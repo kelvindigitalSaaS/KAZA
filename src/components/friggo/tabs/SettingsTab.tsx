@@ -381,18 +381,18 @@ export function SettingsTab() {
               </div>
             </button>
             <button
-              onClick={() => navigate("/garbage-reminder")}
+              onClick={() => navigate("/settings/install")}
               className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 border border-black/[0.04] dark:border-white/[0.06] transition-all active:scale-[0.97] text-left shadow-sm"
             >
-              <div className="rounded-xl bg-destructive/10 p-2.5">
-                <Trash2 className="h-5 w-5 text-destructive" />
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <Download className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="font-semibold text-foreground text-sm leading-tight">
-                  {l.garbage}
+                  {l.installGuide || "Como Instalar"}
                 </p>
                 <p className="text-[10px] font-medium text-muted-foreground">
-                  {l.garbageDesc}
+                  {l.installGuideDesc || "Android, iOS e PC"}
                 </p>
               </div>
             </button>

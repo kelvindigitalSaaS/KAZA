@@ -16,11 +16,22 @@ import {
   ChevronUp,
   LayoutList,
   LayoutGrid,
-  CreditCard,
   CheckCircle2,
   CheckSquare,
   AlertTriangle,
+  Share2,
+  Save,
+  Pencil,
+  X,
+  SlidersHorizontal,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -63,6 +74,10 @@ export function ShoppingTab() {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [newItemUnit, setNewItemUnit] = useState("un");
+  const [showFilters, setShowFilters] = useState(false);
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const labels = {
     "pt-BR": {
@@ -90,11 +105,13 @@ export function ShoppingTab() {
       groupBy: "Agrupar",
       flat: "Lista",
       selectAll: "Selecionar todos",
-      payList: "Pagar lista",
-      allBought: "Todos comprados!",
+      payList: "Guardar lista",
+      allBought: "Lista salva!",
       deleteAll: "Apagar tudo",
       confirmDeleteAll: "Tem certeza? Todos os itens serão removidos.",
-      allDeleted: "Todos os itens foram removidos!"
+      allDeleted: "Todos os itens foram removidos!",
+      shareWhatsApp: "Compartilhar no WhatsApp",
+      filters: "Filtros",
     },
     en: {
       title: "Shopping List",
@@ -121,11 +138,13 @@ export function ShoppingTab() {
       groupBy: "Group",
       flat: "List",
       selectAll: "Select all",
-      payList: "Pay list",
-      allBought: "All bought!",
+      payList: "Save list",
+      allBought: "List saved!",
       deleteAll: "Delete all",
       confirmDeleteAll: "Are you sure? All items will be removed.",
-      allDeleted: "All items removed!"
+      allDeleted: "All items removed!",
+      shareWhatsApp: "Share on WhatsApp",
+      filters: "Filters",
     },
     es: {
       title: "Lista de Compras",
@@ -152,11 +171,13 @@ export function ShoppingTab() {
       groupBy: "Agrupar",
       flat: "Lista",
       selectAll: "Seleccionar todos",
-      payList: "Pagar lista",
-      allBought: "¡Todos comprados!",
+      payList: "Guardar lista",
+      allBought: "¡Lista guardada!",
       deleteAll: "Eliminar todo",
       confirmDeleteAll: "¿Estás seguro? Todos los artículos serán eliminados.",
-      allDeleted: "¡Todos los artículos eliminados!"
+      allDeleted: "¡Todos los artículos eliminados!",
+      shareWhatsApp: "Compartir en WhatsApp",
+      filters: "Filtros",
     }
   };
 
@@ -203,6 +224,28 @@ export function ShoppingTab() {
     setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleSaveList = () => {
+    // Save to localStorage history
+    const saved = JSON.parse(localStorage.getItem("friggo_saved_lists") || "[]");
+    saved.unshift({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      items: shoppingList.map(i => ({ name: i.name, quantity: i.quantity, unit: i.unit, store: i.store }))
+    });
+    // Keep last 10 lists
+    localStorage.setItem("friggo_saved_lists", JSON.stringify(saved.slice(0, 10)));
+    markAllShoppingComplete();
+    toast.success(l.allBought);
+  };
+
+  const handleShareWhatsApp = () => {
+    const pending = shoppingList.filter(i => !i.isCompleted);
+    if (pending.length === 0) { toast.info(language === "pt-BR" ? "Lista vazia" : "Empty list"); return; }
+    const text = pending.map(i => `• ${i.name}${i.quantity ? ` (${i.quantity} ${i.unit || ''})` : ''}`).join('\n');
+    const msg = encodeURIComponent(`🛒 *Lista de Compras*\n\n${text}`);
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+  };
+
   const handleAddItem = (product?: ProductSuggestion) => {
     const itemName = product?.name || newItem.trim();
     if (!itemName) return;
@@ -210,7 +253,7 @@ export function ShoppingTab() {
       name: itemName,
       category: "pantry",
       quantity: product?.defaultQuantity || 1,
-      unit: product?.unit || "un",
+      unit: product?.unit || newItemUnit,
       store: product?.category || "market"
     });
     setNewItem("");
@@ -527,11 +570,13 @@ export function ShoppingTab() {
       <button
         onClick={() => toggleShoppingItem(item.id)}
         className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 active:scale-90",
-          item.isCompleted
-            ? "border-fresh bg-fresh text-primary-foreground shadow-sm"
-            : "border-muted-foreground/30"
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 active:scale-90"
         )}
+        style={{
+          borderColor: "#165A52",
+          background: item.isCompleted ? "#165A52" : "transparent",
+          color: "#fff"
+        }}
       >
         {item.isCompleted && <Check className="h-3.5 w-3.5" />}
       </button>
@@ -641,7 +686,7 @@ export function ShoppingTab() {
         </div>
       </button>
 
-      {/* ── SELECT ALL + PAY LIST ── */}
+      {/* ── SELECT ALL + GUARDAR LISTA + WHATSAPP ── */}
       {pendingCount > 0 && (
         <div className="flex gap-2">
           <button
@@ -649,17 +694,27 @@ export function ShoppingTab() {
               const pending = shoppingList.filter(i => !i.isCompleted);
               pending.forEach(i => toggleShoppingItem(i.id));
             }}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-sm font-semibold text-foreground transition-all active:scale-[0.97]"
+            className="flex items-center justify-center gap-2 h-13 px-4 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-sm font-semibold text-foreground transition-all active:scale-[0.97]"
+            style={{ height: "52px" }}
           >
             <CheckSquare className="h-4 w-4 text-primary" />
             {l.selectAll}
           </button>
           <button
-            onClick={() => markAllShoppingComplete()}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-2xl bg-emerald-500 text-white text-sm font-semibold shadow-sm shadow-emerald-500/25 transition-all active:scale-[0.97]"
+            onClick={handleSaveList}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl text-white text-sm font-bold shadow-sm transition-all active:scale-[0.97]"
+            style={{ height: "52px", background: "#165A52", boxShadow: "0 4px 16px rgba(22,90,82,0.25)" }}
           >
-            <CreditCard className="h-4 w-4" />
+            <Save className="h-4 w-4" />
             {l.payList}
+          </button>
+          <button
+            onClick={handleShareWhatsApp}
+            className="flex items-center justify-center rounded-2xl border border-black/[0.06] bg-white/80 dark:bg-white/5 transition-all active:scale-[0.97]"
+            style={{ height: "52px", width: "52px", minWidth: "52px" }}
+            title={l.shareWhatsApp}
+          >
+            <Share2 className="h-4 w-4 text-green-600" />
           </button>
         </div>
       )}
@@ -668,7 +723,8 @@ export function ShoppingTab() {
       {shoppingList.length > 0 && (
         <button
           onClick={() => setShowDeleteDialog(true)}
-          className="w-full flex items-center justify-center gap-2 h-10 rounded-2xl bg-destructive/10 text-destructive text-sm font-semibold transition-all active:scale-[0.97]"
+          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-destructive/10 text-destructive text-sm font-semibold transition-all active:scale-[0.97]"
+          style={{ height: "48px" }}
         >
           <Trash2 className="h-4 w-4" />
           {l.deleteAll}
@@ -715,12 +771,27 @@ export function ShoppingTab() {
             onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
             onFocus={() => setShowSuggestions(suggestions.length > 0)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-            className="flex-1 h-11 rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 backdrop-blur-xl text-sm transition-all focus:shadow-sm"
+            className="flex-1 h-[52px] rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 backdrop-blur-xl text-sm transition-all focus:shadow-sm"
           />
+          <Select value={newItemUnit} onValueChange={setNewItemUnit}>
+            <SelectTrigger className="h-[52px] w-[72px] rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 text-xs font-bold shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="un">un</SelectItem>
+              <SelectItem value="kg">kg</SelectItem>
+              <SelectItem value="g">g</SelectItem>
+              <SelectItem value="L">L</SelectItem>
+              <SelectItem value="ml">ml</SelectItem>
+              <SelectItem value="pct">pct</SelectItem>
+              <SelectItem value="cx">cx</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             onClick={() => handleAddItem()}
             size="icon"
-            className="h-11 w-11 rounded-2xl shadow-sm shadow-primary/25 transition-all active:scale-[0.97]"
+            className="rounded-2xl shadow-sm shadow-primary/25 transition-all active:scale-[0.97]"
+            style={{ height: "52px", width: "52px", background: "#165A52" }}
           >
             <Plus className="h-5 w-5" />
           </Button>
@@ -746,13 +817,29 @@ export function ShoppingTab() {
       </div>
 
       {!groupByCategory && (
-        <div className="flex flex-wrap gap-2">
-          {storeFilters.map((filter) => {
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Todos chip — always visible */}
+          <button
+            onClick={() => setActiveFilter("all")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97]",
+              activeFilter === "all"
+                ? "text-primary-foreground shadow-sm shadow-primary/25"
+                : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
+            )}
+            style={activeFilter === "all" ? { background: "#165A52" } : {}}
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            {storeFilters[0].label}
+            <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold", activeFilter === "all" ? "bg-white/20" : "bg-black/[0.04] dark:bg-white/10 text-muted-foreground")}>
+              {shoppingList.length}
+            </span>
+          </button>
+
+          {/* Show store filters only when not "all" OR when toggled via filter icon */}
+          {activeFilter !== "all" && storeFilters.slice(1).map((filter) => {
             const Icon = filter.icon;
-            const count =
-              filter.id === "all"
-                ? shoppingList.length
-                : shoppingList.filter((i) => i.store === filter.id).length;
+            const count = shoppingList.filter((i) => i.store === filter.id).length;
             return (
               <button
                 key={filter.id}
@@ -760,27 +847,32 @@ export function ShoppingTab() {
                 className={cn(
                   "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97]",
                   activeFilter === filter.id
-                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
+                    ? "text-primary-foreground shadow-sm shadow-primary/25"
                     : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
                 )}
+                style={activeFilter === filter.id ? { background: "#165A52" } : {}}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {filter.label}
                 {count > 0 && (
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
-                      activeFilter === filter.id
-                        ? "bg-white/20"
-                        : "bg-black/[0.04] dark:bg-white/10 text-muted-foreground"
-                    )}
-                  >
+                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold", activeFilter === filter.id ? "bg-white/20" : "bg-black/[0.04] dark:bg-white/10 text-muted-foreground")}>
                     {count}
                   </span>
                 )}
               </button>
             );
           })}
+
+          {/* Filter icon to expand store filters when "all" is active */}
+          {activeFilter === "all" && (
+            <button
+              onClick={() => setActiveFilter("market")}
+              className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-muted-foreground transition-all active:scale-[0.97]"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              {l.filters}
+            </button>
+          )}
         </div>
       )}
 

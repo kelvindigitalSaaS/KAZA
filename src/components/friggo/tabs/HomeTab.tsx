@@ -70,7 +70,7 @@ const labels = {
         greetingExpiring: 'item(ns) vencendo hoje!',
         greetingAlerts: 'alerta(s) pendente(s)',
         greetingAllGood: 'Tudo em dia! 🎉',
-        payList: 'Pagar lista',
+        payList: 'Guardar lista',
         noResults: 'Nenhum resultado encontrado.',
         useExpiring: 'Use antes que vença:',
     },
@@ -112,7 +112,7 @@ const labels = {
         greetingExpiring: 'item(s) expiring today!',
         greetingAlerts: 'pending alert(s)',
         greetingAllGood: 'All good! 🎉',
-        payList: 'Pay list',
+        payList: 'Save list',
         noResults: 'No results found.',
         useExpiring: 'Use before it expires:',
     },
@@ -154,7 +154,7 @@ const labels = {
         greetingExpiring: 'artículo(s) por vencer hoy!',
         greetingAlerts: 'alerta(s) pendiente(s)',
         greetingAllGood: '¡Todo en orden! 🎉',
-        payList: 'Pagar lista',
+        payList: 'Guardar lista',
         noResults: 'Sin resultados.',
         useExpiring: 'Usa antes de que venza:',
     },
@@ -614,7 +614,7 @@ export function HomeTab() {
                                                 <div key={item.id} className="flex items-center gap-3 rounded-xl bg-gray-50 dark:bg-white/5 px-4 py-3">
                                                     <button
                                                         onClick={() => toggleShoppingItem(item.id)}
-                                                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30 transition-all active:scale-90"
+                                                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all active:scale-90" style={{ borderColor: "#165A52" }}
                                                     />
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
