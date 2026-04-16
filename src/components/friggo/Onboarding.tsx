@@ -5,6 +5,8 @@ import { OnboardingData, ConsumableCategory } from "@/types/friggo";
 import { useKaza } from "@/contexts/FriggoContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
+import { LogOut } from "lucide-react";
 import { isValidCPF, formatCPF } from "@/lib/utils/validation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -416,6 +418,14 @@ export function Onboarding() {
   const { completeOnboarding, setConsumablesBulk } = useKaza();
   const { language } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { signOut } = useAuth();
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } finally {
+      if (typeof window !== "undefined") window.location.href = "/auth";
+    }
+  };
   const l = onboardingLabels[language];
   const [currentStep, setCurrentStep] = useState(0);
   const [[page, direction], setPage] = useState([0, 0]);
@@ -459,6 +469,18 @@ export function Onboarding() {
   const [cpfError, setCpfError] = useState("");
 
   const handleNext = async () => {
+    if (steps[currentStep] === "personalize") {
+      if (!data.name || !data.name.trim()) {
+        toast.error(
+          language === "pt-BR"
+            ? "Informe seu nome para continuar."
+            : language === "es"
+            ? "Ingrese su nombre para continuar."
+            : "Please enter your name to continue."
+        );
+        return;
+      }
+    }
     if (steps[currentStep] === "cpf") {
       const rawCpf = data.cpf || "";
       if (!isValidCPF(rawCpf)) {
@@ -536,51 +558,31 @@ export function Onboarding() {
             animate="center"
             className="flex flex-1 flex-col items-center justify-center px-6 text-center"
           >
-            <motion.div variants={staggerItem} className="relative mb-8">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ ...appleSpring, delay: 0.2 }}
-              >
-                <AnimatedFridge />
-              </motion.div>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ ...appleSpring, delay: 0.5 }}
-                className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-fresh shadow-sm"
+            <motion.div
+              variants={staggerItem}
+              className="relative flex items-center justify-center"
+            >
+              <div
+                className="absolute w-[240px] h-[240px] rounded-full kaza-glow pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(52,199,89,0.22) 0%, rgba(52,199,89,0.08) 38%, rgba(52,199,89,0) 70%)",
+                  filter: "blur(20px)",
+                }}
               />
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ ...appleSpring, delay: 0.6 }}
-                className="absolute -left-1 -bottom-1 h-4 w-4 rounded-full bg-warning"
+              <motion.img
+                src="/icons/192.png"
+                alt=""
+                aria-hidden
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ ...appleSpring, delay: 0.1 }}
+                className="relative z-10 w-28 h-28 md:w-32 md:h-32 object-contain rounded-[28px] kaza-breath"
+                style={{
+                  boxShadow:
+                    "0 0 0 1px rgba(255,255,255,0.05), 0 18px 48px rgba(0,0,0,0.45), 0 0 40px rgba(52,199,89,0.18)",
+                }}
               />
-            </motion.div>
-            <motion.h1 variants={staggerItem} className="mb-3 text-3xl font-bold tracking-tight text-foreground">
-              {l.welcome}{" "}
-              <span style={{ fontFamily: "'Dancing Script', 'Pacifico', 'Satisfy', cursive" }} className="text-primary text-4xl font-extrabold">
-                {l.brandName}
-              </span>
-            </motion.h1>
-            <motion.p variants={staggerItem} className="mb-2 text-lg font-medium text-primary">
-              {l.tagline}
-            </motion.p>
-            <motion.p variants={staggerItem} className="text-sm text-muted-foreground">
-              {l.setupSteps}
-            </motion.p>
-            <motion.div variants={staggerItem} className="mt-8 flex flex-wrap justify-center gap-2">
-              {l.features.map((feature: string, i: number) => (
-                <motion.span
-                  key={feature}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ ...appleSpring, delay: 0.5 + i * 0.1 }}
-                  className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary"
-                >
-                  ✓ {feature}
-                </motion.span>
-              ))}
             </motion.div>
           </motion.div>
         );
@@ -1320,6 +1322,17 @@ export function Onboarding() {
       transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="flex min-h-screen flex-col bg-primary/5"
     >
+      {/* Top bar with Sign Out */}
+      <div className="flex justify-end px-4 pt-safe pt-3">
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="inline-flex items-center gap-1.5 rounded-full bg-background/70 dark:bg-white/5 border border-black/[0.06] dark:border-white/10 px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          {language === "pt-BR" ? "Sair" : language === "es" ? "Salir" : "Sign out"}
+        </button>
+      </div>
       {currentStep > 0 && currentStep < steps.length - 1 && (
         <div className="px-6 pt-safe">
           <div className="flex justify-center gap-2 py-4">

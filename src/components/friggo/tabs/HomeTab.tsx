@@ -329,8 +329,11 @@ export function HomeTab() {
 
             {/* ── HERO HEADER ── */}
             <div className="relative -mx-4 -mt-0 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-900 rounded-b-[2rem]" />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent rounded-b-[2rem]" />
+                <div
+                    className="absolute inset-0 rounded-b-[2rem]"
+                    style={{ background: "linear-gradient(135deg, #3B7A68 0%, #90AB9C 100%)" }}
+                />
+                <div className="absolute inset-0 rounded-b-[2rem] bg-black/10" />
 
                 <div className="relative px-5 pt-8 pb-7">
                     {/* Top bar */}
@@ -430,9 +433,9 @@ export function HomeTab() {
                             onClick={() => navigate('/add-item')}
                             className="group relative overflow-hidden rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-3.5 text-left transition-all duration-200 active:scale-[0.97] hover:bg-white/[0.12]"
                         >
-                            <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/15 rounded-full -translate-y-3 translate-x-3 blur-2xl pointer-events-none" />
+                            <div className="absolute top-0 right-0 w-12 h-12 rounded-full -translate-y-3 translate-x-3 blur-2xl pointer-events-none" style={{ background: "rgba(22,90,82,0.25)" }} />
                             <div className="relative">
-                                <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/25">
+                                <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: "rgba(22,90,82,0.30)" }}>
                                     <Plus className="h-4 w-4 text-white" />
                                 </div>
                                 <p className="text-[11px] font-semibold text-white leading-snug">{l.addItem}</p>
@@ -742,9 +745,11 @@ export function HomeTab() {
             >
                 <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-base md:text-lg font-bold text-foreground">{l.recentlyAdded}</h2>
-                    <button className="flex items-center gap-0.5 text-xs md:text-sm text-primary font-medium active:opacity-70">
-                        {l.seeAll} <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
+                    {items.length > 4 && (
+                        <button className="flex items-center gap-0.5 text-xs md:text-sm text-primary font-medium active:opacity-70">
+                            {l.seeAll} <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                    )}
                 </div>
                 <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
                     {[...items]

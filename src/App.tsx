@@ -57,46 +57,42 @@ function PageSkeleton() {
   );
 }
 
-/** Tela de carregamento com visual Kaza */
+/** Loader premium — apenas ícone + glow + barra shimmer, sem textos. */
 function SplashLoader() {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const duration = 1500;
-    const interval = 16;
-    let elapsed = 0;
-    const timer = setInterval(() => {
-      elapsed += interval;
-      const p = Math.min((elapsed / duration) * 100, 100);
-      setProgress(p);
-      if (p >= 100) clearInterval(timer);
-    }, interval);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-primary dark:bg-primary/90">
-      <div className="flex flex-col items-center px-6">
-        <div className="relative mb-6">
-          <div className="w-28 h-28 md:w-36 md:h-36 rounded-[1.5rem] bg-white flex items-center justify-center shadow-xl overflow-hidden">
-            <svg className="w-16 h-16 md:w-20 md:h-20 text-primary" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <g fill="none" stroke="currentColor" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M 50 150 L 100 40 L 150 150"/>
-                <line x1="65" y1="115" x2="135" y2="115"/>
-              </g>
-            </svg>
-          </div>
-        </div>
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center kaza-splash-bg relative overflow-hidden">
+      {/* glow verde suave atrás do ícone */}
+      <div
+        className="absolute w-[240px] h-[240px] rounded-full kaza-glow pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(52,199,89,0.22) 0%, rgba(52,199,89,0.08) 38%, rgba(52,199,89,0) 70%)",
+          filter: "blur(20px)",
+        }}
+      />
 
-        <h1 className="text-3xl font-black tracking-tight text-white mb-2">Kaza</h1>
-        <p className="text-sm font-medium text-white/80 mb-6">Tudo o que sua casa precisa</p>
+      {/* ícone principal com breathing */}
+      <div className="relative z-10 kaza-breath">
+        <img
+          src="/icons/192.png"
+          alt=""
+          aria-hidden
+          className="w-24 h-24 md:w-28 md:h-28 object-contain rounded-[26px]"
+          style={{
+            boxShadow:
+              "0 0 0 1px rgba(255,255,255,0.05), 0 18px 48px rgba(0,0,0,0.45), 0 0 40px rgba(52,199,89,0.18)",
+          }}
+        />
+      </div>
 
-        <div className="w-48 h-1.5 rounded-full bg-white/20 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-white transition-all duration-300 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+      {/* barra discreta com shimmer */}
+      <div className="relative z-10 mt-8 w-44 h-[5px] rounded-full bg-white/10 overflow-hidden">
+        <div
+          className="h-full w-2/5 rounded-full kaza-shimmer"
+          style={{
+            background: "linear-gradient(90deg,#24c85a 0%,#48e07c 100%)",
+          }}
+        />
       </div>
     </div>
   );
