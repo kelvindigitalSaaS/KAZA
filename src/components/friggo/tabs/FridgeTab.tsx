@@ -182,15 +182,15 @@ export function FridgeTab() {
         <div className="space-y-4 pb-24">
             {/* Apple-style header */}
             <div className="flex items-center justify-between pt-2">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                        {l.pantry}
-                        <div className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary/10">
-                            <Refrigerator className="h-4 w-4 text-primary" />
-                        </div>
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">{items.length} {l.itemsTotal}</p>
+        <div className="hidden">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                {l.pantry}
+                <div className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary/10">
+                    <Refrigerator className="h-4 w-4 text-primary" />
                 </div>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{items.length} {l.itemsTotal}</p>
+        </div>
                 <div className="flex items-center gap-2">
                     {!selectionMode ? (
                         <>

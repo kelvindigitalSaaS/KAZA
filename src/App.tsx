@@ -100,15 +100,10 @@ function SplashLoader() {
 
 /** Redireciona para /auth se não estiver logado */
 function ProtectedRoute({ element, allowLocked = false, allowOnboarding = false }: { element: JSX.Element, allowLocked?: boolean, allowOnboarding?: boolean }) {
-  const [minLoadingDone, setMinLoadingDone] = useState(false);
   const { user, loading: authLoading, requireAuth } = useAuth();
   const { isLocked, loading: subLoading } = useSubscription();
   const { isOnboarded, loading: friggoLoading } = useKaza();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMinLoadingDone(true), 1600);
-    return () => clearTimeout(timer);
-  }, []);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -116,11 +111,25 @@ function ProtectedRoute({ element, allowLocked = false, allowOnboarding = false 
     }
   }, [user, authLoading, requireAuth]);
 
-  if (authLoading || subLoading || friggoLoading || !minLoadingDone) {
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (authLoading || subLoading || friggoLoading) {
+      timeout = setTimeout(() => {
+        if (authLoading || subLoading || friggoLoading) {
+          setTimedOut(true);
+          window.dispatchEvent(new CustomEvent("force-offline"));
+        }
+      }, 12000);
+    }
+    return () => clearTimeout(timeout);
+  }, [authLoading, subLoading, friggoLoading]);
+
+  if ((authLoading || subLoading || friggoLoading) && !timedOut) {
     return <SplashLoader />;
   }
 
-  if (!user) {
+  // Redirect to auth if explicitly not logged in after loading finishes
+  if (!authLoading && !user) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -129,7 +138,7 @@ function ProtectedRoute({ element, allowLocked = false, allowOnboarding = false 
   }
 
   // Mandatory Onboarding Flow
-  if (!isOnboarded && !allowOnboarding && window.location.pathname !== "/") {
+  if (isOnboarded !== undefined && !isOnboarded && !allowOnboarding && window.location.pathname !== "/") {
     return <Navigate to="/" replace />;
   }
 

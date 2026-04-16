@@ -1,26 +1,32 @@
 {
-  "name": "Kaza",
-  "short_name": "Kaza",
+  "name": "Friggo",
+  "short_name": "Friggo",
   "description": "Tudo o que sua casa precisa, antes de acabar. Geladeira, receitas, lista de compras e mais.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#22C55E",
-  "background_color": "#22C55E",
+  "theme_color": "#165A52",
+  "background_color": "#DAF1DE",
   "categories": ["food", "lifestyle", "utilities"],
   "icons": [
     {
-      "src": "/favicon-kaza-light.svg",
-      "type": "image/svg+xml",
-      "sizes": "512x512",
-      "purpose": "any maskable"
+      "src": "/icons/192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
-      "src": "/favicon-kaza-dark.svg",
-      "type": "image/svg+xml",
+      "src": "/icons/512.png",
+      "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ]
 }

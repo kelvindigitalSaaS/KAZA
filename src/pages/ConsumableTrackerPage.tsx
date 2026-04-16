@@ -476,24 +476,24 @@ export default function ConsumableTrackerPage() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                     {visibleItems.map((item) => {
                         const daysLeft = calculateDaysUntilEmpty(item);
                         const alertLevel = getAlertLevel(daysLeft);
 
                         return (
                             <div key={item.id} className={cn(
-                                "rounded-3xl border-2 p-5 transition-all shadow-sm ring-0 hover:ring-2 hover:ring-primary/10",
+                                "rounded-[1.25rem] border border-black/[0.04] dark:border-white/[0.06] p-4 transition-all shadow-sm ring-0 hover:ring-2 hover:ring-primary/10",
                                 item.hidden && "opacity-40 grayscale-[0.5]",
                                 alertLevel === 'danger' && !item.hidden && "bg-destructive/[0.02] border-destructive/20 shadow-destructive/5",
                                 alertLevel === 'warning' && !item.hidden && "bg-warning/[0.02] border-warning/20 shadow-warning/5",
                                 (alertLevel === 'ok' || item.hidden) && "bg-white dark:bg-[#1a1a1a] border-gray-100 dark:border-white/5"
                             )}>
                                 <div
-                                    className="flex items-center gap-4 mb-5 cursor-pointer active:opacity-70 transition-opacity"
+                                    className="flex items-center gap-3 mb-4 cursor-pointer active:opacity-70 transition-opacity"
                                     onClick={() => openEdit(item)}
                                 >
-                                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-muted/50 text-2xl shadow-inner border border-black/[0.02] dark:border-white/[0.02]">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-xl shadow-inner border border-black/[0.02] dark:border-white/[0.02]">
                                         {item.icon}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -521,8 +521,8 @@ export default function ConsumableTrackerPage() {
                                     </div>
                                 </div>
 
-                                <div className="mb-6 px-1">
-                                    <div className="h-2.5 rounded-full bg-muted/30 overflow-hidden border border-black/[0.02] dark:border-white/[0.02]">
+                                <div className="mb-4">
+                                    <div className="h-2 rounded-full bg-muted/40 overflow-hidden border border-black/[0.02] dark:border-white/[0.02]">
                                         <div className={cn(
                                             "h-full rounded-full transition-all duration-700",
                                             alertLevel === 'danger' && "bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.4)]",
@@ -533,18 +533,18 @@ export default function ConsumableTrackerPage() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2">
-                                    <div className="flex flex-1 min-w-[120px] gap-1 group/control">
+                                    <div className="flex flex-1 min-w-[100px] gap-1 group/control">
                                         <Button 
                                             variant="secondary" 
-                                            className="h-12 flex-1 rounded-2xl gap-2 text-[10px] font-black uppercase tracking-widest bg-muted/50 hover:bg-muted" 
+                                            className="h-10 flex-1 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest bg-muted/50 hover:bg-muted shadow-sm" 
                                             onClick={() => handleDebit(item.id)}
                                         >
-                                            <Minus className="h-3.5 w-3.5" />{l.debit}
+                                            <Minus className="h-3 w-3" />{l.debit}
                                         </Button>
                                         <Button 
                                             variant="secondary" 
                                             size="icon" 
-                                            className="h-12 w-12 shrink-0 rounded-2xl bg-muted/30" 
+                                            className="h-10 w-10 shrink-0 rounded-xl bg-muted/30 shadow-sm" 
                                             onClick={() => { 
                                                 setCustomAction({ id: item.id, type: 'debit' }); 
                                                 setCustomAmount(String(item.dailyConsumption).replace('.', ',')); 
@@ -555,17 +555,17 @@ export default function ConsumableTrackerPage() {
                                         </Button>
                                     </div>
 
-                                    <div className="flex flex-1 min-w-[120px] gap-1 group/control">
+                                    <div className="flex flex-1 min-w-[100px] gap-1 group/control">
                                         <Button 
-                                            className="h-12 flex-1 rounded-2xl gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-primary/5" 
+                                            className="h-10 flex-1 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-primary/10" 
                                             onClick={() => handleAddStock(item.id, 1)}
                                         >
-                                            <Plus className="h-3.5 w-3.5" />{l.restock}
+                                            <Plus className="h-3 w-3" />{l.restock}
                                         </Button>
                                         <Button 
                                             variant="outline" 
                                             size="icon" 
-                                            className="h-12 w-12 shrink-0 rounded-2xl border-2" 
+                                            className="h-10 w-10 shrink-0 rounded-xl shadow-sm border border-black/[0.04] dark:border-white/[0.04]" 
                                             onClick={() => { 
                                                 setCustomAction({ id: item.id, type: 'restock' }); 
                                                 setCustomAmount('1'); 
@@ -576,11 +576,11 @@ export default function ConsumableTrackerPage() {
                                         </Button>
                                     </div>
                                     
-                                    <div className="flex gap-2 shrink-0 ml-auto">
+                                    <div className="flex gap-1 shrink-0 ml-auto">
                                         <Button 
                                             variant="outline" 
                                             size="icon" 
-                                            className={cn("h-12 w-12 rounded-2xl border-2 transition-all", item.hidden ? "bg-primary text-white border-primary" : "bg-transparent")} 
+                                            className={cn("h-10 w-10 rounded-xl transition-all shadow-sm border border-black/[0.04] dark:border-white/[0.04]", item.hidden ? "bg-primary text-white border-primary" : "bg-transparent")} 
                                             onClick={() => toggleHideItem(item.id)}
                                         >
                                             {item.hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -589,7 +589,7 @@ export default function ConsumableTrackerPage() {
                                         {alertLevel !== 'ok' && !item.hidden && (
                                             <Button 
                                                 size="icon" 
-                                                className="h-12 w-12 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20" 
+                                                className="h-10 w-10 rounded-xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20" 
                                                 onClick={() => handleAddToShopping(item)}
                                             >
                                                 <ShoppingCart className="h-4 w-4" />
@@ -602,10 +602,10 @@ export default function ConsumableTrackerPage() {
                     })}
                 </div>
 
-                <div className="fixed bottom-0 top-auto left-0 right-0 p-6 border-t border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 backdrop-blur-3xl z-50">
+                <div className="fixed bottom-0 top-auto left-0 right-0 p-4 border-t border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/90 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl z-50">
                     <div className="max-w-lg mx-auto">
-                        <Button className="w-full h-16 rounded-3xl gap-3 font-black uppercase tracking-widest shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground border-b-4 border-primary-foreground/10" onClick={() => setScreen('add')}>
-                            <Package className="h-6 w-6" />{l.addItem}
+                        <Button className="w-full h-14 rounded-2xl gap-2 font-black uppercase tracking-widest shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setScreen('add')}>
+                            <Package className="h-5 w-5" />{l.addItem}
                         </Button>
                     </div>
                 </div>
@@ -615,10 +615,10 @@ export default function ConsumableTrackerPage() {
 
     return (
         <PageTransition direction="up" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a]">
-            <header className="sticky top-0 z-50 flex items-center gap-4 border-b border-black/[0.02] dark:border-white/[0.02] bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-6 py-5 backdrop-blur-3xl">
+            <header className="sticky top-0 z-50 flex items-center gap-4 border-b border-black/[0.02] dark:border-white/[0.02] bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-3 backdrop-blur-3xl">
                 <button 
                     onClick={() => navigate(-1)} 
-                    className="flex h-11 w-11 items-center justify-center rounded-2xl text-foreground bg-white/80 dark:bg-white/10 shadow-sm border border-black/[0.03] dark:border-white/[0.03] active:scale-[0.95] transition-all"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground bg-white/80 dark:bg-white/10 shadow-sm border border-black/[0.03] dark:border-white/[0.03] active:scale-[0.95] transition-all"
                 >
                     <ArrowLeft className="h-5 w-5" />
                 </button>

@@ -177,7 +177,11 @@ export function SubscriptionProvider({
       setTrialDaysRemaining(remaining);
       setIsLocked(locked);
       // @ts-ignore
-      setRegistrationDate(profile?.created_at ? new Date(profile.created_at) : new Date());
+      setRegistrationDate(profile?.created_at ? new Date(profile.created_at) : null);
+
+      if (!profile && user) {
+        console.log("Profile not found, using defaults");
+      }
 
       const { data, error } = await supabase
         .from("subscriptions")

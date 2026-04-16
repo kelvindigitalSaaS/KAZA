@@ -331,7 +331,7 @@ export function HomeTab() {
             <div className="relative -mx-4 -mt-0 overflow-hidden">
                 <div
                     className="absolute inset-0 rounded-b-[2rem]"
-                    style={{ background: "linear-gradient(135deg, #3B7A68 0%, #90AB9C 100%)" }}
+                    style={{ background: "linear-gradient(135deg, #0F3D38 0%, #165A52 100%)" }}
                 />
                 <div className="absolute inset-0 rounded-b-[2rem] bg-black/10" />
 

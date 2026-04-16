@@ -292,28 +292,22 @@ export function SettingsTab() {
   return (
     <PageTransition
       direction="right"
-      className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] pb-32"
+      className="min-h-[100dvh] bg-[#165a52] pb-32 pt-8"
     >
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-6 py-5 backdrop-blur-2xl">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">{l.title}</h1>
-        </div>
-      </header>
-
-      <main className="space-y-6 px-5">
+      <main className="space-y-6 px-3">
         {/* Premium Profile Header */}
         <section
           className={cn(
-            "group relative flex items-center gap-4 rounded-3xl p-5 border shadow-sm transition-all",
+            "group relative flex items-center gap-4 rounded-3xl p-5 border shadow-md transition-all",
             planTier === "premium"
-              ? "border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/10"
-              : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border-black/[0.04] dark:border-white/[0.06]"
+              ? "border-amber-500/20 bg-amber-50/20 dark:bg-amber-950/20"
+              : "bg-white/10 backdrop-blur-xl border-white/20"
           )}
         >
           <AvatarUpload 
             currentUrl={onboardingData?.avatarUrl} 
             size={72} 
-            className="shrink-0"
+            className="shrink-0 ring-2 ring-white/20"
           />
           <div className="flex-1 min-w-0" onClick={() => navigate("/profile")}>
             <div className="flex items-center gap-2 mb-0.5 min-w-0">
@@ -340,18 +334,18 @@ export function SettingsTab() {
                 </div>
               ) : (
                 <>
-                  <h2 className="text-lg font-bold text-foreground truncate">
+                  <h2 className="text-lg font-bold text-white truncate">
                     {onboardingData?.name || user?.email?.split("@")[0]}
                   </h2>
-                  <button aria-label="Editar nome" title="Editar nome" onClick={() => setEditingInlineName(true)} className="text-muted-foreground hover:text-primary p-1">
+                  <button aria-label="Editar nome" title="Editar nome" onClick={() => setEditingInlineName(true)} className="text-white/60 hover:text-white p-1">
                     <Edit className="h-4 w-4" />
                   </button>
                 </>
               )}
               <CurrentPlanBadge showUpgradeSheet={false} />
             </div>
-            <p className="text-sm font-medium text-muted-foreground">{l.editProfile}</p>
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase text-primary tracking-wider">
+            <p className="text-sm font-medium text-white/70">{l.editProfile}</p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase text-white tracking-wider">
               {onboardingData?.residents || 1} {l.residents} • {homeTypeLabel}
             </div>
           </div>
@@ -360,77 +354,77 @@ export function SettingsTab() {
 
         {/* Quick Shortcuts */}
         <section className="space-y-4">
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-1">
+          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[1.5px] px-1">
             <Zap className="h-3.5 w-3.5 inline mr-1 mb-0.5" /> {l.shortcuts}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate("/activity-history")}
-              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 border border-black/[0.04] dark:border-white/[0.06] transition-all active:scale-[0.97] text-left shadow-sm"
+              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/10 backdrop-blur-xl p-4 border border-white/20 transition-all active:scale-[0.97] text-left shadow-sm"
             >
-              <div className="rounded-xl bg-primary/10 p-2.5">
-                <History className="h-5 w-5 text-primary" />
+              <div className="rounded-xl bg-white/20 p-2.5">
+                <History className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-foreground text-sm leading-tight">
+                <p className="font-semibold text-white text-sm leading-tight">
                   {l.history}
                 </p>
-                <p className="text-[10px] font-medium text-muted-foreground">
+                <p className="text-[10px] font-medium text-white/60">
                   {l.historyDesc}
                 </p>
               </div>
             </button>
             <button
               onClick={() => navigate("/settings/install")}
-              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 border border-black/[0.04] dark:border-white/[0.06] transition-all active:scale-[0.97] text-left shadow-sm"
+              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/10 backdrop-blur-xl p-4 border border-white/20 transition-all active:scale-[0.97] text-left shadow-sm"
             >
-              <div className="rounded-xl bg-primary/10 p-2.5">
-                <Download className="h-5 w-5 text-primary" />
+              <div className="rounded-xl bg-white/20 p-2.5">
+                <Download className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-foreground text-sm leading-tight">
+                <p className="font-semibold text-white text-sm leading-tight">
                   {l.installGuide || "Como Instalar"}
                 </p>
-                <p className="text-[10px] font-medium text-muted-foreground">
+                <p className="text-[10px] font-medium text-white/60">
                   {l.installGuideDesc || "Android, iOS e PC"}
                 </p>
               </div>
             </button>
             <button
               onClick={() => navigate("/monthly-report")}
-              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 border border-black/[0.04] dark:border-white/[0.06] transition-all active:scale-[0.97] text-left shadow-sm"
+              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/10 backdrop-blur-xl p-4 border border-white/20 transition-all active:scale-[0.97] text-left shadow-sm"
             >
-              <div className="rounded-xl bg-fresh/10 p-2.5">
-                <Package className="h-5 w-5 text-fresh" />
+              <div className="rounded-xl bg-emerald-400/20 p-2.5">
+                <Package className="h-5 w-5 text-emerald-400" />
               </div>
               <div>
-                <p className="font-semibold text-foreground text-sm leading-tight">
+                <p className="font-semibold text-white text-sm leading-tight">
                   {l.report}
                 </p>
-                <p className="text-[10px] font-medium text-muted-foreground">
+                <p className="text-[10px] font-medium text-white/60">
                   {l.reportDesc}
                 </p>
               </div>
             </button>
             <button
               onClick={() => navigate("/settings/subscription")}
-              className="flex flex-col items-start gap-2.5 rounded-2xl bg-primary/10 p-4 border border-primary/20 transition-all active:scale-[0.97] text-left shadow-sm hover:bg-primary/15"
+              className="flex flex-col items-start gap-2.5 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 p-4 border border-amber-300 transition-all active:scale-[0.97] text-left shadow-sm"
             >
-              <div className="rounded-xl bg-white dark:bg-card p-2.5 shadow-sm border border-primary/10">
-                <Crown className="h-5 w-5 text-primary" />
+              <div className="rounded-xl bg-white/20 p-2.5 backdrop-blur-md">
+                <Crown className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-primary text-sm leading-tight">
+                <p className="font-semibold text-white text-sm leading-tight">
                   {l.subscription}
                 </p>
-                <p className="text-[10px] font-medium text-primary/60">
+                <p className="text-[10px] font-medium text-white/80">
                   {l.subscriptionDesc}
                 </p>
               </div>
             </button>
             <button
               onClick={() => setConfirmReconfigureOpen(true)}
-              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 border border-black/[0.04] dark:border-white/[0.06] transition-all active:scale-[0.97] text-left shadow-sm"
+              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/10 backdrop-blur-xl p-4 border border-white/20 transition-all active:scale-[0.97] text-left shadow-sm"
             >
               <div className="rounded-xl bg-amber-500/10 p-2.5">
                 <RotateCcw className="h-5 w-5 text-amber-500" />
@@ -444,39 +438,37 @@ export function SettingsTab() {
                 </p>
               </div>
             </button>
-            {canInstall && (
-              <button
-                onClick={() => install()}
-                className="flex flex-col items-start gap-2.5 rounded-2xl bg-primary/10 border border-primary/20 p-4 transition-all active:scale-[0.97] text-left shadow-sm hover:bg-primary/15"
-              >
-                <div className="rounded-xl bg-white dark:bg-card p-2.5 shadow-sm border border-primary/10">
-                  <Download className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-primary text-sm leading-tight">
-                    {l.install}
-                  </p>
-                  <p className="text-[10px] font-medium text-primary/60">
-                    {l.installDesc}
-                  </p>
-                </div>
-              </button>
-            )}
+            <button
+              onClick={() => navigate("/garbage-reminder")}
+              className="flex flex-col items-start gap-2.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 border border-black/[0.04] dark:border-white/[0.06] transition-all active:scale-[0.97] text-left shadow-sm hover:bg-white/90 dark:hover:bg-white/10"
+            >
+              <div className="rounded-xl bg-orange-500/10 border border-orange-500/20 p-2.5">
+                <Trash2 className="h-5 w-5 text-orange-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground text-sm leading-tight">
+                  {l.garbage}
+                </p>
+                <p className="text-[10px] font-medium text-muted-foreground">
+                  {l.garbageDesc}
+                </p>
+              </div>
+            </button>
           </div>
         </section>
 
         {/* Preferences */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-1">
+          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[1.5px] px-1">
             {l.appearance}
           </h3>
-          <div className="rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.04] dark:border-white/[0.06]">
+          <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-muted/60 p-2.5">
-                  <Layout className="h-5 w-5 text-muted-foreground" />
+                <div className="rounded-xl bg-white/20 p-2.5">
+                  <Layout className="h-5 w-5 text-white" />
                 </div>
-                <p className="font-semibold text-foreground text-[15px]">{l.darkMode}</p>
+                <p className="font-semibold text-white text-[15px]">{l.darkMode}</p>
               </div>
               <div className="flex gap-1.5">
                 {(
@@ -504,8 +496,8 @@ export function SettingsTab() {
                     className={cn(
                       "flex flex-col items-center justify-center gap-0.5 h-12 w-12 rounded-xl text-[9px] font-bold transition-all uppercase tracking-wide",
                       theme === value
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                        : "bg-muted/50 text-muted-foreground"
+                        ? "bg-white text-[#165a52] shadow-lg shadow-black/10"
+                        : "bg-white/10 text-white/70 hover:bg-white/20"
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -519,10 +511,10 @@ export function SettingsTab() {
 
             <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-muted/60 p-2.5">
-                  <Globe className="h-5 w-5 text-muted-foreground" />
+                <div className="rounded-xl bg-white/20 p-2.5">
+                  <Globe className="h-5 w-5 text-white" />
                 </div>
-                <p className="font-semibold text-foreground text-[15px]">{l.language}</p>
+                <p className="font-semibold text-white text-[15px]">{l.language}</p>
               </div>
               <div className="flex gap-1.5">
                 {(
@@ -538,8 +530,8 @@ export function SettingsTab() {
                     className={cn(
                       "flex flex-col items-center justify-center gap-0.5 h-12 w-12 rounded-xl text-[9px] font-bold transition-all",
                       language === value
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                        : "bg-muted/50 text-muted-foreground"
+                        ? "bg-white text-[#165a52] shadow-lg shadow-black/10"
+                        : "bg-white/10 text-white/70 hover:bg-white/20"
                     )}
                   >
                     <span className="text-xl leading-none">{flag}</span>
@@ -553,11 +545,11 @@ export function SettingsTab() {
 
         {/* Notifications */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-1 flex items-center gap-1">
+          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[1.5px] px-1 flex items-center gap-1">
             <Bell className="h-3.5 w-3.5 inline" /> {l.notifTitle}
           </h3>
-          <p className="text-xs text-muted-foreground px-1">{l.notifDesc}</p>
-          <div className="rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] overflow-hidden shadow-sm">
+          <p className="text-xs text-white/50 px-1">{l.notifDesc}</p>
+          <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden shadow-sm">
             {([
               { key: "expiry", Icon: Clock, color: "text-amber-500" },
               { key: "shopping", Icon: ShoppingCart, color: "text-blue-500" },
@@ -573,16 +565,16 @@ export function SettingsTab() {
                   key={key}
                   className={cn(
                     "flex items-center justify-between px-5 py-3.5",
-                    idx < 5 && "border-b border-black/[0.04] dark:border-white/[0.06]"
+                    idx < 5 && "border-b border-white/10"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={cn("rounded-xl p-2", isActive ? "bg-primary/10" : "bg-muted/50")}>
-                      <Icon className={cn("h-4.5 w-4.5", isActive ? color : "text-muted-foreground")} />
+                    <div className={cn("rounded-xl p-2", isActive ? "bg-white/20" : "bg-black/10")}>
+                      <Icon className={cn("h-4.5 w-4.5", isActive ? color : "text-white/40")} />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground text-[14px]">{(l.notifOptions as any)[key]?.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{(l.notifOptions as any)[key]?.desc}</p>
+                      <p className="font-semibold text-white text-[14px]">{(l.notifOptions as any)[key]?.label}</p>
+                      <p className="text-[11px] text-white/60">{(l.notifOptions as any)[key]?.desc}</p>
                     </div>
                   </div>
                   <Switch
@@ -650,131 +642,131 @@ export function SettingsTab() {
 
         {/* Help & Support */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-1 flex items-center gap-1">
+          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[1.5px] px-1 flex items-center gap-1">
             <HelpCircle className="h-3.5 w-3.5 inline" /> {l.helpSupport}
           </h3>
-          <div className="rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] overflow-hidden shadow-sm">
+          <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden shadow-sm">
             <button
               onClick={() => navigate("/settings/faq")}
-              className="w-full flex items-center justify-between px-5 py-4 border-b border-black/[0.04] dark:border-white/[0.06] transition-colors active:bg-black/[0.03] dark:active:bg-white/[0.03] group"
+              className="w-full flex items-center justify-between px-5 py-4 border-b border-white/10 transition-colors active:bg-white/5 group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-primary/10 p-2.5">
-                  <HelpCircle className="h-5 w-5 text-primary" />
+                <div className="rounded-xl bg-white/20 p-2.5">
+                  <HelpCircle className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-foreground text-[15px]">{l.faq}</p>
-                  <p className="text-xs text-muted-foreground">{l.faqDesc}</p>
+                  <p className="font-semibold text-white text-[15px]">{l.faq}</p>
+                  <p className="text-xs text-white/60">{l.faqDesc}</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-active:text-primary transition-colors" />
+              <ChevronRight className="h-5 w-5 text-white/60 group-active:text-white transition-colors" />
             </button>
 
             <button
               onClick={() => navigate("/settings/privacy")}
-              className="w-full flex items-center justify-between px-5 py-4 transition-colors active:bg-black/[0.03] dark:active:bg-white/[0.03] group"
+              className="w-full flex items-center justify-between px-5 py-4 transition-colors active:bg-white/5 group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-muted/60 p-2.5">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
+                <div className="rounded-xl bg-white/20 p-2.5">
+                  <FileText className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-foreground text-[15px]">{l.privacy}</p>
-                  <p className="text-xs text-muted-foreground">{l.privacyDesc}</p>
+                  <p className="font-semibold text-white text-[15px]">{l.privacy}</p>
+                  <p className="text-xs text-white/60">{l.privacyDesc}</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-active:text-primary transition-colors" />
+              <ChevronRight className="h-5 w-5 text-white/60 group-active:text-white transition-colors" />
             </button>
           </div>
         </section>
 
         {/* Installation Guide */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-1 flex items-center gap-1">
+          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[1.5px] px-1 flex items-center gap-1">
             <Download className="h-3.5 w-3.5 inline" /> {l.installGuide}
           </h3>
-          <div className="rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] overflow-hidden shadow-sm">
+          <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden shadow-sm">
             <button
               onClick={() => navigate("/settings/install")}
-              className="w-full flex items-center justify-between px-5 py-4 transition-colors active:bg-black/[0.03] dark:active:bg-white/[0.03] group"
+              className="w-full flex items-center justify-between px-5 py-4 transition-colors active:bg-white/5 group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-primary/10 p-2.5">
-                  <MonitorDown className="h-5 w-5 text-primary" />
+                <div className="rounded-xl bg-white/20 p-2.5">
+                  <MonitorDown className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-foreground text-[15px]">{l.installGuide}</p>
-                  <p className="text-xs text-muted-foreground">{l.installGuideDesc}</p>
+                  <p className="font-semibold text-white text-[15px]">{l.installGuide}</p>
+                  <p className="text-xs text-white/60">{l.installGuideDesc}</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-active:text-primary transition-colors" />
+              <ChevronRight className="h-5 w-5 text-white/60 group-active:text-white transition-colors" />
             </button>
           </div>
         </section>
 
         {/* Security & Account */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-1">
+          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[1.5px] px-1">
             {l.security}
           </h3>
-          <div className="rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] overflow-hidden shadow-sm">
+          <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 overflow-hidden shadow-sm">
             <button
               onClick={() => setChangePasswordOpen(true)}
-              className="w-full flex items-center justify-between px-5 py-4 border-b border-black/[0.04] dark:border-white/[0.06] transition-colors active:bg-black/[0.03] dark:active:bg-white/[0.03] group"
+              className="w-full flex items-center justify-between px-5 py-4 border-b border-white/20 transition-colors active:bg-white/5 group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-muted/60 p-2.5">
-                  <KeyRound className="h-5 w-5 text-muted-foreground" />
+                <div className="rounded-xl bg-white/20 p-2.5">
+                  <KeyRound className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-foreground text-[15px]">
+                  <p className="font-semibold text-white text-[15px]">
                     {l.changePassword}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-white/60">
                     {l.changePasswordDesc}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-active:text-primary transition-colors" />
+              <ChevronRight className="h-5 w-5 text-white/60 group-active:text-white transition-colors" />
             </button>
 
             <button
               onClick={() => setDeleteAccountOpen(true)}
-              className="w-full flex items-center justify-between px-5 py-4 border-b border-black/[0.04] dark:border-white/[0.06] active:bg-destructive/5 transition-colors group"
+              className="w-full flex items-center justify-between px-5 py-4 border-b border-white/20 active:bg-destructive/20 transition-colors group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-destructive/10 p-2.5">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                <div className="rounded-xl bg-red-400/20 p-2.5">
+                  <AlertTriangle className="h-5 w-5 text-red-200" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-destructive text-[15px]">
+                  <p className="font-semibold text-red-200 text-[15px]">
                     {l.deleteAccount}
                   </p>
-                  <p className="text-xs text-muted-foreground">{l.deleteAccountDesc}</p>
+                  <p className="text-xs text-red-200/60">{l.deleteAccountDesc}</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-active:text-destructive transition-colors" />
+              <ChevronRight className="h-5 w-5 text-red-200/60 group-active:text-red-200 transition-colors" />
             </button>
 
             <button
               onClick={signOut}
-              className="w-full flex items-center justify-between px-5 py-4 active:bg-destructive/5 transition-colors group"
+              className="w-full flex items-center justify-between px-5 py-4 active:bg-destructive/20 transition-colors group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-destructive/10 p-2.5 text-destructive">
+                <div className="rounded-xl bg-red-400/20 p-2.5 text-red-200">
                   <LogOut className="h-5 w-5" />
                 </div>
-                <p className="font-semibold text-destructive text-[15px]">{l.logout}</p>
+                <p className="font-semibold text-red-200 text-[15px]">{l.logout}</p>
               </div>
             </button>
           </div>
         </section>
 
         <div className="text-center py-6 pb-12">
-          <p className="text-[16px] font-cursive italic text-muted-foreground">
+          <p className="text-[16px] font-cursive italic text-white/50">
             Kaza v2.0.0
           </p>
-          <p className="text-xs text-muted-foreground mt-2">{l.madeWith}</p>
+          <p className="text-xs text-white/40 mt-2">{l.madeWith}</p>
         </div>
       </main>
 

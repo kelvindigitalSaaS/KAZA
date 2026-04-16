@@ -17,6 +17,7 @@ import {
   ItemLocation,
   MaturationLevel,
   ConsumableItem,
+  ConsumableCategory,
   DefrostTimer,
   MealPlanEntry
 } from "@/types/friggo";
@@ -37,6 +38,7 @@ interface KazaContextType {
   onboarding_completed: boolean;
   itemHistory: ItemHistoryEntry[];
   loading: boolean;
+  homeId: string | null;
   addItem: (item: Omit<KazaItem, "id">) => Promise<void>;
   updateItem: (id: string, item: Partial<KazaItem>) => Promise<void>;
   removeItem: (id: string) => Promise<void>;
@@ -69,7 +71,6 @@ interface KazaContextType {
   toggleSection: (id: string) => Promise<void>;
   isSectionHidden: (id: string) => boolean;
   refreshData: () => Promise<void>;
-  // Recipe & Planner
   favoriteRecipes: string[];
   toggleFavoriteRecipe: (recipeId: string) => Promise<void>;
   mealPlan: MealPlanEntry[];
@@ -80,25 +81,11 @@ interface KazaContextType {
 const KazaContext = createContext<KazaContextType | undefined>(undefined);
 
 const VALID_CATEGORIES: ItemCategory[] = [
-  "fruit",
-  "vegetable",
-  "meat",
-  "dairy",
-  "cooked",
-  "frozen",
-  "beverage",
-  "cleaning",
-  "hygiene",
-  "pantry"
+  "fruit", "vegetable", "meat", "dairy", "cooked", "frozen",
+  "beverage", "cleaning", "hygiene", "pantry"
 ];
-const VALID_LOCATIONS: ItemLocation[] = [
-  "fridge",
-  "freezer",
-  "pantry",
-  "cleaning"
-];
+const VALID_LOCATIONS: ItemLocation[] = ["fridge", "freezer", "pantry", "cleaning"];
 const DEFAULT_NOTIFICATION_PREFS = ["expiry", "shopping", "nightCheckup"];
-const NOTIFICATION_PREFS_STORAGE_KEY = "friggo_notification_prefs";
 
 const ALERT_NOTIFICATION_PREF_MAP: Record<Alert["type"], string> = {
   expiring: "expiry",
@@ -115,8 +102,8 @@ const DEMO_ITEMS: KazaItem[] = [
     location: "fridge",
     quantity: 6,
     unit: "unidades",
-    addedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    expirationDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+    addedDate: new Date(Date.now() - 3 * 86400000),
+    expirationDate: new Date(Date.now() + 4 * 86400000),
     maturation: "ripe"
   },
   {
@@ -126,9 +113,9 @@ const DEMO_ITEMS: KazaItem[] = [
     location: "fridge",
     quantity: 2,
     unit: "litros",
-    addedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    expirationDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    openedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+    addedDate: new Date(Date.now() - 2 * 86400000),
+    expirationDate: new Date(Date.now() + 2 * 86400000),
+    openedDate: new Date(Date.now() - 86400000)
   }
 ];
 
@@ -136,13 +123,11 @@ export function KazaProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { language } = useLanguage();
+
+  const [homeId, setHomeId] = useState<string | null>(null);
   const [items, setItems] = useState<KazaItem[]>([]);
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
-  const [consumables, setConsumables] = useState<ConsumableItem[]>(() => {
-    const saved = localStorage.getItem("friggo_consumables");
-    if (saved) return JSON.parse(saved);
-    return [];
-  });
+  const [consumables, setConsumables] = useState<ConsumableItem[]>([]);
   const [defrostTimers, setDefrostTimers] = useState<DefrostTimer[]>(() => {
     const saved = localStorage.getItem("friggo_defrost_timers_list");
     return saved ? JSON.parse(saved) : [];
@@ -154,53 +139,16 @@ export function KazaProvider({ children }: { children: ReactNode }) {
   const [mealPlan, setMealPlan] = useState<MealPlanEntry[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
-  // Track alert IDs already notified so we don't spam the user
   const notifiedAlertIds = useRef<Set<string>>(new Set());
   const hasHydratedAlerts = useRef(false);
 
-  const getNotificationPrefsStorageKey = (targetUserId?: string) =>
-    `${NOTIFICATION_PREFS_STORAGE_KEY}:${targetUserId || "guest"}`;
-
-  const readStoredNotificationPrefs = (targetUserId?: string) => {
-    try {
-      const raw = localStorage.getItem(
-        getNotificationPrefsStorageKey(targetUserId)
-      );
-      if (!raw) return undefined;
-
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed)
-        ? parsed.filter((value): value is string => typeof value === "string")
-        : undefined;
-    } catch {
-      return undefined;
-    }
-  };
-
-  const persistNotificationPrefs = (
-    prefs: string[] | undefined,
-    targetUserId?: string
-  ) => {
-    try {
-      const storageKey = getNotificationPrefsStorageKey(targetUserId);
-      if (!prefs || prefs.length === 0) {
-        localStorage.removeItem(storageKey);
-        return;
-      }
-
-      localStorage.setItem(storageKey, JSON.stringify(prefs));
-    } catch {
-      // Ignore localStorage issues so app startup never breaks.
-    }
-  };
-
-  const createDefaultOnboardingData = (
-    overrides: Partial<OnboardingData> = {},
-    targetUserId?: string
+  const buildDefaultOnboarding = (
+    overrides: Partial<OnboardingData> = {}
   ): OnboardingData => {
     const fallbackName =
-      typeof user?.user_metadata?.name === "string" ? user.user_metadata.name : "";
-
+      typeof user?.user_metadata?.name === "string"
+        ? user.user_metadata.name
+        : "";
     return {
       name: fallbackName,
       homeType: "apartment",
@@ -208,16 +156,10 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       fridgeType: "regular",
       coolingLevel: 3,
       habits: [],
-      notificationPrefs:
-        readStoredNotificationPrefs(targetUserId) ?? DEFAULT_NOTIFICATION_PREFS,
+      notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       ...overrides
     };
   };
-
-  // Persistence for local states
-  useEffect(() => {
-    localStorage.setItem("friggo_consumables", JSON.stringify(consumables));
-  }, [consumables]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -231,13 +173,18 @@ export function KazaProvider({ children }: { children: ReactNode }) {
     hasHydratedAlerts.current = false;
   }, [user?.id]);
 
-  // Fetch data from Supabase
+  const showError = (title: string, err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(title, err);
+    toast({ title, description: msg, variant: "destructive" });
+  };
+
   const fetchData = useCallback(async () => {
     if (!user) {
-      // Use demo data when not logged in
       setItems(DEMO_ITEMS);
       setShoppingList([]);
       setOnboardingData(null);
+      setHomeId(null);
       setLoading(false);
       return;
     }
@@ -245,746 +192,353 @@ export function KazaProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
 
-      // Fetch items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from("items")
-        .select("*")
+      const { data: membership, error: memberErr } = await supabase
+        .from("home_members")
+        .select("home_id, role")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("joined_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (memberErr) throw memberErr;
 
-      if (itemsError) throw itemsError;
+      const hid = membership?.home_id ?? null;
+      setHomeId(hid);
 
-      // Transform DB items to KazaItem format
-      const transformedItems: KazaItem[] = (itemsData || []).map((item) => {
-        const category = VALID_CATEGORIES.includes(
-          item.category as ItemCategory
-        )
-          ? (item.category as ItemCategory)
-          : "pantry";
-        const location = VALID_LOCATIONS.includes(item.location as ItemLocation)
-          ? (item.location as ItemLocation)
-          : "fridge";
+      if (!hid) {
+        setItems([]);
+        setShoppingList([]);
+        setConsumables([]);
+        setFavoriteRecipes([]);
+        setMealPlan([]);
+        setOnboardingData(buildDefaultOnboarding());
+        setLoading(false);
+        return;
+      }
 
-        return {
-          id: item.id,
-          name: item.name,
-          category,
-          location,
-          quantity: item.quantity || 1,
-          unit: item.unit || "unidades",
-          addedDate: new Date(item.created_at || Date.now()),
-          expirationDate: item.expiry_date
-            ? new Date(item.expiry_date)
-            : undefined,
-          openedDate: item.opened_date ? new Date(item.opened_date) : undefined,
-          minStock: item.min_stock || undefined,
-          maturation: (item.maturation as MaturationLevel) || undefined
-        };
-      });
-
-      setItems(transformedItems);
-
-      // Fetch shopping items
-      const { data: shoppingData, error: shoppingError } = await supabase
-        .from("shopping_items")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (shoppingError) throw shoppingError;
-
-      const transformedShopping: ShoppingItem[] = (shoppingData || []).map(
-        (item) => {
-          const category = VALID_CATEGORIES.includes(
-            item.category as ItemCategory
-          )
-            ? (item.category as ItemCategory)
-            : "pantry";
-          const storeMap: Record<string, "market" | "fair" | "pharmacy"> = {
-            market: "market",
-            fair: "fair",
-            pharmacy: "pharmacy"
-          };
-
-          return {
-            id: item.id,
-            name: item.name,
-            quantity: item.quantity || 1,
-            unit: item.unit || "unidades",
-            category,
-            isCompleted: item.checked || false,
-            store: storeMap[item.category] || "market"
-          };
-        }
-      );
-
-      setShoppingList(transformedShopping);
-
-      // Fetch consumables
-      const { data: consumablesData, error: consumablesError } = await supabase
-        .from("consumables")
-        .select("*")
-        .eq("user_id", user.id);
-
-      if (consumablesError) throw consumablesError;
-
-      const transformedConsumables: ConsumableItem[] = (consumablesData || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        icon: item.icon,
-        category: (item.category as ConsumableCategory) || "other",
-        currentStock: Number(item.current_stock) || 0,
-        unit: item.unit || "unidades",
-        dailyConsumption: Number(item.daily_consumption) || 0,
-        minStock: Number(item.min_stock) || 0,
-        usageInterval: (item.usage_interval as any) || "daily"
-      }));
-
-      setConsumables(transformedConsumables);
-
-      // Fetch favorites
-      const { data: favData } = await supabase
-        .from("recipe_favorites")
-        .select("recipe_id")
-        .eq("user_id", user.id);
-      
-      setFavoriteRecipes((favData || []).map(f => f.recipe_id));
-
-      // Fetch meal plan
-      const { data: planData } = await supabase
-        .from("meal_plan")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("planned_date", { ascending: true });
-      
-      setMealPlan((planData || []).map(p => ({
-        id: p.id,
-        recipe_id: p.recipe_id,
-        recipe_name: p.recipe_name,
-        planned_date: p.planned_date,
-        meal_type: p.meal_type as any
-      })));
-
-      const storedNotificationPrefs = readStoredNotificationPrefs(user.id);
-
-      // Fetch profile data from multiple tables for enhanced security
       const [
-        { data: profileBasic },
-        { data: profileSettings },
-        { data: profileSensitive }
+        itemsRes,
+        shoppingRes,
+        consumablesRes,
+        recipesRes,
+        mealPlansRes,
+        profileRes,
+        homeRes,
+        homeSettingsRes,
+        notifPrefsRes
       ] = await Promise.all([
+        supabase.from("items").select("*").eq("home_id", hid).order("created_at", { ascending: false }),
+        supabase.from("shopping_items").select("*").eq("home_id", hid).order("created_at", { ascending: false }),
+        supabase.from("consumables").select("*").eq("home_id", hid),
+        supabase.from("recipes").select("id, is_favorite").eq("home_id", hid).eq("is_favorite", true),
+        supabase.from("meal_plans").select("*").eq("home_id", hid).order("planned_date", { ascending: true }),
         supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.from("profile_settings").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.from("profile_sensitive").select("*").eq("user_id", user.id).maybeSingle()
+        supabase.from("homes").select("*").eq("id", hid).maybeSingle(),
+        supabase.from("home_settings").select("*").eq("home_id", hid).maybeSingle(),
+        supabase.from("notification_preferences").select("*").eq("home_id", hid).maybeSingle()
       ]);
 
-      const onboardingActive = profileBasic?.onboarding_completed || false;
+      const firstError =
+        itemsRes.error || shoppingRes.error || consumablesRes.error ||
+        recipesRes.error || mealPlansRes.error || profileRes.error ||
+        homeRes.error || homeSettingsRes.error || notifPrefsRes.error;
+      if (firstError) throw firstError;
+
+      setItems((itemsRes.data || []).map(toKazaItem));
+      setShoppingList((shoppingRes.data || []).map(toShoppingItem));
+      setConsumables((consumablesRes.data || []).map(toConsumable));
+      setFavoriteRecipes((recipesRes.data || []).map((r: any) => r.id));
+      setMealPlan(
+        (mealPlansRes.data || []).map((p: any) => ({
+          id: p.id,
+          recipe_id: p.recipe_id,
+          recipe_name: p.recipe_name,
+          planned_date: p.planned_date,
+          meal_type: p.meal_type
+        }))
+      );
+
+      const profile = profileRes.data as any;
+      const home = homeRes.data as any;
+      const hs = homeSettingsRes.data as any;
+      const np = notifPrefsRes.data as any;
+
+      const notifPrefs: string[] = [];
+      if (np?.expiring_items) notifPrefs.push("expiry");
+      if (np?.shopping_list_updates) notifPrefs.push("shopping");
+      if (np?.low_stock_consumables) notifPrefs.push("nightCheckup");
+      if (np?.daily_summary) notifPrefs.push("recipes");
+
+      const onboardingActive = !!profile?.onboarding_completed;
       setOnboardingCompleted(onboardingActive);
 
       setOnboardingData(
-        createDefaultOnboardingData(
-          {
-            name: profileBasic?.name || "",
-            avatarUrl: profileBasic?.avatar_url,
-            onboarding_completed: onboardingActive,
-            
-            homeType: profileSettings?.home_type as any,
-            residents: profileSettings?.residents,
-            fridgeType: profileSettings?.fridge_type as any,
-            fridgeBrand: profileSettings?.fridge_brand,
-            coolingLevel: profileSettings?.cooling_level,
-            habits: profileSettings?.habits,
-            hiddenSections: profileSettings?.hidden_sections || [],
-            notificationPrefs: (profileSettings?.notification_prefs || storedNotificationPrefs) ?? DEFAULT_NOTIFICATION_PREFS,
-            
-            cpf: profileSensitive?.cpf
-          },
-          user.id
-        )
+        buildDefaultOnboarding({
+          name: profile?.name ?? "",
+          avatarUrl: profile?.avatar_url ?? undefined,
+          cpf: profile?.cpf ?? undefined,
+          homeType: home?.home_type ?? "apartment",
+          residents: home?.residents ?? 1,
+          fridgeType: hs?.fridge_type ?? "regular",
+          fridgeBrand: hs?.fridge_brand ?? undefined,
+          coolingLevel: hs?.cooling_level ?? 3,
+          habits: hs?.habits ?? [],
+          hiddenSections: hs?.hidden_sections ?? [],
+          notificationPrefs: notifPrefs.length ? notifPrefs : DEFAULT_NOTIFICATION_PREFS
+        })
       );
-    } catch (error: any) {
-      console.error("Error fetching data:", error);
-      // Suppress specific JWT expired toast for a smoother dev experience if needed
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        setItems(DEMO_ITEMS);
-        setShoppingList([]);
-        setOnboardingData(createDefaultOnboardingData());
-      } else {
-        toast({
-          title: "Erro ao carregar dados",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+    } catch (err) {
+      showError("Erro ao carregar dados", err);
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Generate alerts based on items
+  // ── alerts ───────────────────────────────────────────────────────────────
   useEffect(() => {
     const newAlerts: Alert[] = [];
     const now = new Date();
 
     items.forEach((item) => {
       if (item.expirationDate) {
-        const daysUntilExpiry = Math.ceil(
-          (new Date(item.expirationDate).getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24)
+        const days = Math.ceil(
+          (new Date(item.expirationDate).getTime() - now.getTime()) / 86400000
         );
-
-        if (daysUntilExpiry <= 0) {
+        if (days <= 0) {
           newAlerts.push({
-            id: `exp-${item.id}`,
-            type: "expiring",
-            itemId: item.id,
-            itemName: item.name,
-            message: `${item.name} venceu!`,
-            priority: "high",
-            createdAt: now
+            id: `exp-${item.id}`, type: "expiring", itemId: item.id,
+            itemName: item.name, message: `${item.name} venceu!`,
+            priority: "high", createdAt: now
           });
-        } else if (daysUntilExpiry <= 1) {
+        } else if (days <= 1) {
           newAlerts.push({
-            id: `exp-${item.id}`,
-            type: "consume-today",
-            itemId: item.id,
-            itemName: item.name,
-            message: `Consumir ${item.name} hoje`,
-            priority: "high",
-            createdAt: now
+            id: `exp-${item.id}`, type: "consume-today", itemId: item.id,
+            itemName: item.name, message: `Consumir ${item.name} hoje`,
+            priority: "high", createdAt: now
           });
-        } else if (daysUntilExpiry <= 3) {
+        } else if (days <= 3) {
           newAlerts.push({
-            id: `exp-${item.id}`,
-            type: "expiring",
-            itemId: item.id,
-            itemName: item.name,
-            message: `${item.name} vence em ${daysUntilExpiry} dias`,
-            priority: "medium",
-            createdAt: now
+            id: `exp-${item.id}`, type: "expiring", itemId: item.id,
+            itemName: item.name, message: `${item.name} vence em ${days} dias`,
+            priority: "medium", createdAt: now
           });
         }
       }
-
       if (item.maturation === "very-ripe" || item.maturation === "overripe") {
         newAlerts.push({
-          id: `mat-${item.id}`,
-          type: "overripe",
-          itemId: item.id,
+          id: `mat-${item.id}`, type: "overripe", itemId: item.id,
           itemName: item.name,
-          message: `${item.name} está ${item.maturation === "very-ripe" ? "muito maduro" : "passado"
-            }`,
+          message: `${item.name} está ${item.maturation === "very-ripe" ? "muito maduro" : "passado"}`,
           priority: item.maturation === "overripe" ? "high" : "medium",
           createdAt: now
         });
       }
-
       if (item.minStock && item.quantity <= item.minStock) {
         newAlerts.push({
-          id: `stock-${item.id}`,
-          type: "low-stock",
-          itemId: item.id,
-          itemName: item.name,
-          message: `${item.name} está acabando`,
-          priority: "low",
-          createdAt: now
+          id: `stock-${item.id}`, type: "low-stock", itemId: item.id,
+          itemName: item.name, message: `${item.name} está acabando`,
+          priority: "low", createdAt: now
         });
       }
-
       if (item.dailyConsumption && item.dailyConsumption > 0) {
-        const daysUntilEmpty = Math.floor(
-          item.quantity / item.dailyConsumption
-        );
-        if (daysUntilEmpty <= 3) {
+        const days = Math.floor(item.quantity / item.dailyConsumption);
+        if (days <= 3) {
           newAlerts.push({
-            id: `consumption-${item.id}`,
-            type: "low-stock",
-            itemId: item.id,
-            itemName: item.name,
-            message: `${item.name} acaba em ${daysUntilEmpty} dias`,
-            priority: daysUntilEmpty <= 1 ? "high" : "medium",
-            createdAt: now
+            id: `consumption-${item.id}`, type: "low-stock", itemId: item.id,
+            itemName: item.name, message: `${item.name} acaba em ${days} dias`,
+            priority: days <= 1 ? "high" : "medium", createdAt: now
           });
         }
       }
-
-      // Meat in Pantry check
       if (item.category === "meat" && item.location === "pantry") {
         newAlerts.push({
-          id: `spoilage-${item.id}`,
-          type: "expiring",
-          itemId: item.id,
+          id: `spoilage-${item.id}`, type: "expiring", itemId: item.id,
           itemName: item.name,
-          message: language === "pt-BR" 
+          message: language === "pt-BR"
             ? `${item.name} na dispensa vai estragar! Precisa de refrigeração.`
             : language === "es"
-              ? `${item.name} en la despensa se echará a perder! Necesita refrigeración.`
+              ? `${item.name} en la despensa se echará a perder!`
               : `${item.name} in pantry will rot! Needs refrigeration.`,
-          priority: "high",
-          createdAt: now
+          priority: "high", createdAt: now
         });
       }
     });
 
     setAlerts(newAlerts);
 
-    const notificationPrefs =
-      onboardingData?.notificationPrefs ?? DEFAULT_NOTIFICATION_PREFS;
-
+    const prefs = onboardingData?.notificationPrefs ?? DEFAULT_NOTIFICATION_PREFS;
     if (!hasHydratedAlerts.current) {
-      newAlerts.forEach((alert) => notifiedAlertIds.current.add(alert.id));
+      newAlerts.forEach((a) => notifiedAlertIds.current.add(a.id));
       hasHydratedAlerts.current = true;
       return;
     }
-
-    // Fire system notifications only for alerts created after the initial load.
     newAlerts.forEach((alert) => {
       if (notifiedAlertIds.current.has(alert.id)) return;
       notifiedAlertIds.current.add(alert.id);
-
-      // Only notify for medium and high priority to avoid noise
       if (alert.priority === "low") return;
-
-      const notificationPref = ALERT_NOTIFICATION_PREF_MAP[alert.type];
-      if (!notificationPrefs.includes(notificationPref)) return;
-
+      if (!prefs.includes(ALERT_NOTIFICATION_PREF_MAP[alert.type])) return;
       const category =
-        alert.type === "consume-today"
-          ? "consume-today" as const
-          : alert.type === "expiring"
-            ? "expiry" as const
-            : alert.type === "overripe"
-              ? "overripe" as const
-              : "low-stock" as const;
-
+        alert.type === "consume-today" ? "consume-today" as const
+          : alert.type === "expiring" ? "expiry" as const
+          : alert.type === "overripe" ? "overripe" as const
+          : "low-stock" as const;
       const title =
-        alert.type === "consume-today"
-          ? "⏰ Kaza — Consumir Hoje!"
-          : alert.type === "expiring"
-            ? "🕰️ Kaza — Atenção ao Prazo"
-            : alert.type === "overripe"
-              ? "🍌 Kaza — Hora de Usar"
-              : "📦 Kaza — Reposição Necessária";
-
+        alert.type === "consume-today" ? "⏰ Friggo — Consumir Hoje!"
+          : alert.type === "expiring" ? "🕰️ Friggo — Atenção ao Prazo"
+          : alert.type === "overripe" ? "🍌 Friggo — Hora de Usar"
+          : "📦 Friggo — Reposição Necessária";
       scheduleLocalNotification(title, alert.message, 0, alert.id, category);
     });
-  }, [items, onboardingData?.notificationPrefs]);
+  }, [items, onboardingData?.notificationPrefs, language]);
 
-  const defrostItem = async (id: string) => {
-    const item = items.find((i) => i.id === id);
-    if (!item) return;
+  // ── mappers ──────────────────────────────────────────────────────────────
+  function toKazaItem(row: any): KazaItem {
+    const category = VALID_CATEGORIES.includes(row.category) ? row.category : "pantry";
+    const location = VALID_LOCATIONS.includes(row.location) ? row.location : "fridge";
+    return {
+      id: row.id,
+      name: row.name,
+      category,
+      location,
+      quantity: Number(row.quantity) || 1,
+      unit: row.unit || "unidades",
+      addedDate: new Date(row.created_at || Date.now()),
+      expirationDate: row.expiry_date ? new Date(row.expiry_date) : undefined,
+      openedDate: row.opened_date ? new Date(row.opened_date) : undefined,
+      minStock: row.min_stock ? Number(row.min_stock) : undefined,
+      maturation: row.maturation || undefined,
+      user_id: row.user_id
+    };
+  }
+  function toShoppingItem(row: any): ShoppingItem {
+    const category = VALID_CATEGORIES.includes(row.category) ? row.category : "pantry";
+    const storeMap: Record<string, "market" | "fair" | "pharmacy"> = {
+      market: "market", fair: "fair", pharmacy: "pharmacy"
+    };
+    return {
+      id: row.id,
+      name: row.name,
+      quantity: Number(row.quantity) || 1,
+      unit: row.unit || "unidades",
+      category,
+      isCompleted: !!row.checked,
+      store: storeMap[row.category] || "market",
+      user_id: row.user_id
+    };
+  }
+  function toConsumable(row: any): ConsumableItem {
+    return {
+      id: row.id,
+      name: row.name,
+      icon: row.icon || "📦",
+      category: (row.category as ConsumableCategory) || "other",
+      currentStock: Number(row.current_stock) || 0,
+      unit: row.unit || "unidades",
+      dailyConsumption: Number(row.daily_consumption) || 0,
+      minStock: Number(row.min_stock) || 0,
+      usageInterval: (row.usage_interval as any) || "daily"
+    };
+  }
 
-    const newExpiration = new Date();
-    newExpiration.setDate(newExpiration.getDate() + 3); // Default 3 days for defrosted items
-
-    await updateItem(id, {
-      location: "fridge",
-      expirationDate: newExpiration
-    });
-
-    const endTime = Date.now() + 2 * 60 * 60 * 1000; // 2 hours from now
-    setDefrostTimers((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        itemId: id,
-        itemName: item.name,
-        startedAt: new Date(),
-        estimatedMinutes: 120
-      }
-    ]);
-
-    toast({
-      title: language === "pt-BR" ? "Degelo iniciado" : "Defrost started",
-      description:
-        language === "pt-BR"
-          ? `${item.name} movido para a geladeira. Um lembrete será enviado em 2 horas.`
-          : `${item.name} moved to the fridge. A reminder will be sent in 2 hours.`
-    });
-  };
-
-  const addConsumable = async (item: Omit<ConsumableItem, "id">) => {
-    if (!user) {
-      const newItem = { ...item, id: crypto.randomUUID() };
-      setConsumables((prev) => [...prev, newItem]);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("consumables")
-        .insert({
-          user_id: user.id,
-          name: item.name,
-          icon: item.icon,
-          category: item.category,
-          current_stock: item.currentStock,
-          unit: item.unit,
-          daily_consumption: item.dailyConsumption,
-          min_stock: item.minStock,
-          usage_interval: (item as any).usageInterval || (item as any).usageType || "daily"
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newItem: ConsumableItem = {
-        id: data.id,
-        name: data.name,
-        icon: data.icon,
-        category: (data.category as ConsumableCategory) || "other",
-        currentStock: Number(data.current_stock) || 0,
-        unit: data.unit || "unidades",
-        dailyConsumption: Number(data.daily_consumption) || 0,
-        minStock: Number(data.min_stock) || 0,
-        usageInterval: (data.usage_interval as any) || "daily"
-      };
-
-      setConsumables((prev) => [...prev, newItem]);
-    } catch (error: any) {
-      console.error("Error adding consumable:", error);
-    }
-  };
-
-  const updateConsumable = async (id: string, updates: Partial<ConsumableItem>) => {
-    if (!user) {
-      setConsumables((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-      );
-      return;
-    }
-
-    try {
-      const dbUpdates: any = {};
-      if (updates.name !== undefined) dbUpdates.name = updates.name;
-      if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
-      if (updates.category !== undefined) dbUpdates.category = updates.category;
-      if (updates.currentStock !== undefined) dbUpdates.current_stock = updates.currentStock;
-      if (updates.unit !== undefined) dbUpdates.unit = updates.unit;
-      if (updates.dailyConsumption !== undefined) dbUpdates.daily_consumption = updates.dailyConsumption;
-      if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
-      if (updates.usageInterval !== undefined) dbUpdates.usage_interval = updates.usageInterval;
-
-      const { error } = await supabase
-        .from("consumables")
-        .update(dbUpdates)
-        .eq("id", id)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
-      setConsumables((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-      );
-    } catch (error: any) {
-      console.error("Error updating consumable:", error);
-    }
-  };
-
-  const removeConsumable = async (id: string) => {
-    if (!user) {
-      setConsumables((prev) => prev.filter((item) => item.id !== id));
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("consumables")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
-      setConsumables((prev) => prev.filter((item) => item.id !== id));
-    } catch (error: any) {
-      console.error("Error removing consumable:", error);
-    }
-  };
-
-  const clearConsumables = () => {
-    setConsumables([]);
-  };
-
-  const setConsumablesBulk = async (items: Omit<ConsumableItem, "id">[]) => {
-    if (!user) {
-      const withIds = items.map((item) => ({ ...item, id: crypto.randomUUID() }));
-      setConsumables((prev) => [...prev, ...withIds]);
-      return;
-    }
-
-    try {
-      const dbItems = items.map(item => ({
-        user_id: user.id,
-        name: item.name,
-        icon: item.icon,
-        category: item.category,
-        current_stock: item.currentStock,
-        unit: item.unit,
-        daily_consumption: item.dailyConsumption,
-        min_stock: item.minStock,
-        usage_interval: (item as any).usageInterval || (item as any).usageType || "daily"
-      }));
-
-      // Use upsert to prevent duplicates if onboarding is re-run
-      const { data, error } = await supabase
-        .from("consumables")
-        .upsert(dbItems, { onConflict: 'user_id,name' }) 
-        .select();
-
-      if (error) throw error;
-
-      const withIds: ConsumableItem[] = (data || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        icon: item.icon,
-        category: (item.category as ConsumableCategory) || "other",
-        currentStock: Number(item.current_stock) || 0,
-        unit: item.unit || "unidades",
-        dailyConsumption: Number(item.daily_consumption) || 0,
-        minStock: Number(item.min_stock) || 0,
-        usageInterval: (item.usage_interval as any) || "daily"
-      }));
-
-      setConsumables(withIds); // Replace with cloud state
-    } catch (error: any) {
-      console.error("Error setting consumables bulk:", error);
-    }
-  };
-
-  const markAllShoppingComplete = async () => {
-    const pending = shoppingList.filter((i) => !i.isCompleted);
-    for (const item of pending) {
-      await toggleShoppingItem(item.id);
-    }
-  };
-
-  const clearAllShoppingList = async () => {
-    if (!user) {
-      setShoppingList([]);
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from("shopping_items")
-        .delete()
-        .eq("user_id", user.id);
-      if (error) throw error;
-      setShoppingList([]);
-    } catch (error: any) {
-      console.error("Error clearing shopping list:", error);
-      setShoppingList([]);
-    }
-  };
-
+  // ── items ────────────────────────────────────────────────────────────────
   const addItem = async (item: Omit<KazaItem, "id">) => {
-    if (!user) {
-      // For demo mode, add locally
-      const newItem = { ...item, id: crypto.randomUUID() };
-      setItems((prev) => [...prev, newItem]);
-      addItemHistory(
-        newItem.id,
-        newItem.name,
-        "added",
-        newItem.quantity,
-        newItem.unit
-      );
+    if (!user || !homeId) {
+      const local = { ...item, id: crypto.randomUUID() };
+      setItems((prev) => [local, ...prev]);
+      addItemHistory(local.id, local.name, "added", local.quantity, local.unit);
       return;
     }
-
     try {
       const { data, error } = await supabase
         .from("items")
         .insert({
+          home_id: homeId,
           user_id: user.id,
+          added_by_user_id: user.id,
           name: item.name,
           category: item.category,
           location: item.location,
           quantity: item.quantity,
           unit: item.unit,
-          expiry_date: item.expirationDate
-            ? item.expirationDate.toISOString().split("T")[0]
-            : null,
-          opened_date: item.openedDate
-            ? item.openedDate.toISOString().split("T")[0]
-            : null,
+          expiry_date: item.expirationDate?.toISOString().split("T")[0] ?? null,
+          opened_date: item.openedDate?.toISOString().split("T")[0] ?? null,
           min_stock: item.minStock,
           maturation: item.maturation
         })
         .select()
         .single();
-
       if (error) throw error;
-
-      const newCategory = VALID_CATEGORIES.includes(
-        data.category as ItemCategory
-      )
-        ? (data.category as ItemCategory)
-        : "pantry";
-      const newLocation = VALID_LOCATIONS.includes(
-        data.location as ItemLocation
-      )
-        ? (data.location as ItemLocation)
-        : "fridge";
-
-      const newItem: KazaItem = {
-        id: data.id,
-        name: data.name,
-        category: newCategory,
-        location: newLocation,
-        quantity: data.quantity || 1,
-        unit: data.unit || "unidades",
-        addedDate: new Date(data.created_at || Date.now()),
-        expirationDate: data.expiry_date
-          ? new Date(data.expiry_date)
-          : undefined,
-        openedDate: data.opened_date ? new Date(data.opened_date) : undefined,
-        minStock: data.min_stock || undefined,
-        maturation: (data.maturation as MaturationLevel) || undefined
-      };
-
-      setItems((prev) => [newItem, ...prev]);
-      addItemHistory(
-        newItem.id,
-        newItem.name,
-        "added",
-        newItem.quantity,
-        newItem.unit
-      );
-    } catch (error: any) {
-      console.error("Error adding item:", error);
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        // Fallback to local mode for this item
-        const newItem = { ...item, id: crypto.randomUUID() };
-        setItems((prev) => [newItem, ...prev]);
-        toast({
-          title: "Sessão expirada",
-          description:
-            "Sua sessão expirou. O item foi adicionado localmente para teste, mas não foi salvo no servidor.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro ao adicionar item",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+      const mapped = toKazaItem(data);
+      setItems((prev) => [mapped, ...prev]);
+      addItemHistory(mapped.id, mapped.name, "added", mapped.quantity, mapped.unit);
+    } catch (err) {
+      showError("Erro ao adicionar item", err);
     }
   };
 
   const updateItem = async (id: string, updates: Partial<KazaItem>) => {
-    if (!user || id.startsWith("demo-")) {
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-      );
+    if (!user || !homeId || id.startsWith("demo-")) {
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...updates } : i)));
       return;
     }
-
     try {
-      const updateData: any = {};
-      if (updates.name !== undefined) updateData.name = updates.name;
-      if (updates.category !== undefined)
-        updateData.category = updates.category;
-      if (updates.location !== undefined)
-        updateData.location = updates.location;
-      if (updates.quantity !== undefined)
-        updateData.quantity = updates.quantity;
-      if (updates.unit !== undefined) updateData.unit = updates.unit;
+      const patch: any = {};
+      if (updates.name !== undefined) patch.name = updates.name;
+      if (updates.category !== undefined) patch.category = updates.category;
+      if (updates.location !== undefined) patch.location = updates.location;
+      if (updates.quantity !== undefined) patch.quantity = updates.quantity;
+      if (updates.unit !== undefined) patch.unit = updates.unit;
       if (updates.expirationDate !== undefined) {
-        updateData.expiry_date = updates.expirationDate
-          ? updates.expirationDate.toISOString().split("T")[0]
-          : null;
+        patch.expiry_date = updates.expirationDate
+          ? updates.expirationDate.toISOString().split("T")[0] : null;
       }
       if (updates.openedDate !== undefined) {
-        updateData.opened_date = updates.openedDate
-          ? updates.openedDate.toISOString().split("T")[0]
-          : null;
+        patch.opened_date = updates.openedDate
+          ? updates.openedDate.toISOString().split("T")[0] : null;
       }
-      if (updates.minStock !== undefined)
-        updateData.min_stock = updates.minStock;
-      if (updates.maturation !== undefined)
-        updateData.maturation = updates.maturation;
+      if (updates.minStock !== undefined) patch.min_stock = updates.minStock;
+      if (updates.maturation !== undefined) patch.maturation = updates.maturation;
 
       const { error } = await supabase
-        .from("items")
-        .update(updateData)
-        .eq("id", id)
-        .eq("user_id", user.id);
-
+        .from("items").update(patch).eq("id", id).eq("home_id", homeId);
       if (error) throw error;
-
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-      );
-    } catch (error: any) {
-      console.error("Error updating item:", error);
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        setItems((prev) =>
-          prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-        );
-        toast({
-          title: "Sessão expirada",
-          description:
-            "Sua sessão expirou. As alterações foram aplicadas localmente, mas não salvas no servidor.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro ao atualizar item",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...updates } : i)));
+    } catch (err) {
+      showError("Erro ao atualizar item", err);
     }
   };
 
   const removeItem = async (id: string) => {
-    if (!user || id.startsWith("demo-")) {
-      setItems((prev) => prev.filter((item) => item.id !== id));
+    if (!user || !homeId || id.startsWith("demo-")) {
+      setItems((prev) => prev.filter((i) => i.id !== id));
       return;
     }
-
     try {
       const { error } = await supabase
-        .from("items")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-
+        .from("items").delete().eq("id", id).eq("home_id", homeId);
       if (error) throw error;
-
-      setItems((prev) => prev.filter((item) => item.id !== id));
-    } catch (error: any) {
-      console.error("Error removing item:", error);
-      toast({
-        title: "Erro ao remover item",
-        description: error.message,
-        variant: "destructive"
-      });
+      setItems((prev) => prev.filter((i) => i.id !== id));
+    } catch (err) {
+      showError("Erro ao remover item", err);
     }
   };
 
+  // ── shopping ─────────────────────────────────────────────────────────────
   const addToShoppingList = async (
     item: Omit<ShoppingItem, "id" | "isCompleted">
   ) => {
-    if (!user) {
+    if (!user || !homeId) {
       setShoppingList((prev) => [
-        ...prev,
-        { ...item, id: crypto.randomUUID(), isCompleted: false }
+        ...prev, { ...item, id: crypto.randomUUID(), isCompleted: false }
       ]);
       return;
     }
-
     try {
       const { data, error } = await supabase
         .from("shopping_items")
         .insert({
+          home_id: homeId,
           user_id: user.id,
           name: item.name,
           quantity: item.quantity,
@@ -992,277 +546,334 @@ export function KazaProvider({ children }: { children: ReactNode }) {
           category: item.category,
           checked: false
         })
-        .select()
-        .single();
-
+        .select().single();
       if (error) throw error;
-
-      const addedCategory = VALID_CATEGORIES.includes(
-        data.category as ItemCategory
-      )
-        ? (data.category as ItemCategory)
-        : "pantry";
-
-      const storeFromCategory: Record<string, "market" | "fair" | "pharmacy"> =
-      {
-        hygiene: "pharmacy",
-        cleaning: "market",
-        fruit: "fair",
-        vegetable: "fair"
-      };
-
-      setShoppingList((prev) => [
-        ...prev,
-        {
-          id: data.id,
-          name: data.name,
-          quantity: data.quantity || 1,
-          unit: data.unit || "unidades",
-          category: addedCategory,
-          isCompleted: data.checked || false,
-          store: storeFromCategory[data.category] || "market"
-        }
-      ]);
-    } catch (error: any) {
-      console.error("Error adding shopping item:", error);
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        setShoppingList((prev) => [
-          ...prev,
-          { ...item, id: crypto.randomUUID(), isCompleted: false }
-        ]);
-        toast({
-          title: "Sessão expirada",
-          description:
-            "Sua sessão expirou. O item foi adicionado à lista localmente.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro ao adicionar item",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+      setShoppingList((prev) => [...prev, toShoppingItem(data)]);
+    } catch (err) {
+      showError("Erro ao adicionar item", err);
     }
   };
 
   const toggleShoppingItem = async (id: string) => {
     const item = shoppingList.find((i) => i.id === id);
     if (!item) return;
-
-    if (!user) {
+    const next = !item.isCompleted;
+    if (!user || !homeId) {
       setShoppingList((prev) =>
-        prev.map((i) =>
-          i.id === id ? { ...i, isCompleted: !i.isCompleted } : i
-        )
-      );
+        prev.map((i) => (i.id === id ? { ...i, isCompleted: next } : i)));
       return;
     }
-
     try {
       const { error } = await supabase
         .from("shopping_items")
-        .update({ checked: !item.isCompleted })
-        .eq("id", id)
-        .eq("user_id", user.id);
-
+        .update({
+          checked: next,
+          checked_by_user_id: next ? user.id : null,
+          checked_at: next ? new Date().toISOString() : null
+        })
+        .eq("id", id).eq("home_id", homeId);
       if (error) throw error;
-
       setShoppingList((prev) =>
-        prev.map((i) =>
-          i.id === id ? { ...i, isCompleted: !i.isCompleted } : i
-        )
-      );
-    } catch (error: any) {
-      console.error("Error toggling shopping item:", error);
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        setShoppingList((prev) =>
-          prev.map((i) =>
-            i.id === id ? { ...i, isCompleted: !i.isCompleted } : i
-          )
-        );
-        toast({
-          title: "Sessão expirada",
-          description:
-            "Sua sessão expirou. A alteração foi aplicada localmente.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro ao atualizar item",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+        prev.map((i) => (i.id === id ? { ...i, isCompleted: next } : i)));
+    } catch (err) {
+      showError("Erro ao atualizar item", err);
     }
   };
 
   const removeFromShoppingList = async (id: string) => {
-    if (!user) {
-      setShoppingList((prev) => prev.filter((item) => item.id !== id));
+    if (!user || !homeId) {
+      setShoppingList((prev) => prev.filter((i) => i.id !== id));
       return;
     }
-
     try {
       const { error } = await supabase
-        .from("shopping_items")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-
+        .from("shopping_items").delete().eq("id", id).eq("home_id", homeId);
       if (error) throw error;
-
-      setShoppingList((prev) => prev.filter((item) => item.id !== id));
-    } catch (error: any) {
-      console.error("Error removing shopping item:", error);
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        setShoppingList((prev) => prev.filter((item) => item.id !== id));
-        toast({
-          title: "Sessão expirada",
-          description: "Sua sessão expirou. O item foi removido localmente.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro ao remover item",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+      setShoppingList((prev) => prev.filter((i) => i.id !== id));
+    } catch (err) {
+      showError("Erro ao remover item", err);
     }
   };
 
   const updateShoppingItemQuantity = async (id: string, quantity: number) => {
     if (quantity < 1) return;
-
-    if (!user) {
+    if (!user || !homeId) {
       setShoppingList((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, quantity } : i))
-      );
+        prev.map((i) => (i.id === id ? { ...i, quantity } : i)));
       return;
     }
-
     try {
       const { error } = await supabase
-        .from("shopping_items")
-        .update({ quantity })
-        .eq("id", id)
-        .eq("user_id", user.id);
-
+        .from("shopping_items").update({ quantity }).eq("id", id).eq("home_id", homeId);
       if (error) throw error;
-
       setShoppingList((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, quantity } : i))
-      );
-    } catch (error: any) {
-      console.error("Error updating shopping item quantity:", error);
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        setShoppingList((prev) =>
-          prev.map((i) => (i.id === id ? { ...i, quantity } : i))
-        );
-        toast({
-          title: "Sessão expirada",
-          description:
-            "Sua sessão expirou. A quantidade foi atualizada localmente.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro ao atualizar quantidade",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+        prev.map((i) => (i.id === id ? { ...i, quantity } : i)));
+    } catch (err) {
+      showError("Erro ao atualizar quantidade", err);
     }
   };
 
-  const completeOnboarding = async (data: OnboardingData) => {
-    if (!user) {
-      persistNotificationPrefs(data.notificationPrefs);
-      setOnboardingData(createDefaultOnboardingData(data));
+  const markAllShoppingComplete = async () => {
+    const pending = shoppingList.filter((i) => !i.isCompleted);
+    for (const item of pending) await toggleShoppingItem(item.id);
+  };
+
+  const clearAllShoppingList = async () => {
+    if (!user || !homeId) {
+      setShoppingList([]);
       return;
     }
-
     try {
-      // Pre-validate CPF uniqueness to provide a friendlier message and avoid
-      // hitting the DB constraint in a Promise.all race.
+      const { error } = await supabase
+        .from("shopping_items").delete().eq("home_id", homeId);
+      if (error) throw error;
+      setShoppingList([]);
+    } catch (err) {
+      showError("Erro ao limpar lista", err);
+    }
+  };
+
+  // ── consumables ──────────────────────────────────────────────────────────
+  const addConsumable = async (item: Omit<ConsumableItem, "id">) => {
+    if (!user || !homeId) {
+      setConsumables((prev) => [...prev, { ...item, id: crypto.randomUUID() }]);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from("consumables")
+        .insert({
+          home_id: homeId,
+          name: item.name,
+          icon: item.icon,
+          category: item.category,
+          current_stock: item.currentStock,
+          unit: item.unit,
+          daily_consumption: item.dailyConsumption,
+          min_stock: item.minStock,
+          usage_interval: item.usageInterval || "daily"
+        })
+        .select().single();
+      if (error) throw error;
+      setConsumables((prev) => [...prev, toConsumable(data)]);
+    } catch (err) {
+      showError("Erro ao adicionar consumível", err);
+    }
+  };
+
+  const updateConsumable = async (id: string, updates: Partial<ConsumableItem>) => {
+    if (!user || !homeId) {
+      setConsumables((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, ...updates } : i)));
+      return;
+    }
+    try {
+      const patch: any = {};
+      if (updates.name !== undefined) patch.name = updates.name;
+      if (updates.icon !== undefined) patch.icon = updates.icon;
+      if (updates.category !== undefined) patch.category = updates.category;
+      if (updates.currentStock !== undefined) patch.current_stock = updates.currentStock;
+      if (updates.unit !== undefined) patch.unit = updates.unit;
+      if (updates.dailyConsumption !== undefined) patch.daily_consumption = updates.dailyConsumption;
+      if (updates.minStock !== undefined) patch.min_stock = updates.minStock;
+      if (updates.usageInterval !== undefined) patch.usage_interval = updates.usageInterval;
+      const { error } = await supabase
+        .from("consumables").update(patch).eq("id", id).eq("home_id", homeId);
+      if (error) throw error;
+      setConsumables((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, ...updates } : i)));
+    } catch (err) {
+      showError("Erro ao atualizar consumível", err);
+    }
+  };
+
+  const removeConsumable = async (id: string) => {
+    if (!user || !homeId) {
+      setConsumables((prev) => prev.filter((i) => i.id !== id));
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from("consumables").delete().eq("id", id).eq("home_id", homeId);
+      if (error) throw error;
+      setConsumables((prev) => prev.filter((i) => i.id !== id));
+    } catch (err) {
+      showError("Erro ao remover consumível", err);
+    }
+  };
+
+  const clearConsumables = () => setConsumables([]);
+
+  const setConsumablesBulk = async (list: Omit<ConsumableItem, "id">[]) => {
+    if (!user || !homeId) {
+      const withIds = list.map((item) => ({ ...item, id: crypto.randomUUID() }));
+      setConsumables(withIds);
+      return;
+    }
+    try {
+      const rows = list.map((item) => ({
+        home_id: homeId,
+        name: item.name,
+        icon: item.icon,
+        category: item.category,
+        current_stock: item.currentStock,
+        unit: item.unit,
+        daily_consumption: item.dailyConsumption,
+        min_stock: item.minStock,
+        usage_interval: item.usageInterval || "daily"
+      }));
+      const { data, error } = await supabase
+        .from("consumables")
+        .upsert(rows, { onConflict: "home_id,name" })
+        .select();
+      if (error) throw error;
+      setConsumables((data || []).map(toConsumable));
+    } catch (err) {
+      showError("Erro ao salvar consumíveis", err);
+    }
+  };
+
+  // ── recipes / meal plan ──────────────────────────────────────────────────
+  const toggleFavoriteRecipe = async (recipeId: string) => {
+    if (!user || !homeId) return;
+    const isFav = favoriteRecipes.includes(recipeId);
+    try {
+      if (isFav) {
+        await supabase
+          .from("recipes")
+          .update({ is_favorite: false })
+          .eq("id", recipeId).eq("home_id", homeId);
+        setFavoriteRecipes((prev) => prev.filter((id) => id !== recipeId));
+      } else {
+        await supabase
+          .from("recipes")
+          .update({ is_favorite: true })
+          .eq("id", recipeId).eq("home_id", homeId);
+        setFavoriteRecipes((prev) => [...prev, recipeId]);
+      }
+    } catch (err) {
+      showError("Erro ao favoritar receita", err);
+    }
+  };
+
+  const addToMealPlan = async (entry: Omit<MealPlanEntry, "id">) => {
+    if (!user || !homeId) return;
+    try {
+      const { data, error } = await supabase
+        .from("meal_plans")
+        .insert({
+          home_id: homeId,
+          recipe_id: entry.recipe_id,
+          recipe_name: entry.recipe_name,
+          planned_date: entry.planned_date,
+          meal_type: entry.meal_type,
+          created_by_user_id: user.id
+        })
+        .select().single();
+      if (error) throw error;
+      if (data) {
+        setMealPlan((prev) => [...prev, {
+          id: data.id,
+          recipe_id: data.recipe_id,
+          recipe_name: data.recipe_name,
+          planned_date: data.planned_date,
+          meal_type: data.meal_type
+        }]);
+        toast({ title: "Agendado!", description: "Refeição adicionada ao seu plano." });
+      }
+    } catch (err) {
+      showError("Erro ao agendar refeição", err);
+    }
+  };
+
+  const removeFromMealPlan = async (id: string) => {
+    if (!user || !homeId) return;
+    try {
+      const { error } = await supabase
+        .from("meal_plans").delete().eq("id", id).eq("home_id", homeId);
+      if (error) throw error;
+      setMealPlan((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      showError("Erro ao remover do plano", err);
+    }
+  };
+
+  // ── onboarding / profile ─────────────────────────────────────────────────
+  const completeOnboarding = async (data: OnboardingData) => {
+    if (!user || !homeId) {
+      setOnboardingData(buildDefaultOnboarding(data));
+      return;
+    }
+    try {
       const rawCpf = String(data.cpf || "").replace(/\D/g, "");
       if (rawCpf.length > 0) {
-        const { data: existingCpf } = await supabase
-          .from("profile_sensitive")
+        const { data: existing } = await supabase
+          .from("profiles")
           .select("user_id")
           .eq("cpf", rawCpf)
           .maybeSingle();
-        if (existingCpf && existingCpf.user_id !== user.id) {
+        if (existing && (existing as any).user_id !== user.id) {
           const msg = language === "pt-BR"
-            ? "Este CPF já está cadastrado em outra conta. Por favor, verifique."
+            ? "Este CPF já está cadastrado em outra conta."
             : "This CPF is already registered with another account.";
           toast({ title: "CPF Duplicado", description: msg, variant: "destructive" });
           throw new Error(msg);
         }
       }
 
-      // Split onboarding data across separate secure tables. Use onConflict for
-      // profile_sensitive so we update the row for this user instead of inserting
-      // a new row that could violate UNIQUE(user_id) or UNIQUE(cpf).
       const results = await Promise.all([
-        supabase.from("profiles").upsert({
-          user_id: user.id,
+        supabase.from("profiles").update({
           name: data.name,
           avatar_url: data.avatarUrl,
+          cpf: rawCpf.length > 0 ? rawCpf : null,
           onboarding_completed: true
-        }),
-        supabase.from("profile_settings").upsert({
-          user_id: user.id,
+        }).eq("user_id", user.id),
+        supabase.from("homes").update({
           home_type: data.homeType || "apartment",
-          residents: data.residents || 1,
+          residents: data.residents || 1
+        }).eq("id", homeId),
+        supabase.from("home_settings").update({
           fridge_type: data.fridgeType || "regular",
-          fridge_brand: data.fridgeBrand || "",
+          fridge_brand: data.fridgeBrand || null,
           cooling_level: data.coolingLevel || 3,
           habits: data.habits || [],
-          notification_prefs: data.notificationPrefs || []
-        }),
-        supabase.from("profile_sensitive").upsert(
-          { user_id: user.id, cpf: rawCpf.length > 0 ? rawCpf : null },
-          { onConflict: "user_id" }
-        )
+          hidden_sections: data.hiddenSections || []
+        }).eq("home_id", homeId),
+        updateNotificationPreferences(homeId, data.notificationPrefs)
       ]);
-
-      const error = results.find(r => r.error)?.error;
-      if (error) throw error;
+      const err = results.find((r: any) => r?.error)?.error;
+      if (err) throw err;
 
       setOnboardingCompleted(true);
-      persistNotificationPrefs(data.notificationPrefs, user.id);
-      setOnboardingData(createDefaultOnboardingData(data, user.id));
-    } catch (error: any) {
-      console.error("Error completing onboarding:", error);
-      
-      // Handle unique constraint violation for CPF (Supabase error 23505)
-      if (error.code === "23505" || error.message?.includes("profiles_cpf_key") || error.message?.includes("profile_sensitive_cpf_key")) {
-        const msg = language === "pt-BR" 
-          ? "Este CPF já está cadastrado em outra conta. Por favor, verifique."
+      setOnboardingData(buildDefaultOnboarding(data));
+    } catch (err: any) {
+      if (err?.code === "23505") {
+        const msg = language === "pt-BR"
+          ? "Este CPF já está cadastrado em outra conta."
           : "This CPF is already registered with another account.";
         toast({ title: "CPF Duplicado", description: msg, variant: "destructive" });
-        throw new Error(msg); // Rethrow to allow UI to handle navigation back to CPF step
+        throw new Error(msg);
       }
-
-      if (error.message?.includes("JWT expired") || error.code === "PGRST303") {
-        persistNotificationPrefs(data.notificationPrefs, user.id);
-        setOnboardingData(createDefaultOnboardingData(data, user.id));
-        toast({
-          title: "Sessão expirada",
-          description: "Sua sessão expirou. O perfil foi salvo localmente.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro ao salvar perfil",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+      showError("Erro ao salvar perfil", err);
+      throw err;
     }
   };
+
+  async function updateNotificationPreferences(
+    hid: string, prefs?: string[]
+  ): Promise<{ error?: any }> {
+    const list = prefs ?? DEFAULT_NOTIFICATION_PREFS;
+    const { error } = await supabase
+      .from("notification_preferences")
+      .update({
+        expiring_items: list.includes("expiry"),
+        shopping_list_updates: list.includes("shopping"),
+        low_stock_consumables: list.includes("nightCheckup"),
+        daily_summary: list.includes("recipes")
+      })
+      .eq("home_id", hid);
+    return { error };
+  }
 
   const resetOnboarding = async () => {
     if (user) {
@@ -1271,250 +882,149 @@ export function KazaProvider({ children }: { children: ReactNode }) {
           .from("profiles")
           .update({ onboarding_completed: false })
           .eq("user_id", user.id);
-      } catch (error: any) {
-        console.error("Error resetting onboarding:", error);
+      } catch (err) {
+        console.error("Error resetting onboarding:", err);
       }
     }
-    persistNotificationPrefs(undefined, user?.id);
-    setOnboardingData(createDefaultOnboardingData({}, user?.id));
+    setOnboardingData(buildDefaultOnboarding({}));
+    setOnboardingCompleted(false);
   };
 
   const updateProfile = async (data: Partial<OnboardingData>) => {
-    if (!user) {
-      setOnboardingData((prev) => {
-        const next = createDefaultOnboardingData({ ...(prev ?? {}), ...data });
-        persistNotificationPrefs(next.notificationPrefs);
-        return next;
-      });
+    if (!user || !homeId) {
+      setOnboardingData((prev) => buildDefaultOnboarding({ ...(prev ?? {}), ...data }));
       return;
     }
-
     try {
-      const profileUpdates: any = { user_id: user.id };
-      const settingsUpdates: any = { user_id: user.id };
-      const sensitiveUpdates: any = { user_id: user.id };
-      
-      let hasProfile = false;
-      let hasSettings = false;
-      let hasSensitive = false;
+      const jobs: Promise<any>[] = [];
+      const profilePatch: any = {};
+      const homePatch: any = {};
+      const settingsPatch: any = {};
 
-      if (data.name !== undefined) { profileUpdates.name = data.name; hasProfile = true; }
-      if (data.avatarUrl !== undefined) { profileUpdates.avatar_url = data.avatarUrl; hasProfile = true; }
-      
-      if (data.homeType !== undefined) { settingsUpdates.home_type = data.homeType; hasSettings = true; }
-      if (data.residents !== undefined) { settingsUpdates.residents = data.residents; hasSettings = true; }
-      if (data.fridgeType !== undefined) { settingsUpdates.fridge_type = data.fridgeType; hasSettings = true; }
-      if (data.fridgeBrand !== undefined) { settingsUpdates.fridge_brand = data.fridgeBrand; hasSettings = true; }
-      if (data.habits !== undefined) { settingsUpdates.habits = data.habits; hasSettings = true; }
-      if (data.hiddenSections !== undefined) { settingsUpdates.hidden_sections = data.hiddenSections; hasSettings = true; }
-      if (data.coolingLevel !== undefined) { settingsUpdates.cooling_level = data.coolingLevel; hasSettings = true; }
-      if (data.notificationPrefs !== undefined) { settingsUpdates.notification_prefs = data.notificationPrefs; hasSettings = true; }
-
-      if ((data as any).cpf !== undefined) {
-        // Do not allow overwriting CPF once it's been set for this user.
-        // CPF is stored in `profile_sensitive`; if onboardingData already
-        // contains a CPF we ignore attempts to change it from the client.
-        if (!onboardingData?.cpf) {
-          const raw = String((data as any).cpf || "").replace(/\D/g, "");
-          // Pre-check for duplicate CPF used by another account
-          if (raw.length > 0) {
-            const { data: existing } = await supabase
-              .from("profile_sensitive")
-              .select("user_id")
-              .eq("cpf", raw)
-              .maybeSingle();
-            if (existing && existing.user_id !== user.id) {
-              const msg = language === "pt-BR"
-                ? "Este CPF já está cadastrado em outra conta. Por favor, verifique."
-                : "This CPF is already registered with another account.";
-              toast({ title: "CPF Duplicado", description: msg, variant: "destructive" });
-              throw new Error(msg);
-            }
+      if (data.name !== undefined) profilePatch.name = data.name;
+      if (data.avatarUrl !== undefined) profilePatch.avatar_url = data.avatarUrl;
+      if ((data as any).cpf !== undefined && !onboardingData?.cpf) {
+        const raw = String((data as any).cpf || "").replace(/\D/g, "");
+        if (raw.length > 0) {
+          const { data: existing } = await supabase
+            .from("profiles").select("user_id").eq("cpf", raw).maybeSingle();
+          if (existing && (existing as any).user_id !== user.id) {
+            const msg = language === "pt-BR"
+              ? "Este CPF já está cadastrado em outra conta."
+              : "This CPF is already registered with another account.";
+            toast({ title: "CPF Duplicado", description: msg, variant: "destructive" });
+            throw new Error(msg);
           }
-          sensitiveUpdates.cpf = raw.length > 0 ? raw : null;
-          hasSensitive = true;
         }
+        profilePatch.cpf = raw.length > 0 ? raw : null;
       }
 
-      const promises = [];
-      if (hasProfile) promises.push(supabase.from("profiles").upsert(profileUpdates));
-      if (hasSettings) promises.push(supabase.from("profile_settings").upsert(settingsUpdates));
-      if (hasSensitive) promises.push(supabase.from("profile_sensitive").upsert(sensitiveUpdates));
+      if (data.homeType !== undefined) homePatch.home_type = data.homeType;
+      if (data.residents !== undefined) homePatch.residents = data.residents;
 
-      const results = await Promise.all(promises);
-      const error = results.find(r => r.error)?.error;
+      if (data.fridgeType !== undefined) settingsPatch.fridge_type = data.fridgeType;
+      if (data.fridgeBrand !== undefined) settingsPatch.fridge_brand = data.fridgeBrand;
+      if (data.coolingLevel !== undefined) settingsPatch.cooling_level = data.coolingLevel;
+      if (data.habits !== undefined) settingsPatch.habits = data.habits;
+      if (data.hiddenSections !== undefined) settingsPatch.hidden_sections = data.hiddenSections;
 
-      if (error) throw error;
-      
-      toast({
-        title: language === "pt-BR" ? "Perfil atualizado" : "Profile updated",
-        description: language === "pt-BR" ? "Suas alterações foram salvas com sucesso." : "Your changes have been saved successfully."
-      });
+      if (Object.keys(profilePatch).length) jobs.push(supabase.from("profiles").update(profilePatch).eq("user_id", user.id));
+      if (Object.keys(homePatch).length) jobs.push(supabase.from("homes").update(homePatch).eq("id", homeId));
+      if (Object.keys(settingsPatch).length) jobs.push(supabase.from("home_settings").update(settingsPatch).eq("home_id", homeId));
+      if (data.notificationPrefs !== undefined) jobs.push(updateNotificationPreferences(homeId, data.notificationPrefs));
 
-      setOnboardingData((prev) => {
-        const next = createDefaultOnboardingData(
-          { ...(prev ?? {}), ...data },
-          user.id
-        );
-        persistNotificationPrefs(next.notificationPrefs, user.id);
-        return next;
-      });
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: error.message,
-        variant: "destructive"
-      });
+      const results = await Promise.all(jobs);
+      const err = results.find((r: any) => r?.error)?.error;
+      if (err) throw err;
+
+      setOnboardingData((prev) => buildDefaultOnboarding({ ...(prev ?? {}), ...data }));
+    } catch (err) {
+      showError("Erro ao atualizar perfil", err);
     }
   };
 
-  const dismissAlert = (id: string) => {
-    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
-  };
+  const dismissAlert = (id: string) =>
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
 
   const addItemHistory = (
-    itemId: string,
-    itemName: string,
+    itemId: string, itemName: string,
     action: "added" | "consumed" | "cooked" | "discarded",
-    quantity: number,
-    unit?: string
+    quantity: number, unit?: string
   ) => {
     setItemHistory((prev) => [
       ...prev,
-      {
-        itemId,
-        itemName,
+      { itemId, itemName, action, quantity, unit,
+        timestamp: new Date(),
+        user: onboardingData?.name || "Usuário" }
+    ]);
+    // Persistência opcional no DB — fire-and-forget
+    if (user && homeId && !itemId.startsWith("demo-")) {
+      void supabase.from("item_history").insert({
+        home_id: homeId,
+        item_id: itemId,
+        item_name: itemName,
         action,
         quantity,
         unit,
-        timestamp: new Date(),
-        user: onboardingData?.name || "Usuário"
-      }
-    ]);
+        user_id: user.id,
+        user_name: onboardingData?.name || null
+      });
+    }
   };
 
-  const refreshData = async () => {
-    await fetchData();
+  const defrostItem = async (id: string) => {
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+    const newExpiration = new Date();
+    newExpiration.setDate(newExpiration.getDate() + 3);
+    await updateItem(id, { location: "fridge", expirationDate: newExpiration });
+    setDefrostTimers((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), itemId: id, itemName: item.name,
+        startedAt: new Date(), estimatedMinutes: 120 }
+    ]);
+    toast({
+      title: language === "pt-BR" ? "Degelo iniciado" : "Defrost started",
+      description: language === "pt-BR"
+        ? `${item.name} movido para a geladeira. Um lembrete será enviado em 2 horas.`
+        : `${item.name} moved to the fridge. Reminder in 2 hours.`
+    });
   };
+
+  const refreshData = async () => { await fetchData(); };
 
   const updateOnboardingData = (data: Partial<OnboardingData>) => {
-    setOnboardingData((prev) => {
-      const next = prev ? { ...prev, ...data } : null;
-      if (next) persistNotificationPrefs(next.notificationPrefs, user?.id);
-      return next;
-    });
-
-    // Auto-save: delegate to `updateProfile` which knows how to split
-    // data across `profiles`, `profile_settings` and `profile_sensitive`.
-    if (user) {
-      updateProfile(data).catch((err) => console.error("Error auto-saving onboarding data:", err));
-    }
+    setOnboardingData((prev) => (prev ? { ...prev, ...data } : null));
+    if (user) updateProfile(data).catch((e) => console.error("auto-save:", e));
   };
 
   return (
     <KazaContext.Provider
       value={{
-        items,
-        shoppingList,
-        consumables,
-        defrostTimers,
-        alerts,
-        onboardingData,
-        isOnboarded: onboarding_completed,
-        onboarding_completed,
-        itemHistory,
-        loading,
-        addItem,
-        updateItem,
-        removeItem,
-        addToShoppingList,
-        toggleShoppingItem,
-        removeFromShoppingList,
+        items, shoppingList, consumables, defrostTimers, alerts,
+        onboardingData, isOnboarded: onboarding_completed, onboarding_completed,
+        itemHistory, loading, homeId,
+        addItem, updateItem, removeItem,
+        addToShoppingList, toggleShoppingItem, removeFromShoppingList,
         updateShoppingItemQuantity,
-        addConsumable,
-        updateConsumable,
-        removeConsumable,
-        clearConsumables,
-        setConsumablesBulk,
-        markAllShoppingComplete,
-        clearAllShoppingList,
-        completeOnboarding,
-        resetOnboarding,
-        updateProfile,
-        updateOnboardingData,
-        defrostItem,
-        dismissAlert,
-        addItemHistory,
+        addConsumable, updateConsumable, removeConsumable,
+        clearConsumables, setConsumablesBulk,
+        markAllShoppingComplete, clearAllShoppingList,
+        completeOnboarding, resetOnboarding, updateProfile, updateOnboardingData,
+        defrostItem, dismissAlert, addItemHistory,
         toggleSection: async (id: string) => {
           if (!onboardingData) return;
-          const currentHidden = onboardingData.hiddenSections || [];
-          const newHidden = currentHidden.includes(id)
-            ? currentHidden.filter(x => x !== id)
-            : [...currentHidden, id];
-          
-          await updateProfile({ hiddenSections: newHidden });
+          const current = onboardingData.hiddenSections || [];
+          const next = current.includes(id)
+            ? current.filter((x) => x !== id)
+            : [...current, id];
+          await updateProfile({ hiddenSections: next });
         },
-        isSectionHidden: (id: string) => onboardingData?.hiddenSections?.includes(id) || false,
+        isSectionHidden: (id: string) =>
+          onboardingData?.hiddenSections?.includes(id) || false,
         refreshData,
-        // Recipe & Planner
-        favoriteRecipes,
-        mealPlan,
-        toggleFavoriteRecipe: async (recipeId: string) => {
-          if (!user) return;
-          const isFav = favoriteRecipes.includes(recipeId);
-          
-          try {
-            if (isFav) {
-              await supabase
-                .from("recipe_favorites")
-                .delete()
-                .eq("user_id", user.id)
-                .eq("recipe_id", recipeId);
-              setFavoriteRecipes(prev => prev.filter(id => id !== recipeId));
-            } else {
-              await supabase
-                .from("recipe_favorites")
-                .insert({ user_id: user.id, recipe_id: recipeId });
-              setFavoriteRecipes(prev => [...prev, recipeId]);
-            }
-          } catch (err) {
-            console.error("Error toggling favorite:", err);
-          }
-        },
-        addToMealPlan: async (entry) => {
-          if (!user) return;
-          try {
-            const { data, error } = await supabase
-              .from("meal_plan")
-              .insert({ ...entry, user_id: user.id })
-              .select()
-              .single();
-            
-            if (error) throw error;
-            if (data) {
-              setMealPlan(prev => [...prev, {
-                id: data.id,
-                recipe_id: data.recipe_id,
-                recipe_name: data.recipe_name,
-                planned_date: data.planned_date,
-                meal_type: data.meal_type as any
-              }]);
-              toast({ title: "Agendado!", description: "Refeição adicionada ao seu plano." });
-            }
-          } catch (err) {
-            console.error("Error adding to meal plan:", err);
-          }
-        },
-        removeFromMealPlan: async (id) => {
-          if (!user) return;
-          try {
-            await supabase.from("meal_plan").delete().eq("id", id);
-            setMealPlan(prev => prev.filter(p => p.id !== id));
-          } catch (err) {
-            console.error("Error removing from meal plan:", err);
-          }
-        }
+        favoriteRecipes, mealPlan,
+        toggleFavoriteRecipe, addToMealPlan, removeFromMealPlan
       }}
     >
       {children}
@@ -1524,8 +1034,6 @@ export function KazaProvider({ children }: { children: ReactNode }) {
 
 export function useKaza() {
   const context = useContext(KazaContext);
-  if (!context) {
-    throw new Error("useKaza must be used within a KazaProvider");
-  }
+  if (!context) throw new Error("useKaza must be used within a KazaProvider");
   return context;
 }

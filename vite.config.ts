@@ -16,10 +16,7 @@ export default defineConfig(({ mode }: { mode: string }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-includeAssets: [
-        "favicon.ico",
-        "favicon-kaza-light.svg",
-        "favicon-kaza-dark.svg",
+      includeAssets: [
         "icons/100.png",
         "icons/152.png",
         "icons/192.png",
@@ -53,30 +50,18 @@ includeAssets: [
         navigateFallbackDenylist: [/^\/api/]
       },
       manifest: {
-        name: "Kaza",
-        short_name: "Kaza",
+        name: "Friggo",
+        short_name: "Friggo",
         description:
           "Tudo o que sua casa precisa, antes de acabar. Geladeira, receitas, lista de compras e mais.",
-        theme_color: "#22c55e",
-        background_color: "#22c55e",
+        theme_color: "#165A52",
+        background_color: "#DAF1DE",
         display: "standalone",
         orientation: "portrait",
         start_url: "/",
         scope: "/",
         categories: ["food", "lifestyle", "utilities"],
         icons: [
-          {
-            src: "icons/100.png",
-            sizes: "100x100",
-            type: "image/png",
-            purpose: "any"
-          },
-          {
-            src: "icons/152.png",
-            sizes: "152x152",
-            type: "image/png",
-            purpose: "any"
-          },
           {
             src: "icons/192.png",
             sizes: "192x192",
@@ -88,6 +73,12 @@ includeAssets: [
             sizes: "512x512",
             type: "image/png",
             purpose: "any"
+          },
+          {
+            src: "icons/512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable"
           }
         ]
       }

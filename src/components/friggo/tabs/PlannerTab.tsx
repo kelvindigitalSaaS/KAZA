@@ -71,6 +71,7 @@ export function PlannerTab() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("weekly");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedWeeklyDate, setSelectedWeeklyDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -124,14 +125,7 @@ export function PlannerTab() {
     <div className="space-y-5 pb-24">
       {/* ── HEADER + VIEW TOGGLE ── */}
       <div className="pt-2 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            Plano de Refeições
-            <div className="rounded-xl bg-primary/10 p-1.5">
-              <CalendarDays className="h-5 w-5 text-primary" />
-            </div>
-          </h1>
-        </div>
+
 
         {/* Segmented Control */}
         <div className="flex p-1 rounded-2xl" style={{ background: "rgba(22,90,82,0.07)" }}>
@@ -164,61 +158,87 @@ export function PlannerTab() {
 
       <AnimatePresence mode="wait">
         {/* ── WEEKLY VIEW ── */}
-        {viewMode === "weekly" && (
-          <motion.div
-            key="weekly"
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 16 }}
-            transition={{ duration: 0.22 }}
-            className="space-y-4"
-          >
-            {weekDays.map((day) => (
-              <div key={day.dateStr} className="space-y-2">
-                {/* Day header */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "flex flex-col items-center justify-center h-12 w-12 rounded-2xl border transition-all shrink-0",
-                      isToday(day.date)
-                        ? "border-primary text-white shadow-md"
-                        : "bg-white dark:bg-white/5 border-black/[0.05] dark:border-white/[0.06] text-muted-foreground"
-                    )}
-                    style={isToday(day.date) ? { background: "#165A52" } : {}}
-                  >
-                    <span className="text-[10px] font-black uppercase leading-none">{day.label}</span>
-                    <span className="text-lg font-bold leading-tight">{day.dayNum}</span>
-                  </div>
-                  <div className="flex-1 h-px bg-black/[0.04] dark:bg-white/[0.06]" />
+        {viewMode === "weekly" && (() => {
+          const activeDayObj = weekDays.find(d => d.dateStr === selectedWeeklyDate) || weekDays[0];
+          
+          return (
+            <motion.div
+              key="weekly"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-6"
+            >
+              {/* Horizontal Days Row */}
+              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                {weekDays.map((day) => {
+                  const isActive = day.dateStr === selectedWeeklyDate;
+                  const recipeCount = day.meals.length;
+
+                  return (
+                    <button
+                      key={day.dateStr}
+                      onClick={() => setSelectedWeeklyDate(day.dateStr)}
+                      className={cn(
+                        "flex flex-col items-center justify-center py-2.5 px-3 min-w-[4.5rem] rounded-2xl border transition-all shrink-0",
+                        isActive
+                          ? "text-white shadow-md border-transparent"
+                          : "bg-white dark:bg-white/5 border-black/[0.05] dark:border-white/[0.06] text-muted-foreground"
+                      )}
+                      style={isActive ? { background: "#165A52" } : {}}
+                    >
+                      <span className="text-[10px] font-black uppercase leading-none mb-1 opacity-80">{day.label}</span>
+                      <span className="text-2xl font-bold leading-none mb-2">{day.dayNum}</span>
+                      {recipeCount > 0 ? (
+                        <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", isActive ? "bg-white/20 text-white" : "bg-primary/20 text-primary")}>
+                          {recipeCount} rec.
+                        </span>
+                      ) : (
+                        <span className="text-[9px] opacity-40 px-1.5 py-0.5">-</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Day Details */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <h3 className="text-lg font-bold text-foreground capitalize">
+                    {activeDayObj.label}, {activeDayObj.dayNum} de {format(activeDayObj.date, "MMM", { locale: ptBR })}
+                  </h3>
                   <button
-                    onClick={() => openAddDialog(day.dateStr)}
-                    className="h-9 w-9 flex items-center justify-center rounded-xl transition-all active:scale-90"
-                    style={{ background: "rgba(22,90,82,0.10)", color: "#165A52" }}
+                    onClick={() => openAddDialog(activeDayObj.dateStr)}
+                    className="h-9 w-9 flex items-center justify-center rounded-xl transition-all active:scale-90 shadow-sm"
+                    style={{ background: "#165A52", color: "white" }}
                   >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
 
-                {day.meals.length === 0 ? (
+                {activeDayObj.meals.length === 0 ? (
                   <div
-                    className="rounded-2xl p-3 text-center border border-dashed"
+                    className="rounded-3xl p-8 text-center border border-dashed flex flex-col items-center"
                     style={{ borderColor: "rgba(22,90,82,0.15)", background: "rgba(22,90,82,0.02)" }}
                   >
-                    <p className="text-xs text-muted-foreground italic">Nenhuma refeição planejada</p>
+                    <ChefHat className="h-10 w-10 mb-3 opacity-20" />
+                    <p className="text-[15px] font-bold text-foreground">Sem refeições</p>
+                    <p className="text-sm text-muted-foreground mt-1 max-w-[200px] leading-snug">Adicione uma receita para o plano deste dia.</p>
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
-                    {day.meals.map((meal) => {
+                  <div className="space-y-2.5">
+                    {activeDayObj.meals.map((meal) => {
                       const config = MEAL_CONFIG[meal.meal_type] || MEAL_CONFIG.lunch;
                       const Icon = config.icon;
                       const recipeData = allRecipes.find((r) => r.id === meal.recipe_id);
                       return (
                         <div
                           key={meal.id}
-                          className="group flex items-center gap-3 bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] p-3 rounded-2xl shadow-sm"
+                          className="group flex flex-row items-center gap-3 bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] p-4 rounded-[1.25rem] shadow-[0_2px_10px_rgb(0,0,0,0.02)]"
                         >
-                          <div className={cn("h-9 w-9 flex items-center justify-center rounded-xl border", config.bg)}>
-                            <Icon className={cn("h-4 w-4", config.color)} />
+                          <div className={cn("h-12 w-12 flex items-center justify-center rounded-2xl", config.bg, "border-0 shadow-inner")}>
+                            <Icon className={cn("h-5 w-5", config.color)} />
                           </div>
                           <div
                             className="flex-1 min-w-0 cursor-pointer"
@@ -227,16 +247,16 @@ export function PlannerTab() {
                                 navigate(`/recipe/${meal.recipe_id}`, { state: { recipe: recipeData } });
                             }}
                           >
-                            <p className={cn("text-[10px] font-black uppercase tracking-wider mb-0.5", config.color)}>
+                            <p className={cn("text-[10px] font-black uppercase tracking-wider mb-1", config.color)}>
                               {config.label}
                             </p>
-                            <p className="text-sm font-bold text-foreground truncate">{meal.recipe_name}</p>
+                            <p className="text-[15px] font-bold text-foreground truncate">{meal.recipe_name}</p>
                           </div>
                           <button
                             onClick={() => removeFromMealPlan(meal.id)}
-                            className="h-8 w-8 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity active:opacity-100"
+                            className="h-10 w-10 flex items-center justify-center rounded-[14px] bg-red-500/10 text-red-500 transition-opacity active:opacity-70"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       );
@@ -244,9 +264,9 @@ export function PlannerTab() {
                   </div>
                 )}
               </div>
-            ))}
-          </motion.div>
-        )}
+            </motion.div>
+          );
+        })()}
 
         {/* ── MONTHLY VIEW ── */}
         {viewMode === "monthly" && (
@@ -390,7 +410,7 @@ export function PlannerTab() {
             className="mt-6 rounded-2xl px-6"
             style={{ background: "#165A52" }}
             onClick={() => {
-              document.querySelector<HTMLButtonElement>('[data-tab="recipes"]')?.click();
+              window.dispatchEvent(new CustomEvent("navigateTab", { detail: "recipes" }));
             }}
           >
             Explorar Receitas
@@ -400,7 +420,7 @@ export function PlannerTab() {
 
       {/* ── Add Meal Dialog ── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl border-white/60 dark:border-white/10 shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl border-white/10 shadow-2xl p-0 overflow-hidden">
           <DialogHeader className="p-6 pb-3">
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               Planejar refeição
@@ -430,22 +450,24 @@ export function PlannerTab() {
                 filteredRecipes.map((recipe) => (
                   <div
                     key={recipe.id}
-                    className="border border-black/[0.04] dark:border-white/[0.06] rounded-2xl bg-white/50 dark:bg-white/[0.02] overflow-hidden"
+                    className="border border-black/[0.04] dark:border-white/[0.08] rounded-3xl bg-white/50 dark:bg-white/[0.02] overflow-hidden shadow-sm"
                   >
-                    <div className="flex items-center gap-3 px-3 py-2.5">
-                      <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-primary/10 shrink-0 shadow-inner">
                         {recipe.image ? (
-                          <img src={recipe.image} className="h-full w-full object-cover rounded-xl" alt="" />
+                          <img src={recipe.image} className="h-full w-full object-cover rounded-2xl" alt="" />
                         ) : (
                           <ChefHat className="h-4 w-4 text-primary" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate">{recipe.name}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{recipe.category}</p>
+                        <p className="text-sm font-bold text-foreground truncate">{recipe.name}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mt-1 opacity-60">
+                          {recipe.category || "Receita"}
+                        </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-1 p-1.5 pt-0">
+                    <div className="grid grid-cols-4 gap-2 px-4 pb-4">
                       {Object.entries(MEAL_CONFIG).map(([type, cfg]) => {
                         const Icon = cfg.icon;
                         return (
@@ -453,13 +475,13 @@ export function PlannerTab() {
                             key={type}
                             onClick={() => handleAddMeal(recipe.id, recipe.name, type)}
                             className={cn(
-                              "h-9 rounded-xl text-[10px] font-black uppercase tracking-tight flex items-center justify-center gap-1 transition-all active:scale-95",
+                              "h-10 rounded-2xl text-[9px] font-black uppercase tracking-tighter flex flex-col items-center justify-center gap-0.5 transition-all active:scale-90 border border-transparent hover:border-current/10",
                               cfg.bg,
                               cfg.color
                             )}
                           >
-                            <Icon className="h-3 w-3" />
-                            {cfg.label}
+                            <Icon className="h-3.5 w-3.5" />
+                            <span>{cfg.label.split(' ')[0]}</span>
                           </button>
                         );
                       })}

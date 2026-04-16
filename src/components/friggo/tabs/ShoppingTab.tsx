@@ -628,38 +628,11 @@ export function ShoppingTab() {
   return (
     <div className="space-y-4 pb-24">
       <div className="flex items-center justify-between pt-2">
-        <div>
+        <div className="hidden">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             {l.title}
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
-              <ShoppingCart className="h-4 w-4 text-primary" />
-            </div>
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            <span className="text-primary font-semibold">{pendingCount}</span>{" "}
-            {l.pending} ·{" "}
-            <span className="text-emerald-500 font-semibold">
-              {completedCount}
-            </span>{" "}
-            {l.bought}
-          </p>
         </div>
-        <button
-          onClick={() => setGroupByCategory(!groupByCategory)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all active:scale-[0.97]",
-            groupByCategory
-              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
-              : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
-          )}
-        >
-          {groupByCategory ? (
-            <LayoutGrid className="h-3.5 w-3.5" />
-          ) : (
-            <LayoutList className="h-3.5 w-3.5" />
-          )}
-          {groupByCategory ? l.groupBy : l.flat}
-        </button>
       </div>
 
       <button
@@ -688,33 +661,32 @@ export function ShoppingTab() {
 
       {/* ── SELECT ALL + GUARDAR LISTA + WHATSAPP ── */}
       {pendingCount > 0 && (
-        <div className="flex gap-2">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-2">
           <button
             onClick={() => {
               const pending = shoppingList.filter(i => !i.isCompleted);
               pending.forEach(i => toggleShoppingItem(i.id));
             }}
-            className="flex items-center justify-center gap-2 h-13 px-4 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-sm font-semibold text-foreground transition-all active:scale-[0.97]"
-            style={{ height: "52px" }}
+            className="flex items-center justify-center gap-1.5 h-[52px] px-3 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-xs font-semibold text-foreground transition-all active:scale-[0.97] whitespace-nowrap"
           >
             <CheckSquare className="h-4 w-4 text-primary" />
-            {l.selectAll}
+            <span className="hidden sm:inline">{l.selectAll}</span>
+            <span className="sm:hidden">Selecionar Tudo</span>
           </button>
           <button
             onClick={handleSaveList}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl text-white text-sm font-bold shadow-sm transition-all active:scale-[0.97]"
-            style={{ height: "52px", background: "#165A52", boxShadow: "0 4px 16px rgba(22,90,82,0.25)" }}
+            className="flex items-center justify-center h-[52px] w-[52px] min-w-[52px] rounded-2xl text-white shadow-sm transition-all active:scale-[0.97]"
+            style={{ background: "#165A52", boxShadow: "0 4px 16px rgba(22,90,82,0.25)" }}
+            title={l.payList}
           >
-            <Save className="h-4 w-4" />
-            {l.payList}
+            <Save className="h-5 w-5" />
           </button>
           <button
             onClick={handleShareWhatsApp}
-            className="flex items-center justify-center rounded-2xl border border-black/[0.06] bg-white/80 dark:bg-white/5 transition-all active:scale-[0.97]"
-            style={{ height: "52px", width: "52px", minWidth: "52px" }}
+            className="flex items-center justify-center h-[52px] w-[52px] min-w-[52px] rounded-2xl border border-black/[0.06] bg-white/80 dark:bg-white/5 transition-all active:scale-[0.97]"
             title={l.shareWhatsApp}
           >
-            <Share2 className="h-4 w-4 text-green-600" />
+            <Share2 className="h-5 w-5 text-[#25D366]" />
           </button>
         </div>
       )}
@@ -745,17 +717,17 @@ export function ShoppingTab() {
               {l.confirmDeleteAll}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex gap-3 sm:flex-row">
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowDeleteDialog(false)}>
+          <DialogFooter className="flex flex-row gap-2 mt-2 w-full justify-center">
+            <Button variant="outline" className="flex-1 h-12 rounded-xl text-xs sm:text-sm font-semibold" onClick={() => setShowDeleteDialog(false)}>
               {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Cancelar'}
             </Button>
-            <Button variant="destructive" className="flex-1 rounded-xl" onClick={() => {
+            <Button variant="destructive" className="flex-1 h-12 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-destructive/20" onClick={() => {
               clearAllShoppingList();
               toast.success(l.allDeleted);
               setShowDeleteDialog(false);
             }}>
-              <Trash2 className="h-4 w-4 mr-1.5" />
-              {l.deleteAll}
+              <Trash2 className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">{l.deleteAll}</span>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -816,8 +788,9 @@ export function ShoppingTab() {
         )}
       </div>
 
-      {!groupByCategory && (
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between mt-2">
+        {!groupByCategory && (
+          <div className="flex items-center gap-2 flex-wrap">
           {/* Todos chip — always visible */}
           <button
             onClick={() => setActiveFilter("all")}
@@ -874,7 +847,25 @@ export function ShoppingTab() {
             </button>
           )}
         </div>
-      )}
+        )}
+
+        <button
+          onClick={() => setGroupByCategory(!groupByCategory)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-all active:scale-[0.97]",
+            groupByCategory
+              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
+              : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
+          )}
+        >
+          {groupByCategory ? (
+            <LayoutGrid className="h-3.5 w-3.5" />
+          ) : (
+            <LayoutList className="h-3.5 w-3.5" />
+          )}
+          {groupByCategory ? l.groupBy : l.flat}
+        </button>
+      </div>
 
       {filteredList.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">

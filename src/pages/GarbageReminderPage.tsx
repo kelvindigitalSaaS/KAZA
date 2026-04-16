@@ -7,16 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useKaza } from "@/contexts/FriggoContext";
-import {
-  Trash2,
-  Bell,
-  Clock,
-  MapPin,
-  Calendar,
-  Building2,
-  Home,
-  ArrowLeft
-} from "lucide-react";
+import { AlarmClock, ArrowLeft, Bell, Building2, Calendar, Check, Clock, Home, MapPin, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/PageTransition";
 import {
@@ -337,13 +328,21 @@ export default function GarbageReminderPage() {
           </div>
         )}
 
-        <Button
-          onClick={() => navigate(-1)}
-          className="w-full h-16 rounded-2xl text-lg font-bold shadow-xl shadow-primary/25 mt-6"
-        >
-          {l.save}
-        </Button>
       </main>
+
+      {/* ── Floating Save Button ── */}
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#fafafa] dark:from-[#0a0a0a] to-transparent z-40 pointer-events-none pb-safe">
+        <div className="max-w-lg mx-auto pointer-events-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-full flex items-center justify-center h-14 rounded-2xl text-white text-[15px] font-bold shadow-lg shadow-primary/25 transition-all active:scale-[0.98]"
+            style={{ background: "#165A52" }}
+          >
+            <Check className="h-5 w-5 mr-2" />
+            {l.save}
+          </button>
+        </div>
+      </div>
     </PageTransition>
   );
 }

@@ -104,17 +104,19 @@ export default function SubscriptionPage() {
   const isTrial = subscription?.plan === "premium" && trialDaysRemaining > 0;
   const planName = isTrial ? l.premiumTrial : (subscription?.plan === "premium" ? l.premium : l.free);
 
+  const [showHistory, setShowHistory] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] pb-10">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] pb-10 font-sans text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.06] px-4 h-16 flex items-center gap-4">
+      <header className="sticky top-0 z-50 bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.06] px-4 h-16 flex items-center gap-4">
         <button 
           onClick={() => navigate(-1)}
-          className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted/50 text-foreground transition-all active:scale-90"
+          className="h-10 w-10 flex items-center justify-center rounded-xl bg-black/5 dark:bg-white/5 text-foreground transition-all active:scale-90 hover:bg-black/10 dark:hover:bg-white/10"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-lg font-bold text-foreground">{l.title}</h1>
+        <h1 className="text-lg font-bold text-foreground tracking-wide">{l.title}</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-6 space-y-6">
@@ -122,30 +124,30 @@ export default function SubscriptionPage() {
         <motion.section 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-[2.5rem] bg-white dark:bg-white/5 border border-black/[0.04] dark:border-white/[0.06] p-6 shadow-sm relative overflow-hidden"
+          className="rounded-[2.5rem] bg-white dark:bg-[#111] border border-black/[0.04] dark:border-white/10 p-6 shadow-xl relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
           
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Crown className="h-8 w-8 text-primary" />
+          <div className="flex items-center gap-4 mb-6 relative">
+            <div className="h-14 w-14 rounded-2xl bg-black/5 dark:bg-white/10 flex items-center justify-center backdrop-blur-md shadow-inner">
+              <Crown className="h-8 w-8 text-purple-500 drop-shadow-md" />
             </div>
             <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{l.status}</p>
-              <h2 className="text-2xl font-black text-foreground flex items-center gap-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{l.status}</p>
+              <h2 className="text-2xl font-black text-foreground flex items-center gap-2 tracking-tight">
                 {planName}
                 {subscription?.isActive && (
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)] animate-pulse" />
                 )}
               </h2>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex justify-between items-center py-3 border-b border-black/[0.04] dark:border-white/[0.06]">
+          <div className="space-y-4 relative">
+            <div className="flex justify-between items-center py-3 border-b border-black/[0.04] dark:border-white/10">
               <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">{l.memberSince}</span>
+                <Calendar className="h-4.5 w-4.5 text-muted-foreground" />
+                <span className="text-sm font-semibold text-muted-foreground">{l.memberSince}</span>
               </div>
               <span className="text-sm font-bold text-foreground">
                 {registrationDate ? new Date(registrationDate).toLocaleDateString(language) : "-"}
@@ -154,14 +156,54 @@ export default function SubscriptionPage() {
             
             <div className="flex justify-between items-center py-1">
               <div className="flex items-center gap-3">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm font-medium text-foreground">{l.active}</span>
+                <ShieldCheck className="h-4.5 w-4.5 text-emerald-500" />
+                <span className="text-sm font-semibold text-foreground">{l.active}</span>
               </div>
-              <span className="text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full uppercase tracking-wider">
+              <span className="text-xs font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 px-3 py-1.5 rounded-full uppercase tracking-wider border border-purple-500/20">
                 {subscription?.plan === 'premium' ? 'Premium' : 'Trial'}
               </span>
             </div>
           </div>
+        </motion.section>
+
+        {/* Payment History Hideable */}
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] flex items-center gap-2">
+              <History className="h-4 w-4" /> {l.paymentHistory}
+            </h3>
+            <button onClick={() => setShowHistory(!showHistory)} className="text-muted-foreground hover:text-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye">
+                {showHistory ? (
+                   <>
+                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                     <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                     <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                     <line x1="2" x2="22" y1="2" y2="22" />
+                   </>
+                ) : (
+                  <>
+                    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                    <circle cx="12" cy="12" r="3" />
+                  </>
+                )}
+              </svg>
+            </button>
+          </div>
+          
+          {showHistory && (
+            <div className="rounded-[2.5rem] bg-white dark:bg-[#111] border border-black/[0.04] dark:border-white/10 p-8 text-center shadow-inner animate-fade-in">
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5 mb-4 shadow-sm">
+                <CreditCard className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-bold text-muted-foreground">{l.noHistory}</p>
+            </div>
+          )}
         </motion.section>
 
         {/* Upgrade Card (High Impact) */}
@@ -169,52 +211,52 @@ export default function SubscriptionPage() {
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="rounded-[2.5rem] bg-[#111] dark:bg-white/[0.03] p-8 text-white shadow-2xl relative overflow-hidden group border border-white/10"
+            transition={{ delay: 0.2 }}
+            className="rounded-[2.5rem] bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-600 p-8 text-white shadow-2xl relative overflow-hidden group border border-purple-400/30"
           >
             {/* Background Effects */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/30 transition-colors duration-1000" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-fuchsia-300/30 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 group-hover:bg-fuchsia-300/50 transition-colors duration-1000" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-900/40 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
             
             <div className="relative">
               <div className="flex items-center justify-between mb-8">
-                <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[2px] text-primary border border-primary/20">
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-xl px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-[2px] text-white shadow-sm border border-white/20">
                   <Sparkles className="h-3 w-3" /> {l.premium}
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Investimento</p>
-                  <p className="text-2xl font-black text-white">{l.priceTag}</p>
+                  <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest leading-none mb-1">Investimento</p>
+                  <p className="text-3xl font-black tracking-tight text-white">{l.priceTag}</p>
                 </div>
               </div>
               
               <h3 className="text-3xl font-black leading-tight mb-3 tracking-tighter">
                 {l.upgradeTitle}
               </h3>
-              <p className="text-white/60 text-sm font-medium mb-8 leading-relaxed max-w-[280px]">
+              <p className="text-white/80 text-[15px] font-bold mb-8 leading-relaxed max-w-[280px]">
                 {l.upgradeDesc}
               </p>
 
               <div className="grid gap-4 mb-10">
                 {l.benefits.map((benefit, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 border border-primary/20">
-                      <CheckCircle2 className="h-3 w-3 text-primary" />
+                    <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center shrink-0 shadow-inner">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
                     </div>
-                    <span className="text-sm font-bold text-white/80">{benefit}</span>
+                    <span className="text-[15px] font-bold leading-snug">{benefit}</span>
                   </div>
                 ))}
               </div>
 
               <Button 
                 onClick={() => window.open(checkoutUrl, "_blank")}
-                className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 border-b-4 border-black/20"
+                className="w-full h-16 rounded-2xl bg-white text-purple-700 font-black text-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/20"
               >
                 {l.getStarted}
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-6 w-6" />
               </Button>
               
-              <p className="text-[10px] text-center text-white/30 font-bold uppercase tracking-widest mt-6">
-                Acesso imediato após confirmação do PIX
+              <p className="text-[11px] text-center text-white/60 font-black uppercase tracking-widest mt-6">
+                Acesso imediato após confirmação
               </p>
             </div>
           </motion.section>
@@ -224,60 +266,30 @@ export default function SubscriptionPage() {
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-[2rem] bg-white dark:bg-white/5 border border-black/[0.04] dark:border-white/[0.06] p-6 shadow-sm"
+          transition={{ delay: 0.3 }}
+          className="rounded-[2.5rem] bg-white dark:bg-[#111] border border-black/[0.04] dark:border-white/10 p-8 shadow-sm flex flex-col items-center text-center"
         >
-          <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <Lock className="h-6 w-6 text-emerald-500" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-base font-black text-foreground mb-1">{l.securityTitle}</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed font-medium mb-4">
-                {l.securityDesc}
-              </p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 bg-white/50 dark:bg-white/5 p-3 rounded-lg border border-primary/10">
-                  <img
-                    src="https://app.cakto.com.br/logo/green-text-logo-transparent-background-login.png"
-                    alt="Cakto Safe Pay"
-                    className="h-5 object-contain"
-                  />
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 bg-primary/5 px-2.5 py-1.5 rounded-md border border-primary/10">
-                    <Zap className="h-3 w-3 text-primary" />
-                    <span className="text-[10px] font-black text-primary uppercase">PIX Mensal</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-emerald-500/5 px-2.5 py-1.5 rounded-md border border-emerald-500/10">
-                    <CreditCard className="h-3 w-3 text-emerald-600" />
-                    <span className="text-[10px] font-black text-emerald-600 uppercase">Cartão de Crédito</span>
-                  </div>
-                </div>
+          <div className="h-16 w-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center shrink-0 shadow-inner mb-4">
+            <Lock className="h-8 w-8 text-emerald-500 drop-shadow-sm" />
+          </div>
+          <div>
+            <h4 className="text-lg font-black text-foreground mb-1.5">{l.securityTitle}</h4>
+            <p className="text-xs text-muted-foreground leading-relaxed font-semibold mb-6 max-w-[250px] mx-auto">
+              {l.securityDesc}
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 shadow-sm">
+                <Zap className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">PIX Mensal</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20 shadow-sm">
+                <CreditCard className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider">Cartões</span>
               </div>
             </div>
-          </div>
-        </motion.section>
-
-        {/* Payment History */}
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-4"
-        >
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-1 flex items-center gap-2">
-            <History className="h-3.5 w-3.5" /> {l.paymentHistory}
-          </h3>
-          
-          <div className="rounded-[2rem] bg-white dark:bg-white/5 border border-black/[0.04] dark:border-white/[0.06] p-8 text-center shadow-sm">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted/60 mb-4">
-              <CreditCard className="h-8 w-8 text-muted-foreground/40" />
-            </div>
-            <p className="text-sm font-bold text-muted-foreground">{l.noHistory}</p>
           </div>
         </motion.section>
       </main>
     </div>
   );
-}
+

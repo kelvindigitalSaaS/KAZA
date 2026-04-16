@@ -70,6 +70,17 @@ function KazaApp() {
     } catch {}
   }, [activeTab]);
 
+  useEffect(() => {
+    const handleNavigateTab = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail && TAB_ORDER.includes(customEvent.detail)) {
+        handleTabChange(customEvent.detail);
+      }
+    };
+    window.addEventListener("navigateTab", handleNavigateTab);
+    return () => window.removeEventListener("navigateTab", handleNavigateTab);
+  }, [handleTabChange]);
+
   // Verificar autenticação
   useEffect(() => {
     if (!authLoading) {
@@ -137,32 +148,5 @@ function KazaApp() {
 }
 
 export default function Index() {
-  const { user, loading } = useAuth();
-  const [showLoading, setShowLoading] = useState(false);
-  const hasShownLoading = useRef(false);
-
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (loading && !hasShownLoading.current) {
-      timeout = setTimeout(() => setShowLoading(true), 300);
-    } else {
-      setShowLoading(false);
-    }
-    return () => clearTimeout(timeout);
-  }, [loading]);
-
-  if (loading && !hasShownLoading.current && showLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (!loading) {
-    hasShownLoading.current = true;
-  }
-
-  // Redirect to auth if not logged in
-  if (!user && !loading) {
-    return <Navigate to="/auth" replace />;
-  }
-
   return <KazaApp />;
 }
