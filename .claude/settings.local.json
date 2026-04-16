@@ -4,7 +4,9 @@
       "Bash(grep -E \"\\\\.tsx$\")",
       "Bash(npx tsc *)",
       "Bash(sed 's/ .*//')",
-      "Bash(grep -l \"meal_plan\\\\|recipe_favorite\" \"c:/Users/PC/Desktop/friggo/friggo/supabase/migrations\"/*.sql)"
+      "Bash(grep -l \"meal_plan\\\\|recipe_favorite\" \"c:/Users/PC/Desktop/friggo/friggo/supabase/migrations\"/*.sql)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: load saved CPF and profile data in onboarding flow *)"
     ]
   }
 }
