@@ -173,18 +173,35 @@ export function useGroupMembers() {
         });
 
         if (error) {
-          const errorMsg = typeof error === "object" ? error.message : String(error);
-          toast.error(errorMsg || "Erro ao enviar convite");
+          let errorMsg = "Erro ao enviar convite";
+
+          if (typeof error === "object") {
+            if (error.message) {
+              if (error.message.includes("Unauthorized")) {
+                errorMsg = "Você não tem permissão para enviar convites";
+              } else if (error.message.includes("group not found")) {
+                errorMsg = "Grupo não encontrado";
+              } else if (error.message.includes("já foi convidado")) {
+                errorMsg = "Este email já foi convidado para este grupo";
+              } else {
+                errorMsg = error.message;
+              }
+            }
+          } else if (typeof error === "string") {
+            errorMsg = error;
+          }
+
+          toast.error(errorMsg);
           console.error("Error sending invite:", error);
           return false;
         }
 
         if (!data || !data.success) {
-          toast.error("Erro ao enviar convite");
+          toast.error("Erro ao enviar convite. Tente novamente.");
           return false;
         }
 
-        toast.success(`Convite enviado para ${email}`);
+        toast.success(`Email enviado com sucesso para ${email}! ✓`);
         return true;
       } catch (err) {
         console.error("Error sending invite:", err);

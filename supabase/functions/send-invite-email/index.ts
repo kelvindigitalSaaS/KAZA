@@ -83,8 +83,9 @@ serve(async (req) => {
       .single();
 
     if (groupError || !group) {
+      const errorMsg = groupError?.message || "Você não tem permissão para enviar convites neste grupo";
       return new Response(
-        JSON.stringify({ error: "Unauthorized or group not found" }),
+        JSON.stringify({ error: errorMsg }),
         {
           status: 403,
           headers: {
@@ -106,7 +107,7 @@ serve(async (req) => {
 
     if (existingInvite) {
       return new Response(
-        JSON.stringify({ error: "Este email já foi convidado para este grupo" }),
+        JSON.stringify({ error: `Este email (${invited_email}) já foi convidado para este grupo. Aguarde a resposta ou envie um novo convite em 7 dias.` }),
         {
           status: 400,
           headers: {
