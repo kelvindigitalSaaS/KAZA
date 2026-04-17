@@ -24,9 +24,10 @@ export function useAuthGuard() {
     return () => clearInterval(interval);
   }, [loading, requireAuth]);
 
-  // Redirecionar se não estiver autenticado
+  // Redirecionar se não estiver autenticado — apenas em rotas /app/*
   useEffect(() => {
-    if (!loading && !user && window.location.pathname !== "/auth") {
+    const path = window.location.pathname;
+    if (!loading && !user && path.startsWith("/app") && path !== "/auth") {
       window.location.href = "/auth";
     }
   }, [user, loading]);

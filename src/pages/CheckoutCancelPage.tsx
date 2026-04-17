@@ -128,14 +128,14 @@ export default function CheckoutCancelPage() {
           {/* Action Buttons */}
           <div className="w-full space-y-2">
             <Button
-              onClick={() => navigate("/plans")}
+              onClick={() => navigate("/app/settings/subscription")}
               className="w-full h-12 rounded-xl font-bold text-base shadow-lg"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               {l.retry}
             </Button>
             <Button
-              onClick={() => navigate("/index")}
+              onClick={() => navigate("/app/home")}
               variant="outline"
               className="w-full h-12 rounded-xl font-bold text-base"
             >

@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sentry } from "@/lib/sentry";
 import { OfflineOverlay } from "@/components/friggo/OfflineOverlay";
 import PWAInstallGuide from "@/components/friggo/PWAInstallGuide";
+import { AccountSessionTracker } from "@/components/friggo/AccountSessionTracker";
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -140,44 +141,36 @@ function ProtectedRoute({ element, allowLocked = false, allowOnboarding = false 
   }
 
   if (isLocked && !allowLocked) {
-    return <Navigate to="/?subscription=open" replace />;
+    return <Navigate to="/app/home?subscription=open" replace />;
   }
 
   // Mandatory Onboarding Flow
-  if (isOnboarded !== undefined && !isOnboarded && !allowOnboarding && window.location.pathname !== "/") {
-    return <Navigate to="/" replace />;
+  if (isOnboarded !== undefined && !isOnboarded && !allowOnboarding && window.location.pathname !== "/app/home") {
+    return <Navigate to="/app/home" replace />;
   }
 
   return element;
 }
 
-/** Rotas públicas acessíveis sem sessão (ex.: retorno da Cakto após pagamento) */
-const PUBLIC_PATHS = ["/auth", "/sucesso", "/success", "/pagina-de-vendas", "/pagina-de-vendas/termos-de-uso", "/pagina-de-vendas/privacidade"];
-function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
-}
-
-/** Wrapper que verifica autenticação em cada render */
+/** Wrapper que verifica autenticação apenas para rotas /app/* */
 function AuthGuard({ children }: { children: ReactNode }) {
   const { user, loading, requireAuth } = useAuth();
 
   useEffect(() => {
-    // Verificar autenticação a cada 30 segundos
     const checkAuth = () => {
-      if (!loading && !isPublicPath(window.location.pathname)) {
+      if (!loading && window.location.pathname.startsWith("/app")) {
         requireAuth();
       }
     };
 
     const interval = setInterval(checkAuth, 30000);
-    checkAuth(); // Verificar imediatamente
+    checkAuth();
 
     return () => clearInterval(interval);
   }, [loading, requireAuth]);
 
-  // Se não está carregando e não tem usuário, redirecionar — exceto em rotas públicas
   useEffect(() => {
-    if (!loading && !user && !isPublicPath(window.location.pathname)) {
+    if (!loading && !user && window.location.pathname.startsWith("/app")) {
       window.location.href = "/auth";
     }
   }, [user, loading]);
@@ -251,121 +244,111 @@ const App = () => {
                   <TooltipProvider>
                     <OfflineOverlay />
                     <PWAInstallGuide />
+                    <AccountSessionTracker />
                     <Toaster />
                     <Sonner />
                     <BrowserRouter future={{ v7_relativeSplatPath: true }}>
                       <AuthGuard>
                         <Suspense fallback={<PageSkeleton />}>
                           <Routes>
-                            <Route
-                              path="/"
-                              element={<ProtectedRoute element={<Index />} />}
-                            />
+                            {/* Raiz pública — exibe a página de vendas */}
+                            <Route path="/" element={<SalesPage />} />
+
+                            {/* Páginas públicas */}
                             <Route path="/auth" element={<Auth />} />
-                            <Route
-                              path="/checkout"
-                              element={<ProtectedRoute element={<Checkout />} />}
-                            />
-                            <Route
-                              path="/monthly-report"
-                              element={
-                                <ProtectedRoute element={<MonthlyReportPage />} />
-                              }
-                            />
-                            <Route
-                              path="/night-checkup"
-                              element={
-                                <ProtectedRoute element={<NightCheckupPage />} />
-                              }
-                            />
-                            <Route
-                              path="/plans"
-                              element={<Navigate to="/settings/subscription" replace />}
-                            />
-                            <Route
-                              path="/trio-setup"
-                              element={<ProtectedRoute element={<TrioSetupPage />} />}
-                            />
-                            <Route
-                              path="/checkout/success"
-                              element={
-                                <ProtectedRoute element={<CheckoutSuccessPage />} allowLocked={true} />
-                              }
-                            />
-                            <Route
-                              path="/checkout/cancel"
-                              element={
-                                <ProtectedRoute element={<CheckoutCancelPage />} allowLocked={true} />
-                              }
-                            />
-                            <Route
-                              path="/add-item"
-                              element={<ProtectedRoute element={<AddItemPage />} />}
-                            />
-                            <Route
-                              path="/consume/:itemId"
-                              element={<ProtectedRoute element={<ConsumePage />} />}
-                            />
-                            <Route
-                              path="/recipe/:recipeId"
-                              element={<ProtectedRoute element={<RecipePage />} />}
-                            />
-                            <Route
-                              path="/consumables"
-                              element={
-                                <ProtectedRoute
-                                  element={<ConsumableTrackerPage />}
-                                />
-                              }
-                            />
-                            <Route
-                              path="/notifications"
-                              element={
-                                <ProtectedRoute element={<NotificationsPage />} />
-                              }
-                            />
-                            <Route
-                              path="/profile"
-                              element={<ProtectedRoute element={<ProfilePage />} />}
-                            />
-                            <Route
-                              path="/activity-history"
-                              element={<ProtectedRoute element={<HistoryPage />} />}
-                            />
-                            <Route
-                              path="/garbage-reminder"
-                              element={
-                                <ProtectedRoute element={<GarbageReminderPage />} />
-                              }
-                            />
-                            {/* Público: Cakto redireciona após pagamento; usuário pode não estar autenticado. */}
                             <Route path="/sucesso" element={<SuccessPage />} />
                             <Route path="/success" element={<SuccessPage />} />
-                            <Route
-                              path="/settings/subscription"
-                              element={<ProtectedRoute element={<SubscriptionPage />} />}
-                            />
                             <Route path="/pagina-de-vendas" element={<SalesPage />} />
                             <Route path="/pagina-de-vendas/termos-de-uso" element={<SalesTermsPage />} />
                             <Route path="/pagina-de-vendas/privacidade" element={<SalesPrivacyPage />} />
+
+                            {/* App interno — todas as rotas protegidas sob /app */}
                             <Route
-                              path="/settings/subscription/manage"
+                              path="/app/home"
+                              element={<ProtectedRoute element={<Index />} />}
+                            />
+                            <Route
+                              path="/app/checkout"
+                              element={<ProtectedRoute element={<Checkout />} />}
+                            />
+                            <Route
+                              path="/app/monthly-report"
+                              element={<ProtectedRoute element={<MonthlyReportPage />} />}
+                            />
+                            <Route
+                              path="/app/night-checkup"
+                              element={<ProtectedRoute element={<NightCheckupPage />} />}
+                            />
+                            <Route
+                              path="/app/plans"
+                              element={<Navigate to="/app/settings/subscription" replace />}
+                            />
+                            <Route
+                              path="/app/trio-setup"
+                              element={<ProtectedRoute element={<TrioSetupPage />} />}
+                            />
+                            <Route
+                              path="/app/checkout/success"
+                              element={<ProtectedRoute element={<CheckoutSuccessPage />} allowLocked={true} />}
+                            />
+                            <Route
+                              path="/app/checkout/cancel"
+                              element={<ProtectedRoute element={<CheckoutCancelPage />} allowLocked={true} />}
+                            />
+                            <Route
+                              path="/app/add-item"
+                              element={<ProtectedRoute element={<AddItemPage />} />}
+                            />
+                            <Route
+                              path="/app/consume/:itemId"
+                              element={<ProtectedRoute element={<ConsumePage />} />}
+                            />
+                            <Route
+                              path="/app/recipe/:recipeId"
+                              element={<ProtectedRoute element={<RecipePage />} />}
+                            />
+                            <Route
+                              path="/app/consumables"
+                              element={<ProtectedRoute element={<ConsumableTrackerPage />} />}
+                            />
+                            <Route
+                              path="/app/notifications"
+                              element={<ProtectedRoute element={<NotificationsPage />} />}
+                            />
+                            <Route
+                              path="/app/profile"
+                              element={<ProtectedRoute element={<ProfilePage />} />}
+                            />
+                            <Route
+                              path="/app/activity-history"
+                              element={<ProtectedRoute element={<HistoryPage />} />}
+                            />
+                            <Route
+                              path="/app/garbage-reminder"
+                              element={<ProtectedRoute element={<GarbageReminderPage />} />}
+                            />
+                            <Route
+                              path="/app/settings/subscription"
+                              element={<ProtectedRoute element={<SubscriptionPage />} />}
+                            />
+                            <Route
+                              path="/app/settings/subscription/manage"
                               element={<ProtectedRoute element={<SubscriptionsManagePage />} />}
                             />
                             <Route
-                              path="/settings/install"
+                              path="/app/settings/install"
                               element={<ProtectedRoute element={<InstallGuidePage />} />}
                             />
                             <Route
-                              path="/settings/faq"
+                              path="/app/settings/faq"
                               element={<ProtectedRoute element={<FAQPage />} />}
                             />
                             <Route
-                              path="/settings/privacy"
+                              path="/app/settings/privacy"
                               element={<ProtectedRoute element={<PrivacyPage />} />}
                             />
                             <Route
-                              path="/plan/meal-planner"
+                              path="/app/plan/meal-planner"
                               element={<ProtectedRoute element={<MealPlannerPage />} />}
                             />
                             <Route path="*" element={<NotFound />} />

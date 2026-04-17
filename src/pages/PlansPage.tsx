@@ -278,7 +278,7 @@ export default function PlansPage() {
             {/* CTA */}
             <button
               onClick={() => {
-                if (!isPremium) navigate("/trio-setup");
+                if (!isPremium) navigate("/app/trio-setup");
               }}
               disabled={isPremium}
               className={cn(

@@ -85,7 +85,7 @@ export function PlannerTab() {
   });
 
   const openAddDialog = (dateStr: string) => {
-    navigate(`/plan/meal-planner?date=${dateStr}`);
+    navigate(`/app/plan/meal-planner?date=${dateStr}`);
   };
 
   return (
@@ -211,7 +211,7 @@ export function PlannerTab() {
                             className="flex-1 min-w-0 cursor-pointer"
                             onClick={() => {
                               if (recipeData)
-                                navigate(`/recipe/${meal.recipe_id}`, { state: { recipe: recipeData } });
+                                navigate(`/app/recipe/${meal.recipe_id}`, { state: { recipe: recipeData } });
                             }}
                           >
                             <p className={cn("text-[10px] font-black uppercase tracking-wider mb-1", config.color)}>

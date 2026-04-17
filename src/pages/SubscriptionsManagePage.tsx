@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountSession } from "@/hooks/useAccountSession";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
   Crown,
@@ -19,24 +20,28 @@ import {
   ArrowRight,
   History,
   ArrowUpRight,
+  Wifi,
+  WifiOff,
+  LogOut,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CAKTO_LOGO =
   "https://app.cakto.com.br/logo/green-logo-transparent-background.png";
 
-type PlanId = "individual" | "trio";
+type PlanId = "individualPRO" | "multiPRO";
 
-const PLANS: Record<PlanId, { url: string; screens: number; price: string; period: string }> = {
-  individual: {
+const PLANS: Record<PlanId, { url: string; maxAccounts: number; price: string; period: string }> = {
+  individualPRO: {
     url: "https://pay.cakto.com.br/356go8z",
-    screens: 1,
+    maxAccounts: 1,
     price: "R$ 14,99",
     period: "/mês",
   },
-  trio: {
+  multiPRO: {
     url: "https://pay.cakto.com.br/wbjq4ne_846287",
-    screens: 3,
+    maxAccounts: 3,
     price: "R$ 27,00",
     period: "/mês",
   },
@@ -47,85 +52,136 @@ const labels = {
     title: "Gerenciar assinatura",
     currentPlan: "Seu plano atual",
     active: "Ativo",
-    trial: "Em período de teste",
+    trial: "Período de teste multiPRO",
     free: "Grátis",
     availablePlans: "Planos disponíveis",
-    availableDesc: "Escolha o plano ideal ou atualize o seu atual.",
+    availableDesc: "Escolha o plano ideal para você.",
     upgradeOnly: "Você tem um plano ativo — só pode trocar para o outro plano.",
-    individual: "Individual",
-    trio: "Trio",
-    screen: "tela",
-    screens: "telas",
+    individualPRO: "individualPRO",
+    multiPRO: "multiPRO",
+    account: "conta",
+    accounts: "contas",
     mostPopular: "Mais popular",
     current: "Plano atual",
     subscribe: "Assinar agora",
     upgrade: "Atualizar para este plano",
-    benefits: [
-      "Itens e receitas ilimitadas",
+    individualFeatures: [
+      "1 conta individual",
+      "Itens e receitas ilimitados",
+      "Lista de compras ilimitada",
       "Alertas inteligentes sem restrição",
       "Planejador de refeições semanal",
       "Histórico completo de consumo",
+    ],
+    multiFeatures: [
+      "Até 3 sub-contas no mesmo plano",
+      "Geladeira e estoque compartilhados",
+      "Lista de compras em tempo real",
+      "Notificações independentes por conta",
+      "Notificar outros membros da casa",
+      "Conta mestre gerencia acessos",
     ],
     security: "Pagamento seguro via Cakto",
     securityDesc: "Seus dados estão 100% protegidos. PIX e cartões.",
     paymentHistory: "Histórico de pagamentos",
     noHistory: "Nenhum pagamento registrado ainda.",
+    groupMembers: "Membros do seu grupo",
+    online: "online",
+    offline: "offline",
+    disconnect: "Desconectar",
+    reconnect: "Reconectar",
+    masterBadge: "Conta mestre",
+    youBadge: "Você",
   },
   en: {
     title: "Manage subscription",
     currentPlan: "Your current plan",
     active: "Active",
-    trial: "Trial period",
+    trial: "multiPRO trial period",
     free: "Free",
     availablePlans: "Available plans",
-    availableDesc: "Pick the ideal plan or upgrade your current one.",
+    availableDesc: "Pick the ideal plan for you.",
     upgradeOnly: "You have an active plan — you can only switch to the other plan.",
-    individual: "Individual",
-    trio: "Trio",
-    screen: "screen",
-    screens: "screens",
+    individualPRO: "individualPRO",
+    multiPRO: "multiPRO",
+    account: "account",
+    accounts: "accounts",
     mostPopular: "Most popular",
     current: "Current plan",
     subscribe: "Subscribe now",
     upgrade: "Upgrade to this plan",
-    benefits: [
+    individualFeatures: [
+      "1 individual account",
       "Unlimited items and recipes",
+      "Unlimited shopping list",
       "Unrestricted smart alerts",
       "Weekly meal planner",
       "Full consumption history",
+    ],
+    multiFeatures: [
+      "Up to 3 sub-accounts in one plan",
+      "Shared fridge and pantry",
+      "Real-time shopping list",
+      "Independent notifications per account",
+      "Notify other household members",
+      "Master account manages access",
     ],
     security: "Secure payment via Cakto",
     securityDesc: "Your data is 100% protected. PIX and cards.",
     paymentHistory: "Payment history",
     noHistory: "No payment history yet.",
+    groupMembers: "Your group members",
+    online: "online",
+    offline: "offline",
+    disconnect: "Disconnect",
+    reconnect: "Reconnect",
+    masterBadge: "Master account",
+    youBadge: "You",
   },
   es: {
     title: "Administrar suscripción",
     currentPlan: "Tu plan actual",
     active: "Activo",
-    trial: "Período de prueba",
+    trial: "Período de prueba multiPRO",
     free: "Gratis",
     availablePlans: "Planes disponibles",
-    availableDesc: "Elige el plan ideal o actualiza el actual.",
+    availableDesc: "Elige el plan ideal para ti.",
     upgradeOnly: "Tienes un plan activo — solo puedes cambiar al otro plan.",
-    individual: "Individual",
-    trio: "Trío",
-    screen: "pantalla",
-    screens: "pantallas",
+    individualPRO: "individualPRO",
+    multiPRO: "multiPRO",
+    account: "cuenta",
+    accounts: "cuentas",
     mostPopular: "Más popular",
     current: "Plan actual",
     subscribe: "Suscribirse",
     upgrade: "Actualizar a este plan",
-    benefits: [
+    individualFeatures: [
+      "1 cuenta individual",
       "Items y recetas ilimitados",
+      "Lista de compras ilimitada",
       "Alertas inteligentes sin restricción",
       "Planificador semanal de comidas",
       "Historial completo de consumo",
+    ],
+    multiFeatures: [
+      "Hasta 3 sub-cuentas en un plan",
+      "Heladera y despensa compartidas",
+      "Lista de compras en tiempo real",
+      "Notificaciones independientes por cuenta",
+      "Notificar a otros miembros del hogar",
+      "Cuenta maestra gestiona accesos",
     ],
     security: "Pago seguro vía Cakto",
     securityDesc: "Tus datos están 100% protegidos. PIX y tarjetas.",
     paymentHistory: "Historial de pagos",
     noHistory: "No hay historial de pagos aún.",
+    groupMembers: "Miembros de tu grupo",
+    online: "en línea",
+    offline: "desconectado",
+    disconnect: "Desconectar",
+    reconnect: "Reconectar",
+    masterBadge: "Cuenta maestra",
+    youBadge: "Tú",
   },
 };
 
@@ -142,17 +198,34 @@ interface PaymentRow {
 export default function SubscriptionsManagePage() {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const { subscription, trialDaysRemaining } = useSubscription();
+  const { subscription, trialDaysRemaining, isMultiPro } = useSubscription();
   const { user } = useAuth();
   const l = labels[language as keyof typeof labels] || labels["pt-BR"];
 
-  const isTrial = subscription?.plan === "premium" && trialDaysRemaining > 0;
-  const isActive = !!subscription?.isActive && !isTrial;
+  const isTrial = trialDaysRemaining > 0 && !subscription?.isActive;
+  const isActive = !!subscription?.isActive;
+
+  // Detecta plano ativo pelo planTier
   const activePlanId: PlanId | null = isActive
-    ? subscription?.itemsLimit === -1 && subscription?.recipesPerDay === -1
-      ? "trio"
-      : "individual"
+    ? subscription?.planTier === "multiPRO"
+      ? "multiPRO"
+      : subscription?.planTier === "individualPRO"
+        ? "individualPRO"
+        // compat: plan="premium" legacy → individualPRO
+        : subscription?.plan === "premium"
+          ? "individualPRO"
+          : null
     : null;
+
+  const groupId = subscription?.groupId ?? null;
+
+  // Session tracking para multiPRO
+  const {
+    groupMembers,
+    isGroupMaster,
+    disconnectMember,
+    reconnectMember,
+  } = useAccountSession(isMultiPro || isTrial ? groupId : null);
 
   const [history, setHistory] = useState<PaymentRow[]>([]);
 
@@ -179,14 +252,20 @@ export default function SubscriptionsManagePage() {
     if (amount == null) return "";
     const cur = currency || "BRL";
     try {
-      return new Intl.NumberFormat(language === "pt-BR" ? "pt-BR" : language === "es" ? "es-ES" : "en-US", {
-        style: "currency",
-        currency: cur,
-      }).format(Number(amount));
+      return new Intl.NumberFormat(
+        language === "pt-BR" ? "pt-BR" : language === "es" ? "es-ES" : "en-US",
+        { style: "currency", currency: cur }
+      ).format(Number(amount));
     } catch {
       return `${cur} ${amount}`;
     }
   };
+
+  const currentPlanLabel = isActive
+    ? activePlanId === "multiPRO" ? l.multiPRO : l.individualPRO
+    : isTrial
+      ? `${l.trial} · multiPRO`
+      : l.free;
 
   return (
     <div className="min-h-screen bg-[#0b1f1c] dark:bg-[#091f1c] pb-16 font-sans text-foreground">
@@ -201,7 +280,7 @@ export default function SubscriptionsManagePage() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-6 space-y-5">
-        {/* Current plan */}
+        {/* Plano atual */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -215,17 +294,13 @@ export default function SubscriptionsManagePage() {
               <Crown className="h-5 w-5 text-emerald-300" />
             </div>
             <div className="flex-1">
-              <p className="text-[18px] font-black text-white">
-                {isActive
-                  ? activePlanId === "trio"
-                    ? l.trio
-                    : l.individual
-                  : isTrial
-                  ? `${l.trial} · Premium`
-                  : l.free}
-              </p>
+              <p className="text-[18px] font-black text-white">{currentPlanLabel}</p>
               <p className="text-[11px] text-white/60 font-medium">
-                {isActive ? l.active : isTrial ? `${trialDaysRemaining} ${l.trial}` : ""}
+                {isActive
+                  ? l.active
+                  : isTrial
+                    ? `${trialDaysRemaining} ${language === "pt-BR" ? "dias restantes" : language === "es" ? "días restantes" : "days left"}`
+                    : ""}
               </p>
             </div>
           </div>
@@ -236,7 +311,97 @@ export default function SubscriptionsManagePage() {
           )}
         </motion.section>
 
-        {/* Available plans */}
+        {/* Membros do grupo — apenas multiPRO ativo ou em trial */}
+        <AnimatePresence>
+          {(isMultiPro || isTrial) && groupMembers.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="rounded-[1.5rem] bg-[#11302c] border border-white/10 p-5 shadow-sm"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="h-4 w-4 text-emerald-300" />
+                <h3 className="text-sm font-bold text-white">{l.groupMembers}</h3>
+                <span className="ml-auto text-[10px] font-black text-emerald-300 bg-emerald-300/10 px-2 py-0.5 rounded-full">
+                  {groupMembers.length}/3
+                </span>
+              </div>
+              <ul className="space-y-2">
+                {groupMembers.map((member) => {
+                  const isMe = member.user_id === user?.id;
+                  const isMasterMember = member.role === "master";
+                  return (
+                    <li
+                      key={member.id}
+                      className="flex items-center gap-3 p-3 rounded-2xl bg-[#0b1f1c] border border-white/5"
+                    >
+                      {/* Avatar placeholder */}
+                      <div className="h-9 w-9 rounded-xl bg-[#165A52]/60 flex items-center justify-center shrink-0 text-sm font-black text-white">
+                        {(member.display_name || "?")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[13px] font-bold text-white truncate">
+                            {member.display_name || `Membro ${member.user_id.slice(0, 6)}`}
+                          </span>
+                          {isMasterMember && (
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-300/20 text-emerald-300">
+                              {l.masterBadge}
+                            </span>
+                          )}
+                          {isMe && (
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-white/15 text-white/80">
+                              {l.youBadge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {member.isOnline ? (
+                            <Wifi className="h-3 w-3 text-emerald-400" />
+                          ) : (
+                            <WifiOff className="h-3 w-3 text-white/40" />
+                          )}
+                          <span className={cn(
+                            "text-[10px] font-semibold",
+                            member.isOnline ? "text-emerald-400" : "text-white/40"
+                          )}>
+                            {member.isOnline ? l.online : l.offline}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Master controls: desconectar/reconectar outros membros */}
+                      {isGroupMaster && !isMe && (
+                        <button
+                          onClick={() =>
+                            member.isOnline
+                              ? disconnectMember(member.user_id)
+                              : reconnectMember(member.user_id)
+                          }
+                          className={cn(
+                            "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-all active:scale-90",
+                            member.isOnline
+                              ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                              : "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                          )}
+                          title={member.isOnline ? l.disconnect : l.reconnect}
+                        >
+                          {member.isOnline ? (
+                            <LogOut className="h-3.5 w-3.5" />
+                          ) : (
+                            <RefreshCw className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Planos disponíveis */}
         <section className="space-y-3">
           <div className="px-1">
             <h3 className="text-base font-black text-white">{l.availablePlans}</h3>
@@ -244,32 +409,32 @@ export default function SubscriptionsManagePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 items-start">
-            {/* Individual */}
             <PlanCard
-              plan="individual"
-              label={l.individual}
-              screens={PLANS.individual.screens}
-              screenLabel={l.screen}
-              price={PLANS.individual.price}
-              period={PLANS.individual.period}
-              isActive={activePlanId === "individual"}
-              disabled={!canOpenPlan("individual")}
-              onClick={() => openCheckout("individual")}
+              planId="individualPRO"
+              label={l.individualPRO}
+              maxAccounts={PLANS.individualPRO.maxAccounts}
+              accountLabel={l.account}
+              price={PLANS.individualPRO.price}
+              period={PLANS.individualPRO.period}
+              features={l.individualFeatures}
+              isActive={activePlanId === "individualPRO"}
+              disabled={!canOpenPlan("individualPRO")}
+              onClick={() => openCheckout("individualPRO")}
               currentLabel={l.current}
               icon={<User className="h-4 w-4" />}
               prominent={false}
             />
-            {/* Trio */}
             <PlanCard
-              plan="trio"
-              label={l.trio}
-              screens={PLANS.trio.screens}
-              screenLabel={l.screens}
-              price={PLANS.trio.price}
-              period={PLANS.trio.period}
-              isActive={activePlanId === "trio"}
-              disabled={!canOpenPlan("trio")}
-              onClick={() => openCheckout("trio")}
+              planId="multiPRO"
+              label={l.multiPRO}
+              maxAccounts={PLANS.multiPRO.maxAccounts}
+              accountLabel={l.accounts}
+              price={PLANS.multiPRO.price}
+              period={PLANS.multiPRO.period}
+              features={l.multiFeatures}
+              isActive={activePlanId === "multiPRO"}
+              disabled={!canOpenPlan("multiPRO")}
+              onClick={() => openCheckout("multiPRO")}
               currentLabel={l.current}
               popularLabel={l.mostPopular}
               icon={<Users className="h-5 w-5" />}
@@ -277,19 +442,7 @@ export default function SubscriptionsManagePage() {
             />
           </div>
 
-          {/* Benefits */}
-          <div className="rounded-[1.5rem] bg-[#11302c] border border-white/10 p-5 space-y-2.5 shadow-sm">
-            {l.benefits.map((b, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="h-5 w-5 rounded-full bg-[#165A52]/50 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-300" />
-                </div>
-                <span className="text-[13px] font-semibold text-white/90 leading-snug">{b}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Security (Cakto) */}
+          {/* Segurança Cakto */}
           <div className="rounded-[1.5rem] bg-[#11302c] border border-white/10 p-5 shadow-sm">
             <div className="flex items-center gap-3 mb-3">
               <div className="h-8 w-8 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
@@ -323,7 +476,7 @@ export default function SubscriptionsManagePage() {
           </div>
         </section>
 
-        {/* Payment history */}
+        {/* Histórico de pagamentos */}
         <section className="rounded-[1.5rem] bg-[#11302c] border border-white/10 p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <History className="h-4 w-4 text-white/70" />
@@ -374,13 +527,16 @@ export default function SubscriptionsManagePage() {
   );
 }
 
+// ── PlanCard ──────────────────────────────────────────────────────────
+
 function PlanCard(props: {
-  plan: PlanId;
+  planId: PlanId;
   label: string;
-  screens: number;
-  screenLabel: string;
+  maxAccounts: number;
+  accountLabel: string;
   price: string;
   period: string;
+  features: string[];
   isActive: boolean;
   disabled: boolean;
   onClick: () => void;
@@ -390,16 +546,20 @@ function PlanCard(props: {
   prominent: boolean;
 }) {
   const {
-    label, screens, screenLabel, price, period,
+    label, maxAccounts, accountLabel, price, period, features,
     isActive, disabled, onClick, currentLabel, popularLabel, icon, prominent
   } = props;
+
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <button
       onClick={disabled ? undefined : onClick}
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
       disabled={disabled}
       className={cn(
-        "relative rounded-[1.5rem] p-4 text-left transition-all duration-200 border",
+        "relative rounded-[1.5rem] p-4 text-left transition-all duration-200 border w-full",
         prominent ? "p-5 border-[3px] border-emerald-300/60" : "border-white/10",
         isActive && "bg-[#165A52] text-white shadow-xl shadow-[#165A52]/40 border-emerald-300",
         !isActive && prominent && "bg-[#0e3d38]",
@@ -428,14 +588,23 @@ function PlanCard(props: {
       )}>
         {icon}
       </div>
-      <p className={cn("font-black text-[15px] leading-tight", isActive ? "text-white" : "text-white")}>
-        {label}
-      </p>
+      <p className="font-black text-[15px] leading-tight text-white">{label}</p>
       <p className="text-[11px] font-semibold mb-2 text-white/60">
-        {screens} {screenLabel}
+        {maxAccounts} {accountLabel}
       </p>
       <p className="text-[22px] font-black leading-none text-white">{price}</p>
       <p className="text-[11px] font-bold text-white/60">{period}</p>
+
+      {/* Features resumidas */}
+      <ul className="mt-3 space-y-1">
+        {features.slice(0, 3).map((f, i) => (
+          <li key={i} className="flex items-start gap-1.5">
+            <CheckCircle2 className="h-3 w-3 text-emerald-300 shrink-0 mt-0.5" />
+            <span className="text-[10px] font-semibold text-white/70 leading-snug">{f}</span>
+          </li>
+        ))}
+      </ul>
+
       {!disabled && !isActive && (
         <div className="mt-3 flex items-center gap-1 text-[11px] font-bold text-emerald-200">
           <Sparkles className="h-3 w-3" />

@@ -331,7 +331,7 @@ export function FridgeTab() {
                             </p>
                             {searchQuery.trim().length > 0 && (
                                 <button
-                                    onClick={() => window.location.href = `/add-item?name=${encodeURIComponent(searchQuery.trim())}`}
+                                    onClick={() => window.location.href = `/app/add-item?name=${encodeURIComponent(searchQuery.trim())}`}
                                     className="mt-4 flex items-center gap-2 rounded-2xl bg-primary/10 px-5 py-3 text-sm font-semibold text-primary transition-all active:scale-[0.97]"
                                 >
                                     <Plus className="h-4 w-4" />
@@ -380,7 +380,7 @@ export function FridgeTab() {
                                                     <div className={cn(selectionMode && "ml-8 transition-all")}>
                                                         <ItemCard
                                                             item={item}
-                                                            onConsume={(i) => selectionMode ? toggleSelection(i.id) : navigate(`/consume/${i.id}`)}
+                                                            onConsume={(i) => selectionMode ? toggleSelection(i.id) : navigate(`/app/consume/${i.id}`)}
                                                             onEdit={!selectionMode ? startEdit : undefined}
                                                             onRefreeze={!selectionMode && item.location !== 'freezer' ? refreezeItem : undefined}
                                                         />
@@ -446,7 +446,7 @@ export function FridgeTab() {
 
                     <div className="rounded-2xl border border-black/[0.04] dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden shadow-sm">
                         <button
-                            onClick={() => navigate('/consumables')}
+                            onClick={() => navigate('/app/consumables')}
                             className="flex w-full items-center justify-between p-4 text-left transition-all hover:bg-muted/50"
                         >
                             <div className="flex items-center gap-3">

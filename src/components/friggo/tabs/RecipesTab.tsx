@@ -123,7 +123,7 @@ export function RecipesTab() {
                   <div key={recipe.id} className="relative animate-fade-in" style={{ animationDelay: `${index * 20}ms` }}>
                     <RecipeCard
                       recipe={recipe}
-                      onClick={() => navigate(`/recipe/${recipe.id}`, { state: { recipe } })}
+                      onClick={() => navigate(`/app/recipe/${recipe.id}`, { state: { recipe } })}
                     />
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFavoriteRecipe(recipe.id); toast.success(language === "en" ? "Removed from favorites" : language === "es" ? "Eliminado de favoritos" : "Removido dos favoritos"); }}
@@ -186,7 +186,7 @@ export function RecipesTab() {
                   >
                     <RecipeCard
                       recipe={recipe}
-                      onClick={() => navigate(`/recipe/${recipe.id}`, { state: { recipe } })}
+                      onClick={() => navigate(`/app/recipe/${recipe.id}`, { state: { recipe } })}
                     />
                   </div>
                 ))}

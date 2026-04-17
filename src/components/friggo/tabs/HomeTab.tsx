@@ -376,7 +376,7 @@ export function HomeTab() {
                                 <Search className="h-5 w-5" />
                             </button>
                             <button
-                                onClick={() => navigate('/notifications')}
+                                onClick={() => navigate('/app/notifications')}
                                 className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 text-white transition-all active:scale-90 hover:bg-white/20"
                             >
                                 <Bell className="h-5 w-5" />
@@ -416,7 +416,7 @@ export function HomeTab() {
                     {/* ── ACTION CARDS ── */}
                     <div className="grid grid-cols-3 gap-2 mt-6">
                         <button
-                            onClick={() => navigate('/monthly-report')}
+                            onClick={() => navigate('/app/monthly-report')}
                             className="group relative overflow-hidden rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-3.5 text-left transition-all duration-200 active:scale-[0.97] hover:bg-white/[0.12]"
                         >
                             <div className="absolute top-0 right-0 w-12 h-12 bg-primary/20 rounded-full -translate-y-3 translate-x-3 blur-2xl pointer-events-none" />
@@ -429,7 +429,7 @@ export function HomeTab() {
                         </button>
 
                         <button
-                            onClick={() => navigate('/night-checkup')}
+                            onClick={() => navigate('/app/night-checkup')}
                             className="group relative overflow-hidden rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-3.5 text-left transition-all duration-200 active:scale-[0.97] hover:bg-white/[0.12]"
                         >
                             <div className="absolute top-0 right-0 w-12 h-12 bg-indigo-500/15 rounded-full -translate-y-3 translate-x-3 blur-2xl pointer-events-none" />
@@ -442,7 +442,7 @@ export function HomeTab() {
                         </button>
 
                         <button
-                            onClick={() => navigate('/add-item')}
+                            onClick={() => navigate('/app/add-item')}
                             className="group relative overflow-hidden rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-3.5 text-left transition-all duration-200 active:scale-[0.97] hover:bg-white/[0.12]"
                         >
                             <div className="absolute top-0 right-0 w-12 h-12 rounded-full -translate-y-3 translate-x-3 blur-2xl pointer-events-none" style={{ background: "rgba(22,90,82,0.25)" }} />
@@ -475,7 +475,7 @@ export function HomeTab() {
                                 ? <p className="py-4 text-center text-sm text-muted-foreground">{l.noResults}</p>
                                 : <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
                                     {searchResults.slice(0, 10).map(item => (
-                                        <ItemCard key={item.id} item={item} onConsume={i => navigate(`/consume/${i.id}`)} />
+                                        <ItemCard key={item.id} item={item} onConsume={i => navigate(`/app/consume/${i.id}`)} />
                                     ))}
                                 </div>
                             }
@@ -487,8 +487,8 @@ export function HomeTab() {
             {/* ── PLAN LIMIT CARDS ── */}
             {subscription && subscription.plan !== 'premium' && (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <PlanLimitCard type="items" currentCount={items.length} onUpgrade={() => navigate('/plans')} />
-                    <PlanLimitCard type="recipes" onUpgrade={() => navigate('/plans')} />
+                    <PlanLimitCard type="items" currentCount={items.length} onUpgrade={() => navigate('/app/settings/subscription')} />
+                    <PlanLimitCard type="recipes" onUpgrade={() => navigate('/app/settings/subscription')} />
                 </div>
             )}
 
@@ -586,7 +586,7 @@ export function HomeTab() {
                                     ? <p className="py-6 text-center text-sm text-muted-foreground">{l.empty}</p>
                                     : <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
                                         {fridgeItems.map(item => (
-                                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/consume/${i.id}`)} />
+                                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/app/consume/${i.id}`)} />
                                         ))}
                                     </div>
                             )}
@@ -595,7 +595,7 @@ export function HomeTab() {
                                     ? <p className="py-6 text-center text-sm text-muted-foreground">{l.empty}</p>
                                     : <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
                                         {expiringToday.map(item => (
-                                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/consume/${i.id}`)} />
+                                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/app/consume/${i.id}`)} />
                                         ))}
                                     </div>
                             )}
@@ -667,7 +667,7 @@ export function HomeTab() {
                                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tipOfDay.description}</p>
                                 )}
                                 <button
-                                    onClick={() => navigate(`/recipe/${tipOfDay.id}`, { state: { recipe: tipOfDay } })}
+                                    onClick={() => navigate(`/app/recipe/${tipOfDay.id}`, { state: { recipe: tipOfDay } })}
                                     className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 active:opacity-70"
                                 >
                                     {l.tryRecipe} <ChevronRight className="h-3 w-3" />
@@ -748,7 +748,7 @@ export function HomeTab() {
                     </div>
                     <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
                         {expiringItems.slice(0, 6).map(item => (
-                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/consume/${i.id}`)} />
+                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/app/consume/${i.id}`)} />
                         ))}
                     </div>
                 </motion.section>
@@ -773,7 +773,7 @@ export function HomeTab() {
                         .sort((a, b) => new Date(b.addedDate).getTime() - new Date(a.addedDate).getTime())
                         .slice(0, 4)
                         .map(item => (
-                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/consume/${i.id}`)} />
+                            <ItemCard key={item.id} item={item} onConsume={i => navigate(`/app/consume/${i.id}`)} />
                         ))}
                 </div>
             </motion.section>

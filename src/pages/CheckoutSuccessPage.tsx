@@ -78,7 +78,7 @@ export default function CheckoutSuccessPage() {
 
         // Aguardar um pouco e depois ir para home
         await new Promise((resolve) => setTimeout(resolve, 10000));
-        navigate("/");
+        navigate("/app/home");
       } catch (error) {
         console.error("Erro ao verificar pagamento:", error);
         toast.error("Erro ao ativar assinatura");
@@ -192,14 +192,14 @@ export default function CheckoutSuccessPage() {
                 {l.actions}
               </p>
               <Button
-                onClick={() => navigate("/index")}
+                onClick={() => navigate("/app/home")}
                 className="w-full h-12 rounded-xl font-bold text-base shadow-lg"
               >
                 <Home className="h-5 w-5 mr-2" />
                 {l.goHome}
               </Button>
               <Button
-                onClick={() => navigate("/plans")}
+                onClick={() => navigate("/app/settings/subscription")}
                 variant="outline"
                 className="w-full h-12 rounded-xl font-bold text-base"
               >

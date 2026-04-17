@@ -9,8 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { openExternalUrl } from "@/lib/nativeBrowser";
 import { isNative } from "@/lib/capacitor";
+import type { PlanTierEnum } from "@/integrations/supabase/types";
 
-export type SubscriptionPlan = "free" | "basic" | "standard" | "premium";
+/** Plano interno da subscription (campo `plan` na tabela). Mantido para compat. */
+export type SubscriptionPlan = "free" | "basic" | "standard" | "premium" | "individualPRO" | "multiPRO";
+
+/** Tier efetivo do plano — o que o front deve usar para lógica de negócio. */
+export type PlanTier = PlanTierEnum; // "free" | "individualPRO" | "multiPRO"
 
 export interface PlanLimits {
   itemsLimit: number;
@@ -23,6 +28,8 @@ export interface Subscription {
   id: string;
   userId: string;
   plan: SubscriptionPlan;
+  planTier: PlanTier;
+  groupId: string | null;
   price: number | null;
   itemsLimit: number;
   recipesPerDay: number;
@@ -51,6 +58,8 @@ export const PLAN_DETAILS: Record<
     notificationChangeDays: number;
     features: string[];
     tier: "simple" | "almost-premium" | "premium";
+    planTier: PlanTier;
+    maxAccounts: number;
   }
 > = {
   free: {
@@ -65,7 +74,9 @@ export const PLAN_DETAILS: Record<
       "1 receita por dia",
       "20 itens na lista"
     ],
-    tier: "simple"
+    tier: "simple",
+    planTier: "free",
+    maxAccounts: 1
   },
   basic: {
     name: "Básico",
@@ -80,7 +91,9 @@ export const PLAN_DETAILS: Record<
       "40 itens na lista",
       "Alterar notificação 1x/semana"
     ],
-    tier: "simple"
+    tier: "simple",
+    planTier: "free",
+    maxAccounts: 1
   },
   standard: {
     name: "Padrão",
@@ -93,32 +106,77 @@ export const PLAN_DETAILS: Record<
       "60 itens na geladeira",
       "3 receitas por dia",
       "90 itens na lista",
-      "Alterar notificação a cada 2 dias",
-      "Interface quase premium"
+      "Alterar notificação a cada 2 dias"
     ],
-    tier: "almost-premium"
+    tier: "almost-premium",
+    planTier: "free",
+    maxAccounts: 1
   },
+  /** Compat: usuários antigos com plan="premium" — mapeados para individualPRO */
   premium: {
-    name: "Premium",
-    price: 27.00,
-    itemsLimit: -1, // unlimited
-    recipesPerDay: -1, // unlimited
-    shoppingListLimit: -1, // unlimited
-    notificationChangeDays: 0, // anytime
+    name: "individualPRO",
+    price: 14.99,
+    itemsLimit: -1,
+    recipesPerDay: -1,
+    shoppingListLimit: -1,
+    notificationChangeDays: 0,
     features: [
-      "Itens ilimitados",
-      "Receitas ilimitadas",
-      "Lista ilimitada",
-      "Notificações sem restrição",
-      "Interface premium exclusiva"
+      "1 conta",
+      "Itens e receitas ilimitados",
+      "Lista de compras ilimitada",
+      "Alertas inteligentes sem restrição",
+      "Planejador de refeições semanal",
+      "Histórico completo de consumo"
     ],
-    tier: "premium"
+    tier: "premium",
+    planTier: "individualPRO",
+    maxAccounts: 1
+  },
+  individualPRO: {
+    name: "individualPRO",
+    price: 14.99,
+    itemsLimit: -1,
+    recipesPerDay: -1,
+    shoppingListLimit: -1,
+    notificationChangeDays: 0,
+    features: [
+      "1 conta",
+      "Itens e receitas ilimitados",
+      "Lista de compras ilimitada",
+      "Alertas inteligentes sem restrição",
+      "Planejador de refeições semanal",
+      "Histórico completo de consumo"
+    ],
+    tier: "premium",
+    planTier: "individualPRO",
+    maxAccounts: 1
+  },
+  multiPRO: {
+    name: "multiPRO",
+    price: 27.00,
+    itemsLimit: -1,
+    recipesPerDay: -1,
+    shoppingListLimit: -1,
+    notificationChangeDays: 0,
+    features: [
+      "Até 3 sub-contas no mesmo plano",
+      "Geladeira e estoque compartilhados",
+      "Configurações e notificações independentes",
+      "Lista de compras em tempo real",
+      "Notificar outros membros da casa",
+      "Conta mestre gerencia acesso"
+    ],
+    tier: "premium",
+    planTier: "multiPRO",
+    maxAccounts: 3
   }
 };
 
 interface SubscriptionContextType {
   subscription: Subscription | null;
   loading: boolean;
+  planTier: PlanTier;
+  isMultiPro: boolean;
   canAddItem: () => boolean;
   canUseRecipe: () => boolean;
   canAddShoppingItem: (currentCount: number) => boolean;
@@ -166,6 +224,7 @@ export function SubscriptionProvider({
         .select("plan_type, subscription_status, trial_start_date, created_at, cakto_customer_id, last_payment_date, payment_method")
         .eq("user_id", user.id)
         .maybeSingle();
+
       // @ts-ignore
       let planType = profile?.plan_type || "free";
       // @ts-ignore
@@ -174,8 +233,7 @@ export function SubscriptionProvider({
       let remaining = Math.max(0, 7 - daysPassed);
       let locked = planType !== 'premium' && remaining === 0;
 
-      // Fonte de verdade canônica: view v_user_access.
-      // Se existir, sobrescreve o cálculo manual (fallback mantido acima por segurança).
+      // Fonte canônica: view v_user_access
       try {
         const { data: access } = await supabase
           .from("v_user_access")
@@ -195,8 +253,6 @@ export function SubscriptionProvider({
       // @ts-ignore
       setRegistrationDate(profile?.created_at ? new Date(profile.created_at) : null);
 
-      // Profile not found: defaults already applied above
-
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
@@ -206,10 +262,9 @@ export function SubscriptionProvider({
       if (error) throw error;
 
       if (data) {
-        // Reset recipes if it's a new day
+        // Reset receitas se virou o dia
         const today = new Date().toISOString().split("T")[0];
         const lastReset = data.last_recipe_reset;
-
         if (lastReset !== today) {
           await supabase
             .from("subscriptions")
@@ -219,15 +274,29 @@ export function SubscriptionProvider({
           data.recipes_used_today = 0;
         }
 
-        const effectivePlan = (trialDaysRemaining > 0 ? "premium" : data.plan) as SubscriptionPlan;
-        const effectiveItemsLimit = trialDaysRemaining > 0 ? -1 : data.items_limit;
-        const effectiveRecipesPerDay = trialDaysRemaining > 0 ? -1 : data.recipes_per_day;
-        const effectiveShoppingListLimit = trialDaysRemaining > 0 ? -1 : data.shopping_list_limit;
+        // Durante trial = acesso multiPRO completo (ilimitado)
+        const inTrial = remaining > 0;
+        const effectivePlan = (inTrial ? "multiPRO" : (data.plan || "free")) as SubscriptionPlan;
+        const effectiveItemsLimit = inTrial ? -1 : data.items_limit;
+        const effectiveRecipesPerDay = inTrial ? -1 : data.recipes_per_day;
+        const effectiveShoppingListLimit = inTrial ? -1 : data.shopping_list_limit;
+
+        // Determina o planTier efetivo
+        const rawPlanTier: string = (data as any).plan_tier || "free";
+        let effectivePlanTier: PlanTier = inTrial
+          ? "multiPRO"
+          : (rawPlanTier === "individualPRO" || rawPlanTier === "multiPRO")
+            ? rawPlanTier as PlanTier
+            : data.plan === "premium" && data.is_active
+              ? "individualPRO"
+              : "free";
 
         setSubscription({
           id: data.id,
           userId: data.user_id,
           plan: effectivePlan,
+          planTier: effectivePlanTier,
+          groupId: (data as any).group_id ?? null,
           price: data.price,
           itemsLimit: effectiveItemsLimit,
           recipesPerDay: effectiveRecipesPerDay,
@@ -253,7 +322,6 @@ export function SubscriptionProvider({
       }
     } catch (error: any) {
       if (import.meta.env.DEV) { console.error("[DEV] subscription fetch error:", error); }
-      // Suppress JWT errors
       setSubscription(null);
     } finally {
       setLoading(false);
@@ -264,18 +332,16 @@ export function SubscriptionProvider({
     fetchSubscription();
   }, [fetchSubscription]);
 
-  // Verificar assinatura automaticamente quando o usuário volta do checkout do Stripe
+  // Verificar assinatura ao retornar do checkout
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const subscriptionResult = params.get("subscription");
 
     if (subscriptionResult === "success" && user) {
-      // Limpar a URL para evitar re-triggers
       const url = new URL(window.location.href);
       url.searchParams.delete("subscription");
       window.history.replaceState({}, "", url.toString());
 
-      // Chamar check-subscription para sincronizar com o Stripe
       const syncSubscription = async () => {
         try {
           await supabase.functions.invoke("check-subscription");
@@ -292,10 +358,14 @@ export function SubscriptionProvider({
     }
   }, [user, fetchSubscription]);
 
+  // Derived state
+  const planTier: PlanTier = subscription?.planTier ?? "free";
+  const isMultiPro = planTier === "multiPRO";
+
   const canAddItem = useCallback(() => {
     if (!subscription) return false;
     if (subscription.itemsLimit === -1) return true;
-    return true; // Will be checked against actual count in context
+    return true;
   }, [subscription]);
 
   const canUseRecipe = useCallback(() => {
@@ -317,7 +387,6 @@ export function SubscriptionProvider({
     if (!subscription) return false;
     if (subscription.notificationChangeDays === 0) return true;
     if (!subscription.lastNotificationChange) return true;
-
     const daysSinceChange = Math.floor(
       (Date.now() - subscription.lastNotificationChange.getTime()) /
         (1000 * 60 * 60 * 24)
@@ -327,16 +396,13 @@ export function SubscriptionProvider({
 
   const useRecipe = useCallback(async () => {
     if (!subscription || !canUseRecipe()) return false;
-
     try {
       const { error } = await supabase
         .from("subscriptions")
         .update({ recipes_used_today: subscription.recipesUsedToday + 1 })
         .eq("id", subscription.id)
         .eq("user_id", subscription.userId);
-
       if (error) throw error;
-
       setSubscription((prev) =>
         prev ? { ...prev, recipesUsedToday: prev.recipesUsedToday + 1 } : null
       );
@@ -350,14 +416,13 @@ export function SubscriptionProvider({
   const upgradePlan = useCallback(
     async (plan: SubscriptionPlan) => {
       if (!subscription) return false;
-
       const planDetails = PLAN_DETAILS[plan];
-
       try {
         const { error } = await supabase
           .from("subscriptions")
           .update({
             plan,
+            plan_tier: planDetails.planTier,
             price: planDetails.price,
             items_limit: planDetails.itemsLimit,
             recipes_per_day: planDetails.recipesPerDay,
@@ -368,9 +433,7 @@ export function SubscriptionProvider({
           })
           .eq("id", subscription.id)
           .eq("user_id", subscription.userId);
-
         if (error) throw error;
-
         await fetchSubscription();
         return true;
       } catch (error) {
@@ -393,18 +456,17 @@ export function SubscriptionProvider({
           console.log(`[DEV] [Checkout] Attempt ${attempt}/${maxRetries} for plan ${plan}`);
         }
 
-        // Fetch profile to include optional CPF via edge function (never exposed in URL)
         let cpf: string | null = null;
         try {
-          const { data: profile } = await supabase
+          const { data: profileSensitive } = await supabase
             .from("profile_sensitive")
             .select("cpf")
             .eq("user_id", user?.id)
             .maybeSingle();
           // @ts-ignore
-          cpf = profile?.cpf ?? null;
+          cpf = profileSensitive?.cpf ?? null;
         } catch {
-          // Non-critical: CPF fetch failed, proceed without it
+          // Non-critical
         }
 
         const { data, error } = await supabase.functions.invoke(
@@ -464,16 +526,12 @@ export function SubscriptionProvider({
     throw new Error(
       finalErrorMsg || "Não foi possível iniciar o pagamento. Verifique sua conexão e tente novamente."
     );
-  }, []);
+  }, [user]);
 
   const openCustomerPortal = useCallback(async () => {
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "customer-portal"
-      );
-
+      const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-
       if (data?.url) {
         await openExternalUrl(data.url);
       }
@@ -485,7 +543,7 @@ export function SubscriptionProvider({
 
   const getPlanTier = useCallback(() => {
     if (!subscription) return "simple";
-    return PLAN_DETAILS[subscription.plan].tier;
+    return PLAN_DETAILS[subscription.plan]?.tier ?? "simple";
   }, [subscription]);
 
   const getRemainingItems = useCallback(() => {
@@ -514,6 +572,8 @@ export function SubscriptionProvider({
       value={{
         subscription,
         loading,
+        planTier,
+        isMultiPro,
         canAddItem,
         canUseRecipe,
         canAddShoppingItem,

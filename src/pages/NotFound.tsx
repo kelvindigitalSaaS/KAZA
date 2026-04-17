@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Home, Refrigerator, Search } from "lucide-react";
+import { Home, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
@@ -20,26 +20,31 @@ const NotFound = () => {
         transition={{ type: "spring", damping: 15 }}
         className="relative mb-8"
       >
-        <div className="relative z-10 bg-card p-10 rounded-[3rem] border-2 border-border shadow-2xl">
-          <Refrigerator className="h-24 w-24 text-muted-foreground/20 mx-auto" />
+        <div className="h-32 w-32 rounded-[2.5rem] border border-black/[0.04] dark:border-white/10 shadow-xl flex items-center justify-center shadow-black/5 overflow-hidden relative bg-white">
+          <img 
+            src="https://cdn-checkout.cakto.com.br/products/a860788b-9cfc-43e2-b233-a602fe205e0c.png?width=180" 
+            alt="Kaza Logo" 
+            className="w-full h-full object-cover z-10 opacity-40 grayscale" 
+          />
+          
           <motion.div
             animate={{ 
               rotate: [0, -10, 10, -10, 0],
               y: [0, -5, 0]
             }}
             transition={{ duration: 4, repeat: Infinity }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
           >
-            <span className="text-8xl font-black text-primary/10">404</span>
+            <span className="text-7xl font-black text-foreground/10 tracking-tighter">404</span>
           </motion.div>
         </div>
         
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground p-4 rounded-2xl shadow-lg border-4 border-background"
+          className="absolute -bottom-3 -right-3 h-14 w-14 rounded-full bg-primary flex items-center justify-center text-primary-foreground border-4 border-background shadow-lg z-30"
         >
-          <Search className="h-6 w-6" />
+          <SearchX className="h-6 w-6" />
         </motion.div>
       </motion.div>
 
@@ -49,7 +54,7 @@ const NotFound = () => {
         transition={{ delay: 0.2 }}
         className="text-3xl font-black tracking-tight mb-3"
       >
-        Geladeira Vazia!
+        Página não encontrada!
       </motion.h1>
       
       <motion.p 
@@ -58,7 +63,7 @@ const NotFound = () => {
         transition={{ delay: 0.3 }}
         className="text-muted-foreground mb-8 max-w-xs mx-auto"
       >
-        Parece que você procurou por algo que não está no nosso estoque. Que tal voltar para o início?
+        Parece que você procurou por algo que não existe. Que tal voltar para o início?
       </motion.p>
 
       <motion.div

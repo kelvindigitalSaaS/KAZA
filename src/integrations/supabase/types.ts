@@ -21,13 +21,61 @@ export type MealTypeEnum = "breakfast" | "lunch" | "dinner" | "snack";
 export type SubscriptionPlanEnum = "free" | "basic" | "standard" | "premium";
 export type SubscriptionStatusEnum =
   | "trialing" | "active" | "past_due" | "cancelled" | "expired";
+
+/** Novos tiers de plano (plan_tier na tabela subscriptions) */
+export type PlanTierEnum = "free" | "individualPRO" | "multiPRO";
+
+/** Papel dentro de um grupo multiPRO */
+export type SubAccountRole = "master" | "member";
+
+export interface SubAccountGroup {
+  id: string;
+  master_user_id: string;
+  plan_tier: PlanTierEnum;
+  max_members: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubAccountMember {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: SubAccountRole;
+  display_name: string | null;
+  avatar_url: string | null;
+  is_active: boolean;
+  invited_by: string | null;
+  joined_at: string;
+}
+
+export interface AccountSession {
+  id: string;
+  user_id: string;
+  group_id: string | null;
+  device_id: string;
+  device_name: string | null;
+  platform: string | null;
+  is_connected: boolean;
+  force_disconnected: boolean;
+  last_seen_at: string;
+  created_at: string;
+  updated_at: string;
+}
 export type ActionTypeEnum =
   | "added" | "consumed" | "cooked" | "discarded" | "defrosted" | "expired";
 export type ConsumableActionEnum = "debit" | "restock" | "adjust";
 
 export interface Database {
   public: {
-    Tables: Record<string, { Row: Record<string, unknown>; Insert: Record<string, unknown>; Update: Record<string, unknown>; }>;
+    Tables: {
+      account_sessions: {
+        Row: AccountSession;
+        Insert: Omit<AccountSession, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<AccountSession, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      [key: string]: { Row: Record<string, unknown>; Insert: Record<string, unknown>; Update: Record<string, unknown>; };
+    };
     Views: Record<string, { Row: Record<string, unknown> }>;
     Functions: Record<string, { Args: Record<string, unknown>; Returns: unknown }>;
     Enums: {

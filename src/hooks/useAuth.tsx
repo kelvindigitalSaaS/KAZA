@@ -41,10 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // Redirect to login if signed out
+      // Redirect to login if signed out — only for protected /app/* routes
       if (event === "SIGNED_OUT" || !session) {
-        // Only redirect if we're not already on auth page
-        if (window.location.pathname !== "/auth") {
+        const path = window.location.pathname;
+        if (path.startsWith("/app") && path !== "/auth") {
           window.location.href = "/auth";
         }
       }
@@ -61,7 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const requireAuth = () => {
     if (!user || !session) {
-      if (window.location.pathname !== "/auth") {
+      const path = window.location.pathname;
+      if (path.startsWith("/app") && path !== "/auth") {
         window.location.href = "/auth";
       }
       return false;

@@ -78,7 +78,7 @@ export default function Auth() {
   }, []);
 
   useEffect(() => {
-    if (user && !authLoading) navigate("/");
+    if (user && !authLoading) navigate("/app/home");
   }, [user, authLoading, navigate]);
 
   // ── Handlers ──
@@ -107,7 +107,7 @@ export default function Auth() {
         });
         if (error) throw error;
         toast.success("Login realizado com sucesso!");
-        navigate("/");
+        navigate("/app/home");
       } else {
         const redirectUrl = isNative
           ? "kaza://auth/callback"
@@ -141,7 +141,7 @@ export default function Auth() {
           return;
         }
         toast.success("Conta criada! Bem-vindo ao kaza App!");
-        navigate("/");
+        navigate("/app/home");
       }
     } catch (error: any) {
       let msg = "Erro ao processar. Tente novamente.";

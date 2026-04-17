@@ -30,7 +30,7 @@ export default function Checkout() {
         <p className="text-muted-foreground text-sm text-center">
           Sessão de checkout inválida ou expirada.
         </p>
-        <Button variant="outline" onClick={() => navigate('/plans')}>
+        <Button variant="outline" onClick={() => navigate('/app/settings/subscription')}>
           Ver planos
         </Button>
       </div>
@@ -41,7 +41,7 @@ export default function Checkout() {
     <div className="min-h-[var(--100dvh,100dvh)] bg-background flex flex-col pt-safe">
       <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-3 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06] shrink-0">
         <button
-          onClick={() => navigate('/plans')}
+          onClick={() => navigate('/app/settings/subscription')}
           className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-xl transition-colors active:scale-[0.97]"
           aria-label="Voltar"
         >

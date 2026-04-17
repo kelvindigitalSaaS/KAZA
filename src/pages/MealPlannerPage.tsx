@@ -141,7 +141,7 @@ export default function MealPlannerPage() {
               {/* Recipe header */}
               <div
                 className="flex items-center gap-3 px-4 py-4 cursor-pointer active:bg-black/[0.02]"
-                onClick={() => navigate(`/recipe/${recipe.id}`, { state: { recipe } })}
+                onClick={() => navigate(`/app/recipe/${recipe.id}`, { state: { recipe } })}
               >
                 <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary/10 shrink-0 overflow-hidden">
                   {recipe.image ? (

@@ -61,7 +61,7 @@ export function OfflineOverlay() {
         {/* Círculo do Logo com "X Vermelho" */}
         <div className="relative mb-6">
           <div className="h-24 w-24 rounded-[1.75rem] border border-black/[0.04] dark:border-white/10 shadow-lg flex items-center justify-center shadow-black/10 overflow-hidden relative bg-white">
-            <img src="https://cdn-checkout.cakto.com.br/products/a860788b-9cfc-43e2-b233-a602fe205e0c.png?width=180" alt="Kaza Logo" className="w-16 h-16 object-contain z-10 opacity-40 grayscale" />
+            <img src="https://cdn-checkout.cakto.com.br/products/a860788b-9cfc-43e2-b233-a602fe205e0c.png?width=180" alt="Kaza Logo" className="w-full h-full object-cover z-10 opacity-40 grayscale" />
             <div className="absolute inset-0 bg-red-500/10 mix-blend-multiply dark:mix-blend-lighten z-20" />
           </div>
 

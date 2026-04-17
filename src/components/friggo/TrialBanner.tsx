@@ -42,7 +42,7 @@ export function TrialBanner() {
   const bannerText = user 
     ? `Kaza Premium liberado (${trialDaysRemaining} ${trialDaysRemaining === 1 ? 'dia' : 'dias'})`
     : 'Aproveitar avaliação 7 dias';
-  const targetPath = user ? "/settings/subscription" : "/auth";
+  const targetPath = user ? "/app/settings/subscription" : "/auth";
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.preventDefault();

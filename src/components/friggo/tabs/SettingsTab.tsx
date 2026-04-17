@@ -302,7 +302,7 @@ export function SettingsTab() {
       <main className="space-y-6 px-3">
         {/* Profile — horizontal layout: avatar left, info right */}
         <section className="flex items-center gap-4 pt-2 pb-1 px-1">
-          <button onClick={() => navigate("/profile")} className="relative group shrink-0">
+          <button onClick={() => navigate("/app/profile")} className="relative group shrink-0">
             <AvatarUpload
               currentUrl={onboardingData?.avatarUrl}
               size={72}
@@ -346,12 +346,12 @@ export function SettingsTab() {
           </h3>
           <div className="grid grid-cols-2 gap-2.5">
             {([
-              { label: l.history, desc: l.historyDesc, icon: History, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/activity-history") },
-              { label: l.installGuide || "Como Instalar", desc: l.installGuideDesc || "Android, iOS e PC", icon: Download, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/settings/install") },
-              { label: l.report, desc: l.reportDesc, icon: Package, color: "text-[#3D6B55] dark:text-emerald-400", bg: "bg-[#3D6B55]/10 dark:bg-emerald-500/20", onClick: () => navigate("/monthly-report") },
-              { label: l.subscription, desc: l.subscriptionDesc, icon: Crown, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/settings/subscription") },
+              { label: l.history, desc: l.historyDesc, icon: History, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/app/activity-history") },
+              { label: l.installGuide || "Como Instalar", desc: l.installGuideDesc || "Android, iOS e PC", icon: Download, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/app/settings/install") },
+              { label: l.report, desc: l.reportDesc, icon: Package, color: "text-[#3D6B55] dark:text-emerald-400", bg: "bg-[#3D6B55]/10 dark:bg-emerald-500/20", onClick: () => navigate("/app/monthly-report") },
+              { label: l.subscription, desc: l.subscriptionDesc, icon: Crown, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/app/settings/subscription") },
               { label: l.reconfigure, desc: l.reconfigureDesc, icon: RotateCcw, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-500/20", onClick: () => setConfirmReconfigureOpen(true) },
-              { label: l.garbage, desc: l.garbageDesc, icon: Trash2, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/20", onClick: () => navigate("/garbage-reminder") },
+              { label: l.garbage, desc: l.garbageDesc, icon: Trash2, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/20", onClick: () => navigate("/app/garbage-reminder") },
             ] as const).map(({ label, desc, icon: Icon, color, bg, onClick }) => (
               <button
                 key={label}
@@ -381,7 +381,7 @@ export function SettingsTab() {
             {planTier === "premium" && trialDaysRemaining <= 0 ? (
               /* Premium paid — CLICKABLE → subscription page */
               <button
-                onClick={() => navigate("/settings/subscription")}
+                onClick={() => navigate("/app/settings/subscription")}
                 className="w-full flex items-center justify-between px-5 py-4 active:bg-[#F7F6F3] dark:active:bg-white/5 transition-colors group"
               >
                 <div className="flex items-center gap-3.5">
@@ -691,8 +691,8 @@ export function SettingsTab() {
           </h3>
           <div className="rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm">
             {[
-              { label: l.faq, desc: l.faqDesc, icon: HelpCircle, onClick: () => navigate("/settings/faq") },
-              { label: l.privacy, desc: l.privacyDesc, icon: FileText, onClick: () => navigate("/settings/privacy") },
+              { label: l.faq, desc: l.faqDesc, icon: HelpCircle, onClick: () => navigate("/app/settings/faq") },
+              { label: l.privacy, desc: l.privacyDesc, icon: FileText, onClick: () => navigate("/app/settings/privacy") },
             ].map(({ label, desc, icon: Icon, onClick }, idx, arr) => (
               <button
                 key={label}
@@ -801,7 +801,7 @@ export function SettingsTab() {
                 await resetOnboarding();
                 // Preserve name typed by user when restarting onboarding
                 updateOnboardingData({ name: localName });
-                navigate("/");
+                navigate("/app/home");
                 toast.success(language === "pt-BR" ? "Configuração reiniciada" : language === "es" ? "Configuración reiniciada" : "Configuration reset");
               }}
             >

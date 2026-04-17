@@ -158,7 +158,7 @@ const SuccessPage = () => {
               "{l.installText}"
             </p>
             <Button
-              onClick={() => navigate("/settings/install")}
+              onClick={() => navigate("/app/settings/install")}
               variant="outline"
               className="w-full h-12 rounded-2xl border-[#90AB9C]/40 bg-transparent text-white font-bold hover:bg-white/5 hover:text-white"
             >
@@ -168,7 +168,7 @@ const SuccessPage = () => {
           </div>
 
           <Button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/app/home")}
             className="w-full h-16 rounded-[2rem] text-lg font-black text-white shadow-xl group border-0"
             style={{
               background: "linear-gradient(90deg, #548A76 0%, #90AB9C 100%)",
