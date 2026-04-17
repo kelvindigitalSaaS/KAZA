@@ -64,9 +64,9 @@ export default function MealPlannerPage() {
   };
 
   return (
-    <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col">
+    <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#fafafa]/90 dark:bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06] px-4 h-16 flex items-center gap-3">
+      <header className="sticky top-0 z-50 bg-[#fafafa]/90 dark:bg-[#091f1c]/90 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06] px-4 h-16 flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
           className="h-10 w-10 flex items-center justify-center rounded-xl bg-black/5 dark:bg-white/5 text-foreground transition-all active:scale-90 hover:bg-black/10 dark:hover:bg-white/10"

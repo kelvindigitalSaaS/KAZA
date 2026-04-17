@@ -149,9 +149,9 @@ export default function PlansPage() {
   return (
     <PageTransition
       direction="left"
-      className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] pb-32"
+      className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-32"
     >
-      <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-4 backdrop-blur-2xl border-b border-black/[0.03] dark:border-white/[0.03]">
+      <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-4 backdrop-blur-2xl border-b border-black/[0.03] dark:border-white/[0.03]">
         <button
           onClick={() => navigate(-1)}
           className="flex h-10 w-10 items-center justify-center rounded-2xl text-foreground bg-white/80 dark:bg-white/10 backdrop-blur-xl active:scale-[0.97] transition-all"
@@ -286,7 +286,7 @@ export default function PlansPage() {
             className="relative flex flex-col gap-5 rounded-[2.5rem] p-8 border-2 transition-all border-amber-400 bg-white dark:bg-[#1a1a1a] shadow-2xl shadow-amber-500/20"
           >
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="rounded-full bg-amber-500 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl ring-4 ring-[#fafafa] dark:ring-[#0a0a0a]">
+              <span className="rounded-full bg-amber-500 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl ring-4 ring-[#fafafa] dark:ring-[#091f1c]">
                 {l.popular}
               </span>
             </div>

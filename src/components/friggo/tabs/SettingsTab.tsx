@@ -84,6 +84,9 @@ export function SettingsTab() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [notifDelay, setNotifDelay] = useState(5);
+  const [nightCheckupTime, setNightCheckupTime] = useState<string>(
+    () => onboardingData?.nightCheckupTime || "21:00"
+  );
   const planTier = getPlanTier();
   const [editingInlineName, setEditingInlineName] = useState(false);
   const [editingDialogName, setEditingDialogName] = useState(false);
@@ -137,33 +140,33 @@ export function SettingsTab() {
       reconfigureDesc: "Refazer a configuração inicial",
       notifTitle: "Notificações",
       notifDesc: "Escolha para que deseja ser notificado",
-      testNotif: "Testar notificação",
+      testNotif: "Testar",
       testNotifDesc: "Enviar uma notificação de teste",
       notifSent: "Notificação de teste agendada!",
       notifSeconds: "segundos",
-        notifOptions: {
-          expiry: { label: "Validade", desc: "Itens prestes a vencer" },
-          shopping: { label: "Compras", desc: "Itens da lista de compras" },
-          recipes: { label: "Receitas", desc: "Sugestões de receitas" },
-          nightCheckup: { label: "Check-up Noturno", desc: "Lembrete diário" },
-          cooking: { label: "Cozinhando", desc: "Temporizadores de cozinha" },
-          consumables: { label: "Consumíveis", desc: "Reposição de itens" }
-        },
-        installGuide: "Como Instalar",
-        installGuideDesc: "Guia para Android, iOS e PC",
-        pricingTitle: "Seja Premium",
-        pricingDesc: "Aproveite todos os recursos sem limites",
-        priceTag: "Apenas R$ 27/mês",
-        upgradeNow: "Fazer Upgrade Agora",
-        premiumFeatures: [
-          "Itens e receitas ilimitadas",
-          "Rastreamento avançado",
-          "Alertas personalizados",
-          "Interface exclusiva"
-        ],
-        install: "Instalar App",
-        installDesc: "App para sua tela de início"
+      notifOptions: {
+        expiry: { label: "Validade", desc: "Itens prestes a vencer" },
+        shopping: { label: "Compras", desc: "Itens da lista de compras" },
+        recipes: { label: "Receitas", desc: "Sugestões de receitas" },
+        nightCheckup: { label: "Check-up Noturno", desc: "Lembrete diário" },
+        cooking: { label: "Cozinhando", desc: "Temporizadores de cozinha" },
+        consumables: { label: "Consumíveis", desc: "Reposição de itens" }
       },
+      installGuide: "Como Instalar",
+      installGuideDesc: "Guia para Android, iOS e PC",
+      pricingTitle: "Seja Premium",
+      pricingDesc: "Aproveite todos os recursos sem limites",
+      priceTag: "Apenas R$ 27/mês",
+      upgradeNow: "Fazer Upgrade Agora",
+      premiumFeatures: [
+        "Itens e receitas ilimitadas",
+        "Rastreamento avançado",
+        "Alertas personalizados",
+        "Interface exclusiva"
+      ],
+      install: "Instalar App",
+      installDesc: "App para sua tela de início"
+    },
     en: {
       title: "Settings",
       profile: "Profile",
@@ -294,67 +297,73 @@ export function SettingsTab() {
   return (
     <PageTransition
       direction="right"
-      className="min-h-[100dvh] bg-[#F7F6F3] pb-32 pt-8"
+      className="min-h-[100dvh] bg-[#F7F6F3] dark:bg-[#091f1c] pb-32 pt-8"
     >
       <main className="space-y-6 px-3">
-        {/* Profile — minimal */}
-        <section className="flex flex-col items-center gap-3 pt-2 pb-1">
-          <button onClick={() => navigate("/profile")} className="relative group">
+        {/* Profile — horizontal layout: avatar left, info right */}
+        <section className="flex items-center gap-4 pt-2 pb-1 px-1">
+          <button onClick={() => navigate("/profile")} className="relative group shrink-0">
             <AvatarUpload
               currentUrl={onboardingData?.avatarUrl}
-              size={80}
-              className="ring-4 ring-[#E2E1DC] shadow-md"
+              size={72}
+              className="shadow-md"
             />
-            <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white border border-[#E2E1DC] flex items-center justify-center shadow-sm">
-              <Edit className="h-3 w-3 text-[#7A7A72]" />
+            <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 flex items-center justify-center shadow-sm">
+              <Edit className="h-3 w-3 text-[#7A7A72] dark:text-white/60" />
             </div>
           </button>
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-[17px] font-bold text-[#2C2C2A] leading-tight">
+          <div className="flex flex-col gap-1 min-w-0">
+            <p className="text-[18px] font-bold text-[#2C2C2A] dark:text-white leading-tight truncate">
               {onboardingData?.name || user?.email?.split("@")[0]}
             </p>
             {planTier === "premium" && trialDaysRemaining <= 0 ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#3D6B55]/10 border border-[#3D6B55]/25 text-[#3D6B55] text-[11px] font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#3D6B55]/10 border border-[#3D6B55]/25 text-[#3D6B55] text-[11px] font-black uppercase tracking-wider w-fit">
                 <Crown className="h-3 w-3" /> Premium
               </span>
             ) : trialDaysRemaining > 0 ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[11px] font-black uppercase tracking-wider w-fit">
                 <Star className="h-3 w-3" />
-                {language === "pt-BR" ? `${trialDaysRemaining} dias de teste` : language === "es" ? `${trialDaysRemaining} días de prueba` : `${trialDaysRemaining} trial days`}
+                {language === "pt-BR" ? `Trial · ${trialDaysRemaining}d` : language === "es" ? `Trial · ${trialDaysRemaining}d` : `Trial · ${trialDaysRemaining}d`}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F0EFE8] border border-[#E2E1DC] text-[#9A998F] text-[11px] font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F0EFE8] dark:bg-white/10 border border-[#E2E1DC] dark:border-white/10 text-[#9A998F] dark:text-white/40 text-[11px] font-black uppercase tracking-wider w-fit">
                 {language === "pt-BR" ? "Gratuito" : language === "es" ? "Gratis" : "Free"}
               </span>
+            )}
+            {subscription?.nextBillingDate && planTier === "premium" && (
+              <p className="text-[11px] text-[#9A998F] dark:text-white/40 font-medium">
+                {language === "pt-BR" ? "Próximo pagamento: " : language === "es" ? "Próximo pago: " : "Next payment: "}
+                {new Date(subscription.nextBillingDate).toLocaleDateString(language === "pt-BR" ? "pt-BR" : language === "es" ? "es-ES" : "en-US")}
+              </p>
             )}
           </div>
         </section>
 
         {/* Quick Shortcuts */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-[#9A998F] uppercase tracking-[1.5px] px-1 flex items-center gap-1">
+          <h3 className="text-[11px] font-bold text-[#9A998F] dark:text-white/40 uppercase tracking-[1.5px] px-1 flex items-center gap-1">
             <Zap className="h-3.5 w-3.5" /> {l.shortcuts}
           </h3>
           <div className="grid grid-cols-2 gap-2.5">
             {([
-              { label: l.history, desc: l.historyDesc, icon: History, color: "text-[#3D3D3A]", bg: "bg-[#EDECEA]", onClick: () => navigate("/activity-history") },
-              { label: l.installGuide || "Como Instalar", desc: l.installGuideDesc || "Android, iOS e PC", icon: Download, color: "text-[#3D3D3A]", bg: "bg-[#EDECEA]", onClick: () => navigate("/settings/install") },
-              { label: l.report, desc: l.reportDesc, icon: Package, color: "text-[#3D6B55]", bg: "bg-[#3D6B55]/10", onClick: () => navigate("/monthly-report") },
-              { label: l.subscription, desc: l.subscriptionDesc, icon: Crown, color: "text-[#3D3D3A]", bg: "bg-[#EDECEA]", onClick: () => navigate("/settings/subscription") },
-              { label: l.reconfigure, desc: l.reconfigureDesc, icon: RotateCcw, color: "text-amber-600", bg: "bg-amber-50", onClick: () => setConfirmReconfigureOpen(true) },
-              { label: l.garbage, desc: l.garbageDesc, icon: Trash2, color: "text-orange-500", bg: "bg-orange-50", onClick: () => navigate("/garbage-reminder") },
+              { label: l.history, desc: l.historyDesc, icon: History, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/activity-history") },
+              { label: l.installGuide || "Como Instalar", desc: l.installGuideDesc || "Android, iOS e PC", icon: Download, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/settings/install") },
+              { label: l.report, desc: l.reportDesc, icon: Package, color: "text-[#3D6B55] dark:text-emerald-400", bg: "bg-[#3D6B55]/10 dark:bg-emerald-500/20", onClick: () => navigate("/monthly-report") },
+              { label: l.subscription, desc: l.subscriptionDesc, icon: Crown, color: "text-[#3D3D3A] dark:text-white/80", bg: "bg-[#EDECEA] dark:bg-white/10", onClick: () => navigate("/settings/subscription") },
+              { label: l.reconfigure, desc: l.reconfigureDesc, icon: RotateCcw, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-500/20", onClick: () => setConfirmReconfigureOpen(true) },
+              { label: l.garbage, desc: l.garbageDesc, icon: Trash2, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/20", onClick: () => navigate("/garbage-reminder") },
             ] as const).map(({ label, desc, icon: Icon, color, bg, onClick }) => (
               <button
                 key={label}
                 onClick={onClick}
-                className="flex flex-col items-start gap-2.5 rounded-2xl bg-white p-4 border border-[#E2E1DC] transition-all active:scale-[0.97] text-left shadow-sm"
+                className="flex flex-col items-start gap-2.5 rounded-2xl bg-white dark:bg-[#11302c] p-4 border border-[#E2E1DC] dark:border-white/10 transition-all active:scale-[0.97] text-left shadow-sm"
               >
                 <div className={cn("rounded-xl p-2.5", bg)}>
                   <Icon className={cn("h-5 w-5", color)} />
                 </div>
                 <div>
-                  <p className="font-semibold text-[#2C2C2A] text-sm leading-tight">{label}</p>
-                  <p className="text-[10px] font-medium text-[#9A998F] mt-0.5">{desc}</p>
+                  <p className="font-semibold text-[#2C2C2A] dark:text-white text-sm leading-tight">{label}</p>
+                  <p className="text-[10px] font-medium text-[#9A998F] dark:text-white/40 mt-0.5">{desc}</p>
                 </div>
               </button>
             ))}
@@ -363,51 +372,51 @@ export function SettingsTab() {
 
         {/* Subscription Section */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-[#9A998F] uppercase tracking-[1.5px] px-1 flex items-center gap-1.5">
+          <h3 className="text-[11px] font-bold text-[#9A998F] dark:text-white/40 uppercase tracking-[1.5px] px-1 flex items-center gap-1.5">
             <Crown className="h-3.5 w-3.5" /> {l.subscription}
           </h3>
 
           {/* Current plan row */}
-          <div className="rounded-2xl bg-white border border-[#E2E1DC] overflow-hidden shadow-sm">
+          <div className="rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm">
             {planTier === "premium" && trialDaysRemaining <= 0 ? (
               /* Premium paid — CLICKABLE → subscription page */
               <button
                 onClick={() => navigate("/settings/subscription")}
-                className="w-full flex items-center justify-between px-5 py-4 active:bg-[#F7F6F3] transition-colors group"
+                className="w-full flex items-center justify-between px-5 py-4 active:bg-[#F7F6F3] dark:active:bg-white/5 transition-colors group"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="h-11 w-11 rounded-2xl bg-[#3D6B55]/10 border border-[#3D6B55]/20 flex items-center justify-center">
                     <Crown className="h-5 w-5 text-[#3D6B55]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[#2C2C2A] text-[15px] leading-tight">Kaza Premium</p>
-                    <p className="text-[12px] text-[#7A7A72] font-medium">
+                    <p className="font-bold text-[#2C2C2A] dark:text-white text-[15px] leading-tight">Kaza Premium</p>
+                    <p className="text-[12px] text-[#7A7A72] dark:text-white/60 font-medium">
                       {language === "pt-BR" ? "Acesso completo ativo" : language === "es" ? "Acceso completo activo" : "Full access active"}
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="h-4.5 w-4.5 text-[#B0AFA7] group-active:text-[#3D3D3A]" />
+                <ChevronRight className="h-4.5 w-4.5 text-[#B0AFA7] dark:text-white/30 group-active:text-[#3D3D3A] dark:text-white/80" />
               </button>
             ) : (
               /* Trial / Free — NOT clickable, just status */
               <div className="flex items-center gap-3.5 px-5 py-4">
                 <div className={cn(
                   "h-11 w-11 rounded-2xl flex items-center justify-center",
-                  trialDaysRemaining > 0 ? "bg-amber-50 border border-amber-200" : "bg-[#F0EFE8] border border-[#E2E1DC]"
+                  trialDaysRemaining > 0 ? "bg-amber-500/20 border border-amber-400/30" : "bg-[#F0EFE8] dark:bg-white/10 border border-[#E2E1DC] dark:border-white/10"
                 )}>
                   {trialDaysRemaining > 0
                     ? <Star className="h-5 w-5 text-amber-500" />
-                    : <Zap className="h-5 w-5 text-[#B0AFA7]" />
+                    : <Zap className="h-5 w-5 text-[#B0AFA7] dark:text-white/30" />
                   }
                 </div>
                 <div>
-                  <p className="font-bold text-[#2C2C2A] text-[15px] leading-tight">
+                  <p className="font-bold text-[#2C2C2A] dark:text-white text-[15px] leading-tight">
                     {trialDaysRemaining > 0
                       ? (language === "pt-BR" ? "Período de Teste" : language === "es" ? "Período de Prueba" : "Trial Period")
                       : (language === "pt-BR" ? "Plano Gratuito" : language === "es" ? "Plan Gratuito" : "Free Plan")
                     }
                   </p>
-                  <p className="text-[12px] text-[#7A7A72] font-medium">
+                  <p className="text-[12px] text-[#7A7A72] dark:text-white/60 font-medium">
                     {trialDaysRemaining > 0
                       ? (language === "pt-BR" ? `${trialDaysRemaining} dias restantes` : language === "es" ? `${trialDaysRemaining} días restantes` : `${trialDaysRemaining} days left`)
                       : (language === "pt-BR" ? "Recursos limitados" : language === "es" ? "Recursos limitados" : "Limited features")
@@ -418,8 +427,8 @@ export function SettingsTab() {
             )}
           </div>
 
-          {/* Plan cards — always visible when trial or free */}
-          {(trialDaysRemaining > 0 || planTier !== "premium") && (
+          {/* Plan cards — visible only when trial ended and not yet subscribed */}
+          {(trialDaysRemaining <= 0 && planTier !== "premium") && (
             <div className="space-y-2.5">
               {([
                 {
@@ -453,7 +462,7 @@ export function SettingsTab() {
               ] as const).map((plan) => (
                 <div
                   key={plan.id}
-                  className="relative rounded-2xl bg-white border border-[#E2E1DC] overflow-hidden shadow-sm"
+                  className="relative rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm"
                 >
                   {plan.popular && (
                     <div className="absolute top-3.5 right-3.5 px-2.5 py-0.5 rounded-full bg-[#3D6B55] text-white text-[9px] font-black uppercase tracking-widest">
@@ -461,18 +470,18 @@ export function SettingsTab() {
                     </div>
                   )}
                   <div className="px-5 pt-5 pb-3">
-                    <p className="font-black text-[#2C2C2A] text-[17px] leading-tight">{plan.label}</p>
-                    <p className="text-[12px] text-[#9A998F] font-medium mt-0.5">{plan.tagline}</p>
+                    <p className="font-black text-[#2C2C2A] dark:text-white text-[17px] leading-tight">{plan.label}</p>
+                    <p className="text-[12px] text-[#9A998F] dark:text-white/40 font-medium mt-0.5">{plan.tagline}</p>
                     <div className="flex items-baseline gap-1 mt-2.5">
-                      <span className="text-[26px] font-black text-[#2C2C2A] tracking-tight">{plan.price}</span>
-                      <span className="text-[13px] font-semibold text-[#B0AFA7]">{plan.period}</span>
+                      <span className="text-[26px] font-black text-[#2C2C2A] dark:text-white tracking-tight">{plan.price}</span>
+                      <span className="text-[13px] font-semibold text-[#B0AFA7] dark:text-white/30">{plan.period}</span>
                     </div>
                   </div>
                   <div className="px-5 pb-3 space-y-1.5">
                     {plan.features.map((f) => (
                       <div key={f} className="flex items-center gap-2.5">
                         <Check className="h-3.5 w-3.5 text-[#3D6B55] shrink-0" />
-                        <span className="text-[13px] text-[#7A7A72] font-medium">{f}</span>
+                        <span className="text-[13px] text-[#7A7A72] dark:text-white/60 font-medium">{f}</span>
                       </div>
                     ))}
                   </div>
@@ -486,7 +495,7 @@ export function SettingsTab() {
                   </div>
                 </div>
               ))}
-              <p className="text-center text-[10px] text-[#B0AFA7] font-medium pt-0.5">
+              <p className="text-center text-[10px] text-[#B0AFA7] dark:text-white/30 font-medium pt-0.5">
                 {language === "pt-BR" ? "Cancele quando quiser · PIX e cartão via Cakto" : "Cancel anytime · PIX and card via Cakto"}
               </p>
             </div>
@@ -495,14 +504,14 @@ export function SettingsTab() {
 
         {/* Preferences */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-[#9A998F] uppercase tracking-[1.5px] px-1">{l.appearance}</h3>
-          <div className="rounded-2xl bg-white border border-[#E2E1DC] overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E1DC]">
+          <h3 className="text-[11px] font-bold text-[#9A998F] dark:text-white/40 uppercase tracking-[1.5px] px-1">{l.appearance}</h3>
+          <div className="rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E1DC] dark:border-white/10">
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-[#EDECEA] p-2.5">
-                  <Layout className="h-5 w-5 text-[#3D3D3A]" />
+                <div className="rounded-xl bg-[#EDECEA] dark:bg-white/10 p-2.5">
+                  <Layout className="h-5 w-5 text-[#3D3D3A] dark:text-white/80" />
                 </div>
-                <p className="font-semibold text-[#2C2C2A] text-[15px]">{l.darkMode}</p>
+                <p className="font-semibold text-[#2C2C2A] dark:text-white text-[15px]">{l.darkMode}</p>
               </div>
               <div className="flex gap-1.5">
                 {([
@@ -516,8 +525,8 @@ export function SettingsTab() {
                     className={cn(
                       "flex flex-col items-center justify-center gap-0.5 h-12 w-12 rounded-xl text-[9px] font-bold transition-all uppercase tracking-wide",
                       theme === value
-                        ? "bg-[#2C2C2A] text-white shadow-sm"
-                        : "bg-[#F0EFE8] text-[#7A7A72] hover:bg-[#E8E7E0]"
+                        ? "bg-white text-[#091f1c] shadow-sm"
+                        : "bg-[#F0EFE8] text-[#7A7A72] dark:bg-white/10 dark:text-white/50 hover:bg-[#E8E7E0] dark:hover:bg-white/15"
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -528,10 +537,10 @@ export function SettingsTab() {
             </div>
             <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-[#EDECEA] p-2.5">
-                  <Globe className="h-5 w-5 text-[#3D3D3A]" />
+                <div className="rounded-xl bg-[#EDECEA] dark:bg-white/10 p-2.5">
+                  <Globe className="h-5 w-5 text-[#3D3D3A] dark:text-white/80" />
                 </div>
-                <p className="font-semibold text-[#2C2C2A] text-[15px]">{l.language}</p>
+                <p className="font-semibold text-[#2C2C2A] dark:text-white text-[15px]">{l.language}</p>
               </div>
               <div className="flex gap-1.5">
                 {([
@@ -545,8 +554,8 @@ export function SettingsTab() {
                     className={cn(
                       "flex flex-col items-center justify-center gap-0.5 h-12 w-12 rounded-xl text-[9px] font-bold transition-all",
                       language === value
-                        ? "bg-[#2C2C2A] text-white shadow-sm"
-                        : "bg-[#F0EFE8] text-[#7A7A72] hover:bg-[#E8E7E0]"
+                        ? "bg-white text-[#091f1c] shadow-sm"
+                        : "bg-[#F0EFE8] text-[#7A7A72] dark:bg-white/10 dark:text-white/50 hover:bg-[#E8E7E0] dark:hover:bg-white/15"
                     )}
                   >
                     <span className="text-xl leading-none">{flag}</span>
@@ -560,30 +569,39 @@ export function SettingsTab() {
 
         {/* Notifications */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-[#9A998F] uppercase tracking-[1.5px] px-1 flex items-center gap-1">
+          <h3 className="text-[11px] font-bold text-[#9A998F] dark:text-white/40 uppercase tracking-[1.5px] px-1 flex items-center gap-1">
             <Bell className="h-3.5 w-3.5" /> {l.notifTitle}
           </h3>
-          <p className="text-xs text-[#9A998F] px-1">{l.notifDesc}</p>
-          <div className="rounded-2xl bg-white border border-[#E2E1DC] overflow-hidden shadow-sm">
+          <p className="text-xs text-[#9A998F] dark:text-white/40 px-1">{l.notifDesc}</p>
+          <div className="rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm">
             {([
-              { key: "expiry", Icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
-              { key: "shopping", Icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-50" },
-              { key: "recipes", Icon: UtensilsCrossed, color: "text-emerald-600", bg: "bg-emerald-50" },
-              { key: "nightCheckup", Icon: CalendarClock, color: "text-indigo-500", bg: "bg-indigo-50" },
-              { key: "cooking", Icon: Flame, color: "text-orange-500", bg: "bg-orange-50" },
-              { key: "consumables", Icon: Package2, color: "text-purple-500", bg: "bg-purple-50" },
+              { key: "expiry", Icon: Clock, color: "text-amber-500 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/20" },
+              { key: "shopping", Icon: ShoppingCart, color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-500/20" },
+              { key: "recipes", Icon: UtensilsCrossed, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/20" },
+              { key: "nightCheckup", Icon: CalendarClock, color: "text-indigo-500 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-500/20" },
+              { key: "cooking", Icon: Flame, color: "text-orange-500 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-500/20" },
+              { key: "consumables", Icon: Package2, color: "text-purple-500 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-500/20" },
             ] as const).map(({ key, Icon, color, bg }, idx) => {
               const prefs = onboardingData?.notificationPrefs || ["expiry", "shopping", "nightCheckup"];
               const isActive = prefs.includes(key);
               return (
-                <div key={key} className={cn("flex items-center justify-between px-5 py-3.5", idx < 5 && "border-b border-[#E2E1DC]")}>
-                  <div className="flex items-center gap-3">
-                    <div className={cn("rounded-xl p-2", isActive ? bg : "bg-[#F0EFE8]")}>
-                      <Icon className={cn("h-4 w-4", isActive ? color : "text-[#B0AFA7]")} />
+                <div key={key} className={cn("flex items-center justify-between px-5 py-3.5", idx < 5 && "border-b border-[#E2E1DC] dark:border-white/10")}>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={cn("rounded-xl p-2 shrink-0", isActive ? bg : "bg-[#EDECEA] dark:bg-white/10")}>
+                      <Icon className={cn("h-4 w-4", isActive ? color : "text-[#B0AFA7] dark:text-white/30")} />
                     </div>
-                    <div>
-                      <p className="font-semibold text-[#2C2C2A] text-[14px]">{(l.notifOptions as any)[key]?.label}</p>
-                      <p className="text-[11px] text-[#9A998F]">{(l.notifOptions as any)[key]?.desc}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[#2C2C2A] dark:text-white text-[14px]">{(l.notifOptions as any)[key]?.label}</p>
+                      {key === "nightCheckup" ? (
+                        <input
+                          type="time"
+                          value={nightCheckupTime}
+                          onChange={(e) => setNightCheckupTime(e.target.value)}
+                          className="mt-0.5 h-7 rounded-lg border border-[#E2E1DC] dark:border-white/10 bg-[#F5F5F5] dark:bg-white/10 px-2 text-[12px] font-semibold text-[#3D6B55] dark:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400/40"
+                        />
+                      ) : (
+                        <p className="text-[11px] text-[#9A998F] dark:text-white/40">{(l.notifOptions as any)[key]?.desc}</p>
+                      )}
                     </div>
                   </div>
                   <Switch
@@ -606,12 +624,22 @@ export function SettingsTab() {
             <select
               value={notifDelay}
               onChange={(e) => setNotifDelay(Number(e.target.value))}
-              className="h-11 rounded-xl bg-white border border-[#E2E1DC] px-3 text-sm font-semibold text-[#2C2C2A] focus:outline-none focus:ring-2 focus:ring-[#3D6B55]/30"
+              className="h-11 rounded-xl bg-[#F5F5F5] dark:bg-white/10 border border-[#E2E1DC] dark:border-white/10 px-3 text-sm font-semibold text-[#2C2C2A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3D6B55]/30"
             >
               {[3, 5, 10, 15, 30, 60].map((s) => (
                 <option key={s} value={s}>{s} {l.notifSeconds}</option>
               ))}
             </select>
+            <button
+              onClick={() => {
+                updateOnboardingData({ nightCheckupTime, notificationPrefs: onboardingData?.notificationPrefs || ["expiry", "shopping", "nightCheckup"] });
+                toast.success(language === "pt-BR" ? "Preferências salvas!" : language === "es" ? "¡Preferencias guardadas!" : "Preferences saved!");
+              }}
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#F5F5F5] dark:bg-white/10 border border-[#E2E1DC] dark:border-white/10 py-3 px-4 text-[#3D6B55] dark:text-emerald-400 font-semibold text-sm transition-all active:scale-[0.97] shadow-sm"
+            >
+              <Check className="h-4 w-4" />
+              {language === "pt-BR" ? "Salvar" : language === "es" ? "Guardar" : "Save"}
+            </button>
             <button
               onClick={async () => {
                 if (!("Notification" in window)) {
@@ -625,7 +653,7 @@ export function SettingsTab() {
                   return;
                 }
                 toast.success(`${l.notifSent} (${notifDelay}s)`);
-                
+
                 const testNotifs = language === "pt-BR" ? [
                   { title: "🧊 Kaza — Tudo Pronto!", body: "Notificações ativadas com sucesso." },
                   { title: "🕰️ Kaza — Vencimento", body: "Atenção: A maçã vence amanhã!" },
@@ -648,7 +676,7 @@ export function SettingsTab() {
                   }, (notifDelay * 1000) + (index * 5000));
                 });
               }}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white border border-[#E2E1DC] py-3 text-[#3D6B55] font-semibold text-sm transition-all active:scale-[0.97] shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#F5F5F5] dark:bg-white/10 border border-[#E2E1DC] dark:border-white/10 py-3 text-[#3D6B55] dark:text-emerald-400 font-semibold text-sm transition-all active:scale-[0.97] shadow-sm"
             >
               <BellRing className="h-4 w-4" />
               {l.testNotif}
@@ -658,30 +686,29 @@ export function SettingsTab() {
 
         {/* Help & Support */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-[#9A998F] uppercase tracking-[1.5px] px-1 flex items-center gap-1">
+          <h3 className="text-[11px] font-bold text-[#9A998F] dark:text-white/40 uppercase tracking-[1.5px] px-1 flex items-center gap-1">
             <HelpCircle className="h-3.5 w-3.5" /> {l.helpSupport}
           </h3>
-          <div className="rounded-2xl bg-white border border-[#E2E1DC] overflow-hidden shadow-sm">
+          <div className="rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm">
             {[
               { label: l.faq, desc: l.faqDesc, icon: HelpCircle, onClick: () => navigate("/settings/faq") },
               { label: l.privacy, desc: l.privacyDesc, icon: FileText, onClick: () => navigate("/settings/privacy") },
-              { label: l.installGuide, desc: l.installGuideDesc, icon: MonitorDown, onClick: () => navigate("/settings/install") },
             ].map(({ label, desc, icon: Icon, onClick }, idx, arr) => (
               <button
                 key={label}
                 onClick={onClick}
-                className={cn("w-full flex items-center justify-between px-5 py-4 active:bg-[#F7F6F3] transition-colors group", idx < arr.length - 1 && "border-b border-[#E2E1DC]")}
+                className={cn("w-full flex items-center justify-between px-5 py-4 active:bg-[#F7F6F3] dark:active:bg-white/5 transition-colors group", idx < arr.length - 1 && "border-b border-[#E2E1DC] dark:border-white/10")}
               >
                 <div className="flex items-center gap-3">
-                  <div className="rounded-xl bg-[#EDECEA] p-2.5">
-                    <Icon className="h-5 w-5 text-[#3D3D3A]" />
+                  <div className="rounded-xl bg-[#EDECEA] dark:bg-white/10 p-2.5">
+                    <Icon className="h-5 w-5 text-[#3D3D3A] dark:text-white/80" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-[#2C2C2A] text-[15px]">{label}</p>
-                    <p className="text-xs text-[#9A998F]">{desc}</p>
+                    <p className="font-semibold text-[#2C2C2A] dark:text-white text-[15px]">{label}</p>
+                    <p className="text-xs text-[#9A998F] dark:text-white/40">{desc}</p>
                   </div>
                 </div>
-                <ChevronRight className="h-4.5 w-4.5 text-[#B0AFA7]" />
+                <ChevronRight className="h-4.5 w-4.5 text-[#B0AFA7] dark:text-white/30" />
               </button>
             ))}
           </div>
@@ -689,29 +716,29 @@ export function SettingsTab() {
 
         {/* Security & Account */}
         <section className="space-y-3">
-          <h3 className="text-[11px] font-bold text-[#9A998F] uppercase tracking-[1.5px] px-1">{l.security}</h3>
-          <div className="rounded-2xl bg-white border border-[#E2E1DC] overflow-hidden shadow-sm">
+          <h3 className="text-[11px] font-bold text-[#9A998F] dark:text-white/40 uppercase tracking-[1.5px] px-1">{l.security}</h3>
+          <div className="rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm">
             <button
               onClick={() => setChangePasswordOpen(true)}
-              className="w-full flex items-center justify-between px-5 py-4 border-b border-[#E2E1DC] active:bg-[#F7F6F3] transition-colors group"
+              className="w-full flex items-center justify-between px-5 py-4 border-b border-[#E2E1DC] dark:border-white/10 active:bg-[#F7F6F3] dark:active:bg-white/5 transition-colors group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-[#EDECEA] p-2.5">
-                  <KeyRound className="h-5 w-5 text-[#3D3D3A]" />
+                <div className="rounded-xl bg-[#EDECEA] dark:bg-white/10 p-2.5">
+                  <KeyRound className="h-5 w-5 text-[#3D3D3A] dark:text-white/80" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-[#2C2C2A] text-[15px]">{l.changePassword}</p>
-                  <p className="text-xs text-[#9A998F]">{l.changePasswordDesc}</p>
+                  <p className="font-semibold text-[#2C2C2A] dark:text-white text-[15px]">{l.changePassword}</p>
+                  <p className="text-xs text-[#9A998F] dark:text-white/40">{l.changePasswordDesc}</p>
                 </div>
               </div>
-              <ChevronRight className="h-4.5 w-4.5 text-[#B0AFA7]" />
+              <ChevronRight className="h-4.5 w-4.5 text-[#B0AFA7] dark:text-white/30" />
             </button>
             <button
               onClick={() => setDeleteAccountOpen(true)}
-              className="w-full flex items-center justify-between px-5 py-4 border-b border-[#E2E1DC] active:bg-red-50 transition-colors group"
+              className="w-full flex items-center justify-between px-5 py-4 border-b border-[#E2E1DC] dark:border-white/10 active:bg-red-50 dark:active:bg-red-500/10 transition-colors group"
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-red-50 p-2.5">
+                <div className="rounded-xl bg-red-50 dark:bg-red-500/20 p-2.5">
                   <AlertTriangle className="h-5 w-5 text-red-500" />
                 </div>
                 <div className="text-left">
@@ -723,9 +750,9 @@ export function SettingsTab() {
             </button>
             <button
               onClick={signOut}
-              className="w-full flex items-center gap-3 px-5 py-4 active:bg-red-50 transition-colors"
+              className="w-full flex items-center gap-3 px-5 py-4 active:bg-red-50 dark:active:bg-red-500/10 transition-colors"
             >
-              <div className="rounded-xl bg-red-50 p-2.5">
+              <div className="rounded-xl bg-red-50 dark:bg-red-500/20 p-2.5">
                 <LogOut className="h-5 w-5 text-red-500" />
               </div>
               <p className="font-semibold text-red-500 text-[15px]">{l.logout}</p>
@@ -734,8 +761,8 @@ export function SettingsTab() {
         </section>
 
         <div className="text-center py-6 pb-12">
-          <p className="text-[13px] text-[#B0AFA7] font-medium">Kaza v2.0.0</p>
-          <p className="text-xs text-[#B0AFA7] mt-1">{l.madeWith}</p>
+          <p className="text-[13px] text-[#B0AFA7] dark:text-white/30 font-medium">Kaza v2.0.0</p>
+          <p className="text-xs text-[#B0AFA7] dark:text-white/30 mt-1">{l.madeWith}</p>
         </div>
       </main>
 

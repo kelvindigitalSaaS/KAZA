@@ -122,7 +122,7 @@ function KazaApp() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] pb-20 overflow-hidden">
+    <div className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-20 overflow-hidden">
       <main className="mx-auto max-w-lg px-4 pt-safe relative h-full">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

@@ -543,10 +543,28 @@ export function Onboarding() {
     }
 
     if (currentStep < steps.length - 1) {
-      setPage([currentStep + 1, 1]);
-      setCurrentStep((prev) => prev + 1);
+      // Pular steps blindados (nome/CPF já definidos)
+      let next = currentStep + 1;
+      while (next < steps.length - 1 && SKIPPABLE_STEPS.includes(steps[next])) {
+        next++;
+      }
+      setPage([next, 1]);
+      setCurrentStep(next);
     }
   };
+
+  // Se começar num step que deve ser pulado (nome/CPF já definidos), avança
+  useEffect(() => {
+    if (SKIPPABLE_STEPS.includes(steps[currentStep])) {
+      let next = currentStep + 1;
+      while (next < steps.length - 1 && SKIPPABLE_STEPS.includes(steps[next])) {
+        next++;
+      }
+      setCurrentStep(next);
+      setPage([next, 1]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasNameAndCpf]);
   const handleBack = () => {
     if (currentStep > 0) {
       // If going back would land on a skippable step, jump over it

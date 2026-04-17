@@ -49,9 +49,9 @@ export default function NotificationsPage() {
     const dismissAll = () => alerts.forEach(alert => dismissAlert(alert.id));
 
     return (
-        <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a]">
+        <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c]">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06]">
+            <header className="sticky top-0 z-50 bg-[#fafafa]/80 dark:bg-[#091f1c]/80 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06]">
                 <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
                     <div className="flex items-center gap-3">
                         <button

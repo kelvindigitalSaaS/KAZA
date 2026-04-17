@@ -41,9 +41,11 @@ const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 const GarbageReminderPage = lazy(() => import("./pages/GarbageReminderPage"));
 const InstallGuidePage = lazy(() => import("./pages/InstallGuidePage"));
 const SubscriptionPage = lazy(() => import("./pages/SubscriptionPage"));
+const SubscriptionsManagePage = lazy(() => import("./pages/SubscriptionsManagePage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const MealPlannerPage = lazy(() => import("./pages/MealPlannerPage"));
+const SalesPage = lazy(() => import("./pages/SalesPage"));
 
 const queryClient = new QueryClient();
 
@@ -146,6 +148,12 @@ function ProtectedRoute({ element, allowLocked = false, allowOnboarding = false 
   return element;
 }
 
+/** Rotas públicas acessíveis sem sessão (ex.: retorno da Cakto após pagamento) */
+const PUBLIC_PATHS = ["/auth", "/sucesso", "/success", "/pagina-de-vendas"];
+function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 /** Wrapper que verifica autenticação em cada render */
 function AuthGuard({ children }: { children: ReactNode }) {
   const { user, loading, requireAuth } = useAuth();
@@ -153,7 +161,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Verificar autenticação a cada 30 segundos
     const checkAuth = () => {
-      if (!loading) {
+      if (!loading && !isPublicPath(window.location.pathname)) {
         requireAuth();
       }
     };
@@ -164,9 +172,9 @@ function AuthGuard({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [loading, requireAuth]);
 
-  // Se não está carregando e não tem usuário, redirecionar
+  // Se não está carregando e não tem usuário, redirecionar — exceto em rotas públicas
   useEffect(() => {
-    if (!loading && !user && window.location.pathname !== "/auth") {
+    if (!loading && !user && !isPublicPath(window.location.pathname)) {
       window.location.href = "/auth";
     }
   }, [user, loading]);
@@ -323,15 +331,17 @@ const App = () => {
                                 <ProtectedRoute element={<GarbageReminderPage />} />
                               }
                             />
-                            <Route
-                              path="/sucesso"
-                              element={
-                                <ProtectedRoute element={<SuccessPage />} allowOnboarding={true} allowLocked={true} />
-                              }
-                            />
+                            {/* Público: Cakto redireciona após pagamento; usuário pode não estar autenticado. */}
+                            <Route path="/sucesso" element={<SuccessPage />} />
+                            <Route path="/success" element={<SuccessPage />} />
                             <Route
                               path="/settings/subscription"
                               element={<ProtectedRoute element={<SubscriptionPage />} />}
+                            />
+                            <Route path="/pagina-de-vendas" element={<SalesPage />} />
+                            <Route
+                              path="/settings/subscription/manage"
+                              element={<ProtectedRoute element={<SubscriptionsManagePage />} />}
                             />
                             <Route
                               path="/settings/install"

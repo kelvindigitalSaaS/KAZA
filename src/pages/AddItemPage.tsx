@@ -252,8 +252,8 @@ export default function AddItemPage() {
     const currentRule = foodRules[language]?.[category] || foodRules['pt-BR'][category];
 
     return (
-        <PageTransition direction="up" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] pb-20">
-            <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-4 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06]">
+        <PageTransition direction="up" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-20">
+            <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-4 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06]">
                 <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-2xl text-foreground bg-white/80 dark:bg-white/10 backdrop-blur-xl active:scale-[0.97] transition-all">
                     <ArrowLeft className="h-5 w-5" />
                 </button>
@@ -386,7 +386,7 @@ export default function AddItemPage() {
                     </div>
                 )}
 
-                <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 backdrop-blur-2xl z-50">
+                <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/80 dark:bg-[#091f1c]/80 backdrop-blur-2xl z-50">
                     <div className="max-w-base mx-auto">
                         <Button onClick={handleSubmit} className="w-full rounded-2xl h-14 text-base font-bold shadow-lg shadow-primary/25 transition-all active:scale-[0.97]">
                             {l.add}

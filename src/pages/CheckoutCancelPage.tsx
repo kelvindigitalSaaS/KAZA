@@ -71,7 +71,7 @@ export default function CheckoutCancelPage() {
   return (
     <PageTransition
       direction="down"
-      className="min-h-[100dvh] bg-gradient-to-b from-amber-50/50 via-[#fafafa] to-[#fafafa] dark:from-amber-950/20 dark:via-[#0a0a0a] dark:to-[#0a0a0a] pb-20"
+      className="min-h-[100dvh] bg-gradient-to-b from-amber-50/50 via-[#fafafa] to-[#fafafa] dark:from-amber-950/20 dark:via-[#091f1c] dark:to-[#091f1c] pb-20"
     >
       <div className="mx-auto max-w-lg px-4 py-8">
         {/* Canceled Animation */}

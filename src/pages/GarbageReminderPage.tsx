@@ -11,7 +11,8 @@ import { AlarmClock, ArrowLeft, Bell, Building2, Calendar, Check, Clock, Home, M
 import { toast } from "sonner";
 import { PageTransition } from "@/components/PageTransition";
 import {
-  startGarbageReminderMonitoring
+  startGarbageReminderMonitoring,
+  syncGarbageReminderToDb
 } from "@/lib/garbageReminderNotifications";
 
 const WEEKDAYS = {
@@ -39,7 +40,7 @@ const WEEKDAYS = {
 export default function GarbageReminderPage() {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const { onboardingData } = useKaza();
+  const { onboardingData, homeId } = useKaza();
 
   const [enabled, setEnabled] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 4]); // Monday and Thursday
@@ -151,6 +152,8 @@ export default function GarbageReminderPage() {
     if (enabled && selectedDays.length > 0) {
       startGarbageReminderMonitoring();
     }
+    // Espelhar no banco (best-effort, não bloqueia UX)
+    void syncGarbageReminderToDb(homeId);
     toast.success(l.saved, { duration: 2000 });
     navigate(-1);
   };
@@ -196,9 +199,9 @@ export default function GarbageReminderPage() {
   return (
     <PageTransition
       direction="left"
-      className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] pb-20"
+      className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-20"
     >
-      <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-4 backdrop-blur-2xl font-bold">
+      <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-4 backdrop-blur-2xl font-bold">
         <button
           onClick={() => navigate(-1)}
           className="flex h-10 w-10 items-center justify-center rounded-2xl text-foreground bg-white/80 dark:bg-white/10 backdrop-blur-xl active:scale-[0.97] transition-all"
@@ -331,7 +334,7 @@ export default function GarbageReminderPage() {
       </main>
 
       {/* ── Floating Save Button ── */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#fafafa] dark:from-[#0a0a0a] to-transparent z-40 pointer-events-none pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#fafafa] dark:from-[#091f1c] to-transparent z-40 pointer-events-none pb-safe">
         <div className="max-w-lg mx-auto pointer-events-auto">
           <button
             onClick={handleSave}

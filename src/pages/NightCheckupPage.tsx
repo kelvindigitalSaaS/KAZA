@@ -225,8 +225,8 @@ export default function NightCheckupPage() {
     const actionBg = actionType === 'consumed' ? 'rgba(22,90,82,0.10)' : 'rgba(239,68,68,0.10)';
 
     return (
-        <PageTransition direction="up" className="pb-8 min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] text-foreground">
-            <header className="sticky top-0 z-50 flex items-center gap-3 border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-4 backdrop-blur-2xl">
+        <PageTransition direction="up" className="pb-8 min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] text-foreground">
+            <header className="sticky top-0 z-50 flex items-center gap-3 border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-4 backdrop-blur-2xl">
                 <button
                     onClick={() => step === 'items' ? setStep('question') : navigate(-1)}
                     className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-xl active:scale-[0.97] transition-all text-foreground"
@@ -482,7 +482,7 @@ export default function NightCheckupPage() {
 
             {/* ── Fixed OK button for items step ── */}
             {step === 'items' && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#fafafa]/90 dark:bg-[#0a0a0a]/90 backdrop-blur-2xl border-t border-black/[0.04] dark:border-white/[0.06]">
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#fafafa]/90 dark:bg-[#091f1c]/90 backdrop-blur-2xl border-t border-black/[0.04] dark:border-white/[0.06]">
                     <div className="max-w-lg mx-auto">
                         <Button
                             onClick={handleConfirmSelection}

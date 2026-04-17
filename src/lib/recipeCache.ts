@@ -1,124 +1,63 @@
 import { Recipe } from '@/types/friggo';
 
-const CACHE_KEY = 'friggo_recipe_cache';
-const CACHE_EXPIRY_KEY = 'friggo_recipe_cache_expiry';
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+// In-memory only. Nada é persistido em localStorage.
+// Receitas favoritas ficam no banco (recipes.is_favorite) via FriggoContext.
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 interface CachedRecipes {
   ingredients: string[];
   recipes: Recipe[];
-  timestamp: number;
+  expiresAt: number;
 }
 
-// Get cached recipes
+let memoryCache: CachedRecipes | null = null;
+const savedRecipes = new Map<string, Recipe>();
+
 export function getCachedRecipes(ingredients: string[]): Recipe[] | null {
-  try {
-    const cacheJson = localStorage.getItem(CACHE_KEY);
-    const expiryTime = localStorage.getItem(CACHE_EXPIRY_KEY);
-    
-    if (!cacheJson || !expiryTime) return null;
-    
-    // Check if cache is expired
-    if (Date.now() > parseInt(expiryTime)) {
-      clearRecipeCache();
-      return null;
-    }
-    
-    const cache: CachedRecipes = JSON.parse(cacheJson);
-    
-    // Check if ingredients match (at least 70% overlap)
-    const normalizedInput = ingredients.map(i => i.toLowerCase()).sort();
-    const normalizedCached = cache.ingredients.map(i => i.toLowerCase()).sort();
-    
-    const overlap = normalizedInput.filter(i => normalizedCached.includes(i));
-    if (overlap.length / Math.max(normalizedInput.length, normalizedCached.length) >= 0.7) {
-      return cache.recipes;
-    }
-    
-    return null;
-  } catch {
+  if (!memoryCache) return null;
+  if (Date.now() > memoryCache.expiresAt) {
+    memoryCache = null;
     return null;
   }
+  const normalizedInput = ingredients.map(i => i.toLowerCase()).sort();
+  const normalizedCached = memoryCache.ingredients.map(i => i.toLowerCase()).sort();
+  const overlap = normalizedInput.filter(i => normalizedCached.includes(i));
+  if (overlap.length / Math.max(normalizedInput.length, normalizedCached.length) >= 0.7) {
+    return memoryCache.recipes;
+  }
+  return null;
 }
 
-// Save recipes to cache
 export function cacheRecipes(ingredients: string[], recipes: Recipe[]): void {
-  try {
-    const cache: CachedRecipes = {
-      ingredients,
-      recipes,
-      timestamp: Date.now(),
-    };
-    
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-    localStorage.setItem(CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
-  } catch (error) {
-    console.error('Failed to cache recipes:', error);
-  }
+  memoryCache = { ingredients, recipes, expiresAt: Date.now() + CACHE_DURATION };
 }
 
-// Clear recipe cache
 export function clearRecipeCache(): void {
-  localStorage.removeItem(CACHE_KEY);
-  localStorage.removeItem(CACHE_EXPIRY_KEY);
+  memoryCache = null;
 }
 
-// Get cache info
 export function getCacheInfo(): { hasCache: boolean; expiresAt: Date | null; recipeCount: number } {
-  try {
-    const cacheJson = localStorage.getItem(CACHE_KEY);
-    const expiryTime = localStorage.getItem(CACHE_EXPIRY_KEY);
-    
-    if (!cacheJson || !expiryTime) {
-      return { hasCache: false, expiresAt: null, recipeCount: 0 };
-    }
-    
-    const cache: CachedRecipes = JSON.parse(cacheJson);
-    return {
-      hasCache: true,
-      expiresAt: new Date(parseInt(expiryTime)),
-      recipeCount: cache.recipes.length,
-    };
-  } catch {
-    return { hasCache: false, expiresAt: null, recipeCount: 0 };
-  }
+  if (!memoryCache) return { hasCache: false, expiresAt: null, recipeCount: 0 };
+  return {
+    hasCache: true,
+    expiresAt: new Date(memoryCache.expiresAt),
+    recipeCount: memoryCache.recipes.length,
+  };
 }
-
-// Saved/favorite recipes
-const SAVED_RECIPES_KEY = 'friggo_saved_recipes';
 
 export function getSavedRecipes(): Recipe[] {
-  try {
-    const saved = localStorage.getItem(SAVED_RECIPES_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch {
-    return [];
-  }
+  return Array.from(savedRecipes.values());
 }
 
 export function saveRecipe(recipe: Recipe): void {
-  try {
-    const saved = getSavedRecipes();
-    if (!saved.find(r => r.id === recipe.id)) {
-      saved.push(recipe);
-      localStorage.setItem(SAVED_RECIPES_KEY, JSON.stringify(saved));
-    }
-  } catch (error) {
-    console.error('Failed to save recipe:', error);
-  }
+  savedRecipes.set(recipe.id, recipe);
 }
 
 export function unsaveRecipe(recipeId: string): void {
-  try {
-    const saved = getSavedRecipes();
-    const filtered = saved.filter(r => r.id !== recipeId);
-    localStorage.setItem(SAVED_RECIPES_KEY, JSON.stringify(filtered));
-  } catch (error) {
-    console.error('Failed to unsave recipe:', error);
-  }
+  savedRecipes.delete(recipeId);
 }
 
 export function isRecipeSaved(recipeId: string): boolean {
-  const saved = getSavedRecipes();
-  return saved.some(r => r.id === recipeId);
+  return savedRecipes.has(recipeId);
 }

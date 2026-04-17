@@ -718,7 +718,7 @@ export default function ConsumableTrackerPage() {
                     })}
                 </div>
 
-                <div className="fixed bottom-0 top-auto left-0 right-0 p-4 border-t border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/90 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl z-50">
+                <div className="fixed bottom-0 top-auto left-0 right-0 p-4 border-t border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/90 dark:bg-[#091f1c]/90 backdrop-blur-3xl z-50">
                     <div className="max-w-lg mx-auto">
                         <Button className="w-full h-14 rounded-2xl gap-2 font-black uppercase tracking-widest shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setScreen('add')}>
                             <Package className="h-5 w-5" />{l.addItem}
@@ -730,8 +730,8 @@ export default function ConsumableTrackerPage() {
     };
 
     return (
-        <PageTransition direction="up" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a]">
-            <header className="sticky top-0 z-50 flex items-center gap-4 border-b border-black/[0.02] dark:border-white/[0.02] bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-3 backdrop-blur-3xl">
+        <PageTransition direction="up" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c]">
+            <header className="sticky top-0 z-50 flex items-center gap-4 border-b border-black/[0.02] dark:border-white/[0.02] bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-3 backdrop-blur-3xl">
                 <button 
                     onClick={() => navigate(-1)} 
                     className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground bg-white/80 dark:bg-white/10 shadow-sm border border-black/[0.03] dark:border-white/[0.03] active:scale-[0.95] transition-all"

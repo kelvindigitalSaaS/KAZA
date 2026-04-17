@@ -128,10 +128,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<KazaItem[]>([]);
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [consumables, setConsumables] = useState<ConsumableItem[]>([]);
-  const [defrostTimers, setDefrostTimers] = useState<DefrostTimer[]>(() => {
-    const saved = localStorage.getItem("kaza_defrost_timers_list") || localStorage.getItem("friggo_defrost_timers_list");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [defrostTimers, setDefrostTimers] = useState<DefrostTimer[]>([]);
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [onboarding_completed, setOnboardingCompleted] = useState(false);
   const [itemHistory, setItemHistory] = useState<ItemHistoryEntry[]>([]);
@@ -160,13 +157,6 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       ...overrides
     };
   };
-
-  useEffect(() => {
-    localStorage.setItem(
-      "kaza_defrost_timers_list",
-      JSON.stringify(defrostTimers)
-    );
-  }, [defrostTimers]);
 
   useEffect(() => {
     notifiedAlertIds.current.clear();
@@ -265,8 +255,10 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       const notifPrefs: string[] = [];
       if (np?.expiring_items) notifPrefs.push("expiry");
       if (np?.shopping_list_updates) notifPrefs.push("shopping");
-      if (np?.low_stock_consumables) notifPrefs.push("nightCheckup");
       if (np?.daily_summary) notifPrefs.push("recipes");
+      if (np?.night_checkup) notifPrefs.push("nightCheckup");
+      if (np?.cooking_reminders) notifPrefs.push("cooking");
+      if (np?.low_stock_consumables) notifPrefs.push("consumables");
 
       const onboardingActive = !!profile?.onboarding_completed;
       setOnboardingCompleted(onboardingActive);
@@ -415,9 +407,9 @@ export function KazaProvider({ children }: { children: ReactNode }) {
   }
   function toShoppingItem(row: any): ShoppingItem {
     const category = VALID_CATEGORIES.includes(row.category) ? row.category : "pantry";
-    const storeMap: Record<string, "market" | "fair" | "pharmacy"> = {
-      market: "market", fair: "fair", pharmacy: "pharmacy"
-    };
+    const VALID_STORES = ["market", "fair", "pharmacy", "other"] as const;
+    const rawStore = row.store as string | null | undefined;
+    const store = (VALID_STORES.includes(rawStore as any) ? rawStore : "market") as ShoppingItem["store"];
     return {
       id: row.id,
       name: row.name,
@@ -425,7 +417,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       unit: row.unit || "unidades",
       category,
       isCompleted: !!row.checked,
-      store: storeMap[row.category] || "market",
+      store,
       user_id: row.user_id
     };
   }
@@ -546,6 +538,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
           quantity: item.quantity,
           unit: item.unit,
           category: item.category,
+          store: item.store,
           checked: false
         })
         .select().single();
@@ -823,13 +816,16 @@ export function KazaProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Blindagem: só gravar name/cpf se ainda não existirem no perfil.
+      const profileUpdate: any = {
+        avatar_url: data.avatarUrl,
+        onboarding_completed: true,
+      };
+      if (!onboardingData?.name && data.name) profileUpdate.name = data.name;
+      if (!onboardingData?.cpf && rawCpf.length > 0) profileUpdate.cpf = rawCpf;
+
       const results = await Promise.all([
-        supabase.from("profiles").update({
-          name: data.name,
-          avatar_url: data.avatarUrl,
-          cpf: rawCpf.length > 0 ? rawCpf : null,
-          onboarding_completed: true
-        }).eq("user_id", user.id),
+        supabase.from("profiles").update(profileUpdate).eq("user_id", user.id),
         supabase.from("homes").update({
           home_type: data.homeType || "apartment",
           residents: data.residents || 1
@@ -862,20 +858,22 @@ export function KazaProvider({ children }: { children: ReactNode }) {
   };
 
   async function updateNotificationPreferences(
-    hid: string, prefs?: string[]
+    hid: string, prefs?: string[], nightCheckupTime?: string
   ): Promise<{ error?: any }> {
     const list = prefs ?? DEFAULT_NOTIFICATION_PREFS;
+    const patch: Record<string, unknown> = {
+      home_id: hid,
+      expiring_items: list.includes("expiry"),
+      shopping_list_updates: list.includes("shopping"),
+      low_stock_consumables: list.includes("consumables"),
+      daily_summary: list.includes("recipes"),
+      cooking_reminders: list.includes("cooking"),
+      night_checkup: list.includes("nightCheckup"),
+    };
+    if (nightCheckupTime !== undefined) patch.nightly_checkup_time = nightCheckupTime;
     const { error } = await supabase
       .from("notification_preferences")
-      .upsert({
-        home_id: hid,
-        expiring_items: list.includes("expiry"),
-        shopping_list_updates: list.includes("shopping"),
-        low_stock_consumables: list.includes("consumables"),
-        daily_summary: list.includes("recipes"),
-        cooking_reminders: list.includes("cooking"),
-        night_checkup: list.includes("nightCheckup"),
-      }, { onConflict: "home_id" });
+      .upsert(patch, { onConflict: "home_id" });
     return { error };
   }
 
@@ -905,8 +903,10 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       const homePatch: any = {};
       const settingsPatch: any = {};
 
-      if (data.name !== undefined) profilePatch.name = data.name;
+      // Nome é blindado: só pode ser definido uma vez. Se já existe, ignora silenciosamente.
+      if (data.name !== undefined && !onboardingData?.name) profilePatch.name = data.name;
       if (data.avatarUrl !== undefined) profilePatch.avatar_url = data.avatarUrl;
+      // CPF também é blindado (trigger no banco também bloqueia em última instância).
       if ((data as any).cpf !== undefined && !onboardingData?.cpf) {
         const raw = String((data as any).cpf || "").replace(/\D/g, "");
         if (raw.length > 0) {
@@ -935,7 +935,8 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       if (Object.keys(profilePatch).length) jobs.push(supabase.from("profiles").update(profilePatch).eq("user_id", user.id));
       if (Object.keys(homePatch).length) jobs.push(supabase.from("homes").update(homePatch).eq("id", homeId));
       if (Object.keys(settingsPatch).length) jobs.push(supabase.from("home_settings").update(settingsPatch).eq("home_id", homeId));
-      if (data.notificationPrefs !== undefined) jobs.push(updateNotificationPreferences(homeId, data.notificationPrefs));
+      if (data.notificationPrefs !== undefined || (data as any).nightCheckupTime !== undefined)
+        jobs.push(updateNotificationPreferences(homeId, data.notificationPrefs, (data as any).nightCheckupTime));
 
       const results = await Promise.all(jobs);
       const err = results.find((r: any) => r?.error)?.error;

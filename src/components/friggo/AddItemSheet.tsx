@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, X as XIcon } from "lucide-react";
 import { useKaza } from "@/contexts/FriggoContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ItemCategory, ItemLocation, MaturationLevel } from "@/types/friggo";
@@ -42,6 +42,7 @@ export function AddItemSheet() {
   const [minStock, setMinStock] = useState("");
   const [dailyConsumption, setDailyConsumption] = useState("");
   const [isCooked, setIsCooked] = useState(false);
+  const [categoryConfirmed, setCategoryConfirmed] = useState(false);
 
   // voice input removed per design: hide assistant features
 
@@ -262,6 +263,13 @@ export function AddItemSheet() {
     setMinStock("");
     setDailyConsumption("");
     setIsCooked(false);
+    setCategoryConfirmed(false);
+  };
+
+  const categoryEmojis: Record<string, string> = {
+    fruit: "🍎", vegetable: "🥬", meat: "🍖", dairy: "🥛",
+    cooked: "🍲", frozen: "❄️", beverage: "🥤", pantry: "🏪",
+    cleaning: "🧹", hygiene: "🧴",
   };
 
   const showMaturation = category === "fruit" || category === "vegetable";
@@ -305,21 +313,37 @@ export function AddItemSheet() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label className="text-sm font-semibold">{l.category}</Label>
-              <Select
-                value={category}
-                onValueChange={(v) => setCategory(v as ItemCategory)}
-              >
-                <SelectTrigger className="h-12 rounded-md">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {categoryConfirmed ? (
+                <div className="flex items-center gap-2 h-12 rounded-md border border-primary/30 bg-primary/5 px-3">
+                  <span className="text-lg">{categoryEmojis[category]}</span>
+                  <span className="flex-1 text-sm font-semibold text-primary truncate">
+                    {categories.find(c => c.value === category)?.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryConfirmed(false)}
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-primary transition-all hover:bg-primary/30"
+                  >
+                    <XIcon className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <Select
+                  value={category}
+                  onValueChange={(v) => { setCategory(v as ItemCategory); setCategoryConfirmed(true); }}
+                >
+                  <SelectTrigger className="h-12 rounded-md">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {categoryEmojis[cat.value]} {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-semibold">{l.location}</Label>

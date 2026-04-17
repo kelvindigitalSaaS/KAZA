@@ -209,7 +209,7 @@ export function ProfileSettings({ open, onClose }: ProfileSettingsProps) {
  </label>
  </div>
 
- {/* Name */}
+ {/* Name — blindado após primeira definição */}
  <div className="space-y-2">
  <Label className="text-sm font-semibold">{l.name}</Label>
  <Input
@@ -217,7 +217,18 @@ export function ProfileSettings({ open, onClose }: ProfileSettingsProps) {
  value={name}
  onChange={(e) => setName(e.target.value)}
  className="h-12 rounded-md"
+ readOnly={!!onboardingData?.name}
+ disabled={!!onboardingData?.name}
  />
+ {!!onboardingData?.name && (
+ <p className="text-xs text-muted-foreground">
+ {language === 'pt-BR'
+ ? 'Nome não pode ser alterado após o cadastro.'
+ : language === 'es'
+ ? 'El nombre no puede cambiarse después del registro.'
+ : 'Name cannot be changed after signup.'}
+ </p>
+ )}
  </div>
 
  {/* Residents */}

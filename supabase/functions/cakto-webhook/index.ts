@@ -130,6 +130,29 @@ serve(async (req) => {
         webhook_data: transaction,
       }, { onConflict: "cakto_transaction_id" });
 
+      // Atualizar subscriptions com period/next_billing e registrar evento
+      const now = new Date();
+      const nextBilling = new Date(now.getTime() + 30 * 24 * 3600 * 1000);
+      await supabase.from("subscriptions").upsert({
+        user_id: profile.user_id,
+        plan: "premium",
+        is_active: true,
+        current_period_end: nextBilling.toISOString(),
+        next_billing_at: nextBilling.toISOString(),
+        payment_status: "paid",
+        plan_label: "Premium",
+        auto_renew: true,
+        cancel_at_period_end: false,
+      }, { onConflict: "user_id" });
+
+      await supabase.from("subscription_events").insert({
+        user_id: profile.user_id,
+        event_type: "payment_succeeded",
+        amount: transaction.amount || 0,
+        currency: "BRL",
+        metadata: { cakto_transaction_id: transactionId },
+      });
+
       resultMsg = "Purchase approved - user upgraded to premium";
 
     // ── refund / subscription_canceled (nota: Cakto usa 1 'l') ──
@@ -155,6 +178,23 @@ serve(async (req) => {
         payment_method: "cancellation",
         webhook_data: transaction,
       }, { onConflict: "cakto_transaction_id" });
+
+      await supabase.from("subscriptions").upsert({
+        user_id: profile.user_id,
+        plan: "free",
+        is_active: false,
+        cancel_at_period_end: true,
+        canceled_at: new Date().toISOString(),
+        payment_status: event,
+      }, { onConflict: "user_id" });
+
+      await supabase.from("subscription_events").insert({
+        user_id: profile.user_id,
+        event_type: event === "refund" ? "payment_failed" : "canceled",
+        amount: event === "refund" ? -(transaction.amount || 0) : 0,
+        currency: "BRL",
+        metadata: { cakto_transaction_id: transactionId, event },
+      });
 
       resultMsg = "Refund/Cancel processed - user downgraded to free";
 

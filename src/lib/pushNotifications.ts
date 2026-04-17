@@ -121,7 +121,42 @@ export async function requestWebNotificationPermission(): Promise<boolean> {
   if (Notification.permission === "granted") return true;
   if (Notification.permission === "denied") return false;
   const result = await Notification.requestPermission();
-  return result === "granted";
+  const granted = result === "granted";
+  if (granted) {
+    try { await saveWebPushSubscription(); } catch { /* best-effort */ }
+  }
+  return granted;
+}
+
+/**
+ * Persiste a inscrição de push do navegador em public.push_subscriptions.
+ * Best-effort: não bloqueia o fluxo se falhar.
+ */
+export async function saveWebPushSubscription(): Promise<void> {
+  if (isNative) return;
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    // Sem VAPID key aqui; grava inscrição existente se houver.
+    if (!sub) return;
+    const json = sub.toJSON() as any;
+    await supabase.from("push_subscriptions").upsert({
+      user_id: user.id,
+      endpoint: sub.endpoint,
+      p256dh: json?.keys?.p256dh ?? null,
+      auth: json?.keys?.auth ?? null,
+      user_agent: navigator.userAgent,
+      platform: "web",
+      is_active: true,
+      last_seen_at: new Date().toISOString(),
+    }, { onConflict: "user_id,endpoint" });
+  } catch (e) {
+    console.warn("[push] saveWebPushSubscription failed", e);
+  }
 }
 
 /**

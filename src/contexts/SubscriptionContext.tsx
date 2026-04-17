@@ -174,6 +174,22 @@ export function SubscriptionProvider({
       let remaining = Math.max(0, 7 - daysPassed);
       let locked = planType !== 'premium' && remaining === 0;
 
+      // Fonte de verdade canônica: view v_user_access.
+      // Se existir, sobrescreve o cálculo manual (fallback mantido acima por segurança).
+      try {
+        const { data: access } = await supabase
+          .from("v_user_access")
+          .select("has_access, in_trial, trial_days_left, billing_soon")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (access) {
+          remaining = (access as any).trial_days_left ?? remaining;
+          locked = !((access as any).has_access);
+        }
+      } catch {
+        // view pode não existir em ambientes antigos — mantém fallback
+      }
+
       setTrialDaysRemaining(remaining);
       setIsLocked(locked);
       // @ts-ignore

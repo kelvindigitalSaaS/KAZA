@@ -162,8 +162,8 @@ export default function MonthlyReportPage() {
     const monthName = format(now, 'MMMM yyyy');
 
     return (
-        <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] pb-20">
-            <header className="sticky top-0 z-50 flex items-center gap-3 border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-4 backdrop-blur-2xl">
+        <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-20">
+            <header className="sticky top-0 z-50 flex items-center gap-3 border-b border-black/[0.04] dark:border-white/[0.06] bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-4 backdrop-blur-2xl">
                 <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-2xl text-foreground bg-white/80 dark:bg-white/10 backdrop-blur-xl active:scale-[0.97] transition-all">
                     <ArrowLeft className="h-5 w-5" />
                 </button>

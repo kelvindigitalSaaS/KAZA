@@ -38,7 +38,8 @@ export interface ShoppingItem {
   quantity: number;
   unit: string;
   isCompleted: boolean;
-  store: "market" | "fair" | "pharmacy";
+  store: "market" | "fair" | "pharmacy" | "other";
+  user_id?: string;
 }
 
 export interface Recipe {

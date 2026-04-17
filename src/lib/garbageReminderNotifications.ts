@@ -170,6 +170,32 @@ export function getGarbageReminderConfig(): GarbageReminderConfig {
 }
 
 /**
+ * Sincroniza config do localStorage com a tabela public.garbage_reminders.
+ * Best-effort: localStorage continua sendo a fonte primária offline.
+ */
+export async function syncGarbageReminderToDb(homeId: string | null | undefined) {
+  if (!homeId) return;
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const cfg = getGarbageReminderConfig();
+    await supabase.from("garbage_reminders").upsert({
+      home_id: homeId,
+      user_id: user.id,
+      enabled: cfg.enabled,
+      selected_days: cfg.selectedDays,
+      reminder_time: cfg.reminderTime,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo",
+      garbage_location: cfg.garbageLocation,
+      building_floor: cfg.buildingFloor ?? null,
+    }, { onConflict: "home_id,user_id" });
+  } catch (e) {
+    console.warn("[garbage] syncGarbageReminderToDb failed", e);
+  }
+}
+
+/**
  * Monitor contínuo para verificar e agendar notificações
  * Deve ser chamado periodicamente (a cada 5 minutos)
  */

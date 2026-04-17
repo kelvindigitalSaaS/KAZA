@@ -169,8 +169,8 @@ export default function PrivacyPage() {
   const data = TERMS_DATA[language as keyof typeof TERMS_DATA] || TERMS_DATA["pt-BR"];
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] pb-10">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.06] px-4 h-16 flex items-center gap-4">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#091f1c] pb-10">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#091f1c]/80 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.06] px-4 h-16 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
           className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted/50 text-foreground transition-all active:scale-90"

@@ -147,8 +147,8 @@ export default function ProfilePage() {
     };
 
     return (
-        <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#0a0a0a] pb-20">
-            <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-3 backdrop-blur-2xl border-b border-black/[0.02] dark:border-white/[0.02]">
+        <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-20">
+            <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-3 backdrop-blur-2xl border-b border-black/[0.02] dark:border-white/[0.02]">
                 <button
                     onClick={() => navigate(-1)}
                     className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground active:scale-[0.97] transition-all bg-white/80 dark:bg-white/10 shadow-sm border border-black/[0.03] dark:border-white/[0.03] backdrop-blur-xl"

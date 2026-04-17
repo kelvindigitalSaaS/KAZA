@@ -20,6 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useKaza } from "@/contexts/FriggoContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Trash2,
   Bell,
@@ -63,7 +65,8 @@ const WEEKDAYS = {
 
 export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
   const { language } = useLanguage();
-  const { onboardingData } = useKaza();
+  const { onboardingData, homeId } = useKaza();
+  const { user } = useAuth();
 
   const [enabled, setEnabled] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 4]); // Monday and Thursday
@@ -73,18 +76,37 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
   );
   const [buildingFloor, setBuildingFloor] = useState("");
 
-  // Load from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("friggo-garbage-reminder");
-    if (saved) {
-      const data = JSON.parse(saved);
-      setEnabled(data.enabled ?? false);
-      setSelectedDays(data.selectedDays ?? [1, 4]);
-      setReminderTime(data.reminderTime ?? "20:00");
-      setGarbageLocation(data.garbageLocation ?? "street");
-      setBuildingFloor(data.buildingFloor ?? "");
-    }
-  }, []);
+    if (!open) return;
+    const loadFromDB = async () => {
+      if (user && homeId) {
+        const { data } = await supabase
+          .from("garbage_reminders")
+          .select("*")
+          .eq("home_id", homeId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data) {
+          setEnabled((data as any).enabled ?? false);
+          setSelectedDays((data as any).selected_days ?? [1, 4]);
+          setReminderTime((data as any).reminder_time ?? "20:00");
+          setGarbageLocation((data as any).garbage_location ?? "street");
+          setBuildingFloor((data as any).building_floor ?? "");
+          return;
+        }
+      }
+      const saved = localStorage.getItem("friggo-garbage-reminder");
+      if (saved) {
+        const data = JSON.parse(saved);
+        setEnabled(data.enabled ?? false);
+        setSelectedDays(data.selectedDays ?? [1, 4]);
+        setReminderTime(data.reminderTime ?? "20:00");
+        setGarbageLocation(data.garbageLocation ?? "street");
+        setBuildingFloor(data.buildingFloor ?? "");
+      }
+    };
+    loadFromDB();
+  }, [open, user, homeId]);
 
   const labels = {
     "pt-BR": {
@@ -196,7 +218,7 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
     return `${l.in} ${daysUntilCollection} ${l.days}`;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const data = {
       enabled,
       selectedDays,
@@ -205,6 +227,24 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
       buildingFloor
     };
     localStorage.setItem("friggo-garbage-reminder", JSON.stringify(data));
+
+    if (user && homeId) {
+      const { error } = await supabase
+        .from("garbage_reminders")
+        .upsert({
+          home_id: homeId,
+          user_id: user.id,
+          enabled,
+          selected_days: selectedDays,
+          reminder_time: reminderTime,
+          garbage_location: garbageLocation,
+          building_floor: buildingFloor || null,
+        }, { onConflict: "home_id,user_id" });
+
+      if (error && import.meta.env.DEV) {
+        console.error("[DEV] garbage_reminders upsert error:", error);
+      }
+    }
 
     // Start monitoring if enabled
     if (enabled && selectedDays.length > 0) {
@@ -222,7 +262,7 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0 bg-[#fafafa] dark:bg-[#0a0a0a]">
+      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0 bg-[#fafafa] dark:bg-[#091f1c]">
         <SheetHeader className="border-b border-primary/10 px-6 py-4">
           <SheetTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
             <Trash2 className="h-5 w-5 text-primary" />

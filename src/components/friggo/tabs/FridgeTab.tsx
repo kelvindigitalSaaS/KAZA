@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ItemCard } from '../ItemCard';
 import { BarcodeScanner } from '../BarcodeScanner';
 import { useNavigate } from 'react-router-dom';
-import { Refrigerator, Snowflake, Package, Droplets, Search, ScanBarcode, ChevronDown, ChevronUp, TrendingDown, CheckSquare, Square, Trash2, X, Edit3, AlertTriangle, EyeOff } from 'lucide-react';
+import { Refrigerator, Snowflake, Package, Droplets, Search, ScanBarcode, ChevronDown, ChevronUp, TrendingDown, CheckSquare, Square, Trash2, X, Edit3, AlertTriangle, EyeOff, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -178,49 +178,12 @@ export function FridgeTab() {
         return daysLeft <= 7 || c.currentStock <= (c.minStock || 0);
     });
 
+    const allSelected = selectionMode && selectedItems.size === filteredItems.length && filteredItems.length > 0;
+
     return (
         <div className="space-y-4 pb-24">
-            {/* Apple-style header */}
-            <div className="flex items-center justify-between pt-2">
-        <div className="hidden">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                {l.pantry}
-                <div className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary/10">
-                    <Refrigerator className="h-4 w-4 text-primary" />
-                </div>
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{items.length} {l.itemsTotal}</p>
-        </div>
-                <div className="flex items-center gap-2">
-                    {!selectionMode ? (
-                        <>
-                            <button
-                                onClick={() => setSelectionMode(true)}
-                                className="flex items-center gap-1.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/10 px-3 py-2.5 text-sm font-semibold text-foreground transition-all active:scale-[0.97] shadow-sm"
-                            >
-                                <CheckSquare className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => setScannerOpen(true)}
-                                className="flex items-center gap-2 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/10 px-4 py-2.5 text-sm font-semibold text-primary transition-all active:scale-[0.97] shadow-sm"
-                            >
-                                <ScanBarcode className="h-4 w-4" />
-                                {l.scanner}
-                            </button>
-                        </>
-                    ) : (
-                        <button
-                            onClick={exitSelectionMode}
-                            className="flex items-center gap-1.5 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/10 px-3 py-2.5 text-sm font-semibold text-foreground transition-all active:scale-[0.97] shadow-sm"
-                        >
-                            <X className="h-4 w-4" />
-                            {l.cancel}
-                        </button>
-                    )}
-                </div>
-            </div>
 
-            {/* Selection toolbar */}
+            {/* Selection toolbar (when active) */}
             {selectionMode && (
                 <div className="flex items-center justify-between rounded-2xl bg-primary/5 border border-primary/10 p-3 animate-slide-down">
                     <div className="flex items-center gap-3">
@@ -230,12 +193,21 @@ export function FridgeTab() {
                         </button>
                         <span className="text-xs text-muted-foreground">{selectedItems.size} {l.selected}</span>
                     </div>
-                    {selectedItems.size > 0 && (
-                        <Button onClick={deleteSelected} variant="destructive" size="sm" className="rounded-xl h-9 gap-1.5 active:scale-[0.97] transition-all">
-                            <Trash2 className="h-3.5 w-3.5" />
-                            {l.deleteSelected} ({selectedItems.size})
-                        </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {selectedItems.size > 0 && (
+                            <Button onClick={deleteSelected} variant="destructive" size="sm" className="rounded-xl h-9 gap-1.5 active:scale-[0.97] transition-all">
+                                <Trash2 className="h-3.5 w-3.5" />
+                                {l.deleteSelected} ({selectedItems.size})
+                            </Button>
+                        )}
+                        <button
+                            onClick={exitSelectionMode}
+                            className="flex items-center gap-1.5 rounded-xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/10 px-3 py-2 text-sm font-semibold text-foreground transition-all active:scale-[0.97] shadow-sm"
+                        >
+                            <X className="h-4 w-4" />
+                            {l.cancel}
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -287,19 +259,35 @@ export function FridgeTab() {
                 </TabsList>
 
                 <TabsContent value="items" className="mt-4 space-y-4">
-                    {/* Search */}
-                    <div className="relative">
-                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            placeholder={l.searchItems}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="h-12 rounded-2xl border-black/[0.06] dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl pl-10 text-[15px] shadow-sm"
-                        />
+                    {/* Search row with scanner + select-all icons */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setScannerOpen(true)}
+                            title={l.scanner}
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.06] dark:border-white/10 text-primary shadow-sm transition-all active:scale-[0.95]"
+                        >
+                            <ScanBarcode className="h-5 w-5" />
+                        </button>
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder={l.searchItems}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-12 rounded-2xl border-black/[0.06] dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl pl-10 text-[15px] shadow-sm"
+                            />
+                        </div>
+                        <button
+                            onClick={() => { setSelectionMode(true); selectAll(); }}
+                            title={l.selectAll}
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.06] dark:border-white/10 text-foreground shadow-sm transition-all active:scale-[0.95]"
+                        >
+                            <CheckSquare className="h-5 w-5" />
+                        </button>
                     </div>
 
-                    {/* Location Filters */}
-                    <div className="flex flex-wrap gap-2">
+                    {/* Location Filters — hidden when all items selected */}
+                    {!allSelected && <div className="flex flex-wrap gap-2">
                         {locationFilters.map((filter) => {
                             const Icon = filter.icon;
                             const isActive = activeFilter === filter.id;
@@ -329,7 +317,7 @@ export function FridgeTab() {
                                 </button>
                             );
                         })}
-                    </div>
+                    </div>}
 
                     {/* Items by Category with Collapsible */}
                     {Object.entries(groupedItems).length === 0 ? (
@@ -341,6 +329,15 @@ export function FridgeTab() {
                             <p className="mt-1 text-sm text-gray-500">
                                 {searchQuery ? l.tryAnother : l.addItems}
                             </p>
+                            {searchQuery.trim().length > 0 && (
+                                <button
+                                    onClick={() => window.location.href = `/add-item?name=${encodeURIComponent(searchQuery.trim())}`}
+                                    className="mt-4 flex items-center gap-2 rounded-2xl bg-primary/10 px-5 py-3 text-sm font-semibold text-primary transition-all active:scale-[0.97]"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    {language === 'pt-BR' ? `Cadastrar "${searchQuery.trim()}"` : language === 'es' ? `Registrar "${searchQuery.trim()}"` : `Register "${searchQuery.trim()}"`}
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-3">

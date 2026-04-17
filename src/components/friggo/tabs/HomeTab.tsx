@@ -217,12 +217,24 @@ export function HomeTab() {
     // ── Tip of the day ──
     const tipOfDay = useMemo(() => {
         const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % allRecipes.length;
+        // Session offset: changes each app session so consecutive visits see different tips
+        let sessionOffset = 0;
+        try {
+            const stored = sessionStorage.getItem('kaza_tip_offset');
+            if (stored !== null) {
+                sessionOffset = parseInt(stored, 10);
+            } else {
+                sessionOffset = Math.floor(Math.random() * allRecipes.length);
+                sessionStorage.setItem('kaza_tip_offset', String(sessionOffset));
+            }
+        } catch { /* sessionStorage unavailable */ }
+        const baseIndex = (dayIndex + sessionOffset) % allRecipes.length;
         const expiringNames = expiringItems.map(i => i.name.toLowerCase());
-        if (expiringNames.length === 0) return allRecipes[dayIndex] || null;
+        if (expiringNames.length === 0) return allRecipes[baseIndex] || null;
         const match = allRecipes.find(r =>
             r.ingredients.some(ing => expiringNames.some(e => ing.toLowerCase().includes(e)))
         );
-        return match || allRecipes[dayIndex] || null;
+        return match || allRecipes[baseIndex] || null;
     }, [expiringItems]);
 
     const INTERVAL_FACTORS = {
@@ -667,7 +679,7 @@ export function HomeTab() {
             )}
 
             {/* ── CONSUMABLES RUNNING LOW ── */}
-            {lowConsumables.length > 0 && !onboardingData?.hiddenSections?.includes('home-low-consumables') && (
+            {lowConsumables.length > 0 && (
                 <motion.section
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -679,15 +691,19 @@ export function HomeTab() {
                             <h2 className="text-base font-bold text-foreground">{l.consumablesLow}</h2>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground">{lowConsumables.length} {l.items}</span>
+                            {!onboardingData?.hiddenSections?.includes('home-low-consumables') && (
+                                <span className="text-xs text-muted-foreground">{lowConsumables.length} {l.items}</span>
+                            )}
                             <button
                                 onClick={() => toggleContextSection('home-low-consumables')}
                                 className="flex h-6 w-6 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all"
+                                title={onboardingData?.hiddenSections?.includes('home-low-consumables') ? 'Exibir' : 'Ocultar'}
                             >
                                 <EyeOff className="h-3.5 w-3.5" />
                             </button>
                         </div>
                     </div>
+                    {!onboardingData?.hiddenSections?.includes('home-low-consumables') && (
                     <div className="space-y-2">
                         {lowConsumables.map(c => (
                             <motion.div
@@ -713,6 +729,7 @@ export function HomeTab() {
                             </motion.div>
                         ))}
                     </div>
+                    )}
                 </motion.section>
             )}
 

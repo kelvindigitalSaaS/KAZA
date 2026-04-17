@@ -43,7 +43,7 @@ export default function KazaLogin({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 }}
-      className="bg-white/95 dark:bg-[#0b0a0a]/90 backdrop-blur-2xl border border-black/[0.04] dark:border-white/[0.06] rounded-[2rem] shadow-2xl p-6 max-w-md mx-auto"
+      className="bg-white/95 dark:bg-[#0b1f1c]/90 backdrop-blur-2xl border border-black/[0.04] dark:border-white/[0.06] rounded-[2rem] shadow-2xl p-6 max-w-md mx-auto"
     >
       <form onSubmit={onSubmit} className="space-y-6">
         {view === 'register' && (

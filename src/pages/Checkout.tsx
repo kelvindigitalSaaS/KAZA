@@ -39,7 +39,7 @@ export default function Checkout() {
 
   return (
     <div className="min-h-[var(--100dvh,100dvh)] bg-background flex flex-col pt-safe">
-      <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#0a0a0a]/80 px-4 py-3 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06] shrink-0">
+      <header className="sticky top-0 z-50 flex items-center gap-3 bg-[#fafafa]/80 dark:bg-[#091f1c]/80 px-4 py-3 backdrop-blur-2xl border-b border-black/[0.04] dark:border-white/[0.06] shrink-0">
         <button
           onClick={() => navigate('/plans')}
           className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-xl transition-colors active:scale-[0.97]"

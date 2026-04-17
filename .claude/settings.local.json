@@ -6,7 +6,9 @@
       "Bash(sed 's/ .*//')",
       "Bash(grep -l \"meal_plan\\\\|recipe_favorite\" \"c:/Users/PC/Desktop/friggo/friggo/supabase/migrations\"/*.sql)",
       "Bash(git add *)",
-      "Bash(git commit -m 'fix: load saved CPF and profile data in onboarding flow *)"
+      "Bash(git commit -m 'fix: load saved CPF and profile data in onboarding flow *)",
+      "Bash(sed \"s/.*\\\\.from\\('//\")",
+      "Bash(sed \"s/'\\).*//\")"
     ]
   }
 }

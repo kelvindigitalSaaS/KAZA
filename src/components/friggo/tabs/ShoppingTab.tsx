@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useKaza } from "@/contexts/FriggoContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ShoppingCart,
   Plus,
@@ -59,8 +61,10 @@ export function ShoppingTab() {
     updateShoppingItemQuantity,
     onboardingData,
     markAllShoppingComplete,
-    clearAllShoppingList
+    clearAllShoppingList,
+    homeId
   } = useKaza();
+  const { user } = useAuth();
   const { language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("all");
   const [newItem, setNewItem] = useState("");
@@ -74,6 +78,8 @@ export function ShoppingTab() {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSavedLists, setShowSavedLists] = useState(false);
+  const [savedLists, setSavedLists] = useState<Array<{ id: string; date: string; name?: string; items: Array<{ name: string; quantity?: number; unit?: string; store?: string }> }>>([]);
   const [newItemUnit, setNewItemUnit] = useState("un");
   const [newItemStore, setNewItemStore] = useState<"market" | "fair" | "pharmacy" | "other">("market");
   const [showFilters, setShowFilters] = useState(false);
@@ -225,18 +231,63 @@ export function ShoppingTab() {
     setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleSaveList = () => {
-    // Save to localStorage history
-    const saved = JSON.parse(localStorage.getItem("friggo_saved_lists") || "[]");
-    saved.unshift({
-      id: Date.now(),
-      date: new Date().toISOString(),
-      items: shoppingList.map(i => ({ name: i.name, quantity: i.quantity, unit: i.unit, store: i.store }))
+  const loadSavedLists = async () => {
+    if (!user || !homeId) { setSavedLists([]); return; }
+    const { data } = await supabase
+      .from("saved_shopping_lists")
+      .select("id, name, items, created_at")
+      .eq("home_id", homeId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setSavedLists(
+      (data || []).map((row: any) => ({
+        id: row.id,
+        date: row.created_at,
+        name: row.name,
+        items: Array.isArray(row.items) ? row.items : [],
+      }))
+    );
+  };
+
+  const handleSaveList = async () => {
+    if (!user || !homeId) {
+      toast.error(language === "pt-BR" ? "Faça login para salvar listas" : "Login to save lists");
+      return;
+    }
+    const items = shoppingList.map(i => ({ name: i.name, quantity: i.quantity, unit: i.unit, store: i.store }));
+    const { error } = await supabase.from("saved_shopping_lists").insert({
+      home_id: homeId,
+      user_id: user.id,
+      name: new Date().toLocaleDateString(),
+      items,
     });
-    // Keep last 10 lists
-    localStorage.setItem("friggo_saved_lists", JSON.stringify(saved.slice(0, 10)));
-    markAllShoppingComplete();
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await markAllShoppingComplete();
     toast.success(l.allBought);
+  };
+
+  const handleLoadSavedList = (list: typeof savedLists[0]) => {
+    list.items.forEach(item => {
+      const store = (item.store as any) || "market";
+      addToShoppingList({
+        name: item.name,
+        quantity: item.quantity || 1,
+        unit: item.unit || "un",
+        category: store === "pharmacy" ? "hygiene" : store === "fair" ? "vegetable" : "pantry",
+        store,
+      });
+    });
+    setShowSavedLists(false);
+    toast.success(language === "pt-BR" ? "Lista carregada!" : language === "es" ? "¡Lista cargada!" : "List loaded!");
+  };
+
+  const handleDeleteSavedList = async (id: string) => {
+    if (!homeId) return;
+    await supabase.from("saved_shopping_lists").delete().eq("id", id).eq("home_id", homeId);
+    setSavedLists(prev => prev.filter(l => l.id !== id));
   };
 
   const handleShareWhatsApp = () => {
@@ -250,12 +301,15 @@ export function ShoppingTab() {
   const handleAddItem = (product?: ProductSuggestion) => {
     const itemName = product?.name || newItem.trim();
     if (!itemName) return;
+    const chosenStore = product?.category || newItemStore;
     addToShoppingList({
       name: itemName,
-      category: newItemStore === "pharmacy" ? "hygiene" : "pantry",
+      category:
+        chosenStore === "pharmacy" ? "hygiene" :
+        chosenStore === "fair"     ? "vegetable" : "pantry",
       quantity: product?.defaultQuantity || 1,
       unit: product?.unit || newItemUnit,
-      store: product?.category || newItemStore
+      store: chosenStore
     });
     setNewItem("");
     setShowSuggestions(false);
@@ -692,16 +746,80 @@ export function ShoppingTab() {
         </div>
       )}
 
-      {/* ── DELETE ALL ── */}
+      {/* ── DELETE ALL + LISTAS SALVAS ── */}
       {shoppingList.length > 0 && (
-        <button
-          onClick={() => setShowDeleteDialog(true)}
-          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-destructive/10 text-destructive text-sm font-semibold transition-all active:scale-[0.97]"
-          style={{ height: "48px" }}
-        >
-          <Trash2 className="h-4 w-4" />
-          {l.deleteAll}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowDeleteDialog(true)}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-destructive/10 text-destructive text-sm font-semibold transition-all active:scale-[0.97]"
+            style={{ height: "48px" }}
+          >
+            <Trash2 className="h-4 w-4" />
+            {l.deleteAll}
+          </button>
+          <button
+            onClick={() => { loadSavedLists(); setShowSavedLists(true); }}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-black/[0.06] dark:border-white/10 bg-white/80 dark:bg-white/5 text-foreground text-sm font-semibold transition-all active:scale-[0.97] px-4"
+            style={{ height: "48px" }}
+          >
+            <Save className="h-4 w-4 text-primary" />
+            <span className="hidden sm:inline">{language === "pt-BR" ? "Listas Salvas" : language === "es" ? "Listas Guardadas" : "Saved Lists"}</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── SAVED LISTS MODAL ── */}
+      {showSavedLists && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 animate-backdrop" onClick={() => setShowSavedLists(false)}>
+          <div className="w-full max-w-lg rounded-t-3xl bg-[#fafafa] dark:bg-[#1a1a1a] p-6 pb-10 max-h-[80vh] overflow-y-auto animate-sheet-up" onClick={e => e.stopPropagation()}>
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-600" />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">
+                {language === "pt-BR" ? "Listas Salvas" : language === "es" ? "Listas Guardadas" : "Saved Lists"}
+              </h2>
+              <button onClick={() => setShowSavedLists(false)} className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {savedLists.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-8">
+                {language === "pt-BR" ? "Nenhuma lista salva ainda." : language === "es" ? "Ninguna lista guardada aún." : "No saved lists yet."}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {savedLists.map(list => (
+                  <div key={list.id} className="rounded-2xl border border-black/[0.04] dark:border-white/[0.06] bg-white dark:bg-white/5 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground text-sm">
+                          {list.name || (language === "pt-BR" ? "Lista de compras" : language === "es" ? "Lista de compras" : "Shopping list")}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(list.date).toLocaleDateString(language === "pt-BR" ? "pt-BR" : language === "es" ? "es-ES" : "en-US")} · {list.items.length} {language === "pt-BR" ? "itens" : language === "es" ? "artículos" : "items"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleLoadSavedList(list)}
+                          className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-all active:scale-95"
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5" />
+                          {language === "pt-BR" ? "Carregar" : language === "es" ? "Cargar" : "Load"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSavedList(list.id)}
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-destructive/10 text-destructive transition-all active:scale-95"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Delete All Confirmation Dialog */}

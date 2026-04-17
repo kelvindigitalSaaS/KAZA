@@ -1,6 +1,23 @@
 // Service worker custom handlers (plain JS)
 // This file is injected into the Workbox-generated SW via importScripts.
-// It handles notification click and action events for the Friggo PWA.
+// It handles notification click, close and push events for the Friggo PWA.
+
+// ── Push event handler (PWA web push) ────────────────────────────────────────
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; } catch { payload = { title: "Friggo", body: event.data && event.data.text ? event.data.text() : "" }; }
+  const title = payload.title || "Friggo";
+  const options = {
+    body: payload.body || "",
+    icon: payload.icon || "/icon-192.png",
+    badge: payload.badge || "/icon-192.png",
+    tag: payload.tag || payload.category || "friggo",
+    data: payload.data || payload,
+    actions: payload.actions || [],
+    vibrate: payload.vibrate,
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
 
 // ── Notification click handler ───────────────────────────────────────────────
 self.addEventListener("notificationclick", (event) => {
