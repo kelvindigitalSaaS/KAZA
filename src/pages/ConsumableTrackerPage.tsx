@@ -168,6 +168,7 @@ export default function ConsumableTrackerPage() {
 
     const [screen, setScreen] = useState<'list' | 'add' | 'edit' | 'custom'>('list');
     const [hideMissing, setHideMissing] = useState(false);
+    const [expandedItem, setExpandedItem] = useState<string | null>(null);
     
     // Using strings for inputs to handle comma/dot and empty states reliably
     const [newItem, setNewItem] = useState({ 
@@ -594,135 +595,154 @@ export default function ConsumableTrackerPage() {
                     </div>
                 )}
 
+                {/* Compact grid view - collapsed by default */}
+                {visibleItems.length > 0 && (
+                    <div className="mb-6">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3 px-1">Visão Rápida</h3>
+                        <div className="grid grid-cols-4 gap-2">
+                            {visibleItems.map((item) => {
+                                const daysLeft = calculateDaysUntilEmpty(item);
+                                const alertLevel = getAlertLevel(daysLeft);
+
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setExpandedItem(expandedItem === item.id ? null : item.id)}
+                                        className={cn(
+                                            "relative rounded-2xl p-3 transition-all active:scale-[0.95] flex flex-col items-center gap-2",
+                                            expandedItem === item.id ? "ring-2 ring-primary bg-primary/5" : "bg-white dark:bg-white/5",
+                                            alertLevel === 'danger' && "border border-destructive/30",
+                                            alertLevel === 'warning' && "border border-warning/30",
+                                            alertLevel === 'ok' && "border border-black/[0.04] dark:border-white/[0.04]",
+                                            item.hidden && "opacity-40"
+                                        )}
+                                    >
+                                        <div className="text-3xl">{item.icon}</div>
+                                        <div className={cn(
+                                            "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                                            alertLevel === 'danger' && "bg-destructive/10 text-destructive",
+                                            alertLevel === 'warning' && "bg-warning/10 text-warning",
+                                            alertLevel === 'ok' && "bg-emerald-500/10 text-emerald-600"
+                                        )}>
+                                            {daysLeft === Infinity ? '∞' : daysLeft}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Expanded details */}
                 <div className="grid grid-cols-1 gap-3">
                     {visibleItems.map((item) => {
                         const daysLeft = calculateDaysUntilEmpty(item);
                         const alertLevel = getAlertLevel(daysLeft);
+                        const isExpanded = expandedItem === item.id;
 
                         return (
                             <div key={item.id} className={cn(
-                                "rounded-[1.25rem] border border-black/[0.04] dark:border-white/[0.06] p-4 transition-all shadow-sm ring-0 hover:ring-2 hover:ring-primary/10",
+                                "rounded-2xl border transition-all shadow-sm overflow-hidden",
                                 item.hidden && "opacity-40 grayscale-[0.5]",
-                                alertLevel === 'danger' && !item.hidden && "bg-destructive/[0.02] border-destructive/20 shadow-destructive/5",
-                                alertLevel === 'warning' && !item.hidden && "bg-warning/[0.02] border-warning/20 shadow-warning/5",
-                                (alertLevel === 'ok' || item.hidden) && "bg-white dark:bg-[#1a1a1a] border-gray-100 dark:border-white/5"
+                                alertLevel === 'danger' && !item.hidden && "border-destructive/20 bg-destructive/[0.02]",
+                                alertLevel === 'warning' && !item.hidden && "border-warning/20 bg-warning/[0.02]",
+                                (alertLevel === 'ok' || item.hidden) && "border-black/[0.04] dark:border-white/[0.06] bg-white dark:bg-white/[0.02]"
                             )}>
-                                <div
-                                    className="flex items-center gap-3 mb-4 cursor-pointer active:opacity-70 transition-opacity"
-                                    onClick={() => openEdit(item)}
+                                {/* Collapsed header */}
+                                <button
+                                    onClick={() => setExpandedItem(isExpanded ? null : item.id)}
+                                    className="w-full flex items-center gap-3 p-4 hover:bg-black/[0.01] dark:hover:bg-white/[0.02] active:bg-black/[0.02] dark:active:bg-white/[0.03] transition-colors"
                                 >
-                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-xl shadow-inner border border-black/[0.02] dark:border-white/[0.02]">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-xl border border-black/[0.02] dark:border-white/[0.02]">
                                         {item.icon}
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-lg font-black text-foreground tracking-tight truncate">{item.name}</p>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0 bg-white/50 dark:bg-black/20 border-black/[0.03] dark:border-white/[0.03]">
-                                                {Number.isFinite(Number(item.currentStock)) ? Number(item.currentStock).toFixed(2) : String(item.currentStock)} {item.unit}
-                                            </Badge>
-                                            <span className="text-[10px] font-bold text-muted-foreground opacity-60">•</span>
-                                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-                                                {Number.isFinite(Number(item.dailyConsumption)) ? Number(item.dailyConsumption).toFixed(2) : String(item.dailyConsumption)} {item.unit}/{l[item.usageInterval || 'daily']}
-                                            </span>
-                                            {isMultiPro && (
-                                                <>
-                                                    <span className="text-[10px] font-bold text-muted-foreground opacity-60">•</span>
-                                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                                                        {(Number(item.dailyConsumption) / residents).toFixed(2)} {l.perPerson}
-                                                    </span>
-                                                </>
+                                    <div className="flex-1 min-w-0 text-left">
+                                        <p className="text-sm font-bold text-foreground truncate">{item.name}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {Number(item.currentStock).toFixed(1)} {item.unit} • {daysLeft === Infinity ? '∞ dias' : `${daysLeft}d`}
+                                        </p>
+                                    </div>
+                                    <div className={cn(
+                                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                                        alertLevel === 'danger' && "bg-destructive/10 text-destructive",
+                                        alertLevel === 'warning' && "bg-warning/10 text-warning",
+                                        alertLevel === 'ok' && "bg-emerald-500/10 text-emerald-600"
+                                    )}>
+                                        <Calendar className="h-3 w-3" />
+                                        {daysLeft === Infinity ? '∞' : daysLeft}
+                                    </div>
+                                </button>
+
+                                {/* Expanded content */}
+                                {isExpanded && (
+                                    <div className="border-t border-black/[0.02] dark:border-white/[0.05] p-4 space-y-4">
+                                        <div>
+                                            <div className="h-2 rounded-full bg-muted/40 overflow-hidden border border-black/[0.02] dark:border-white/[0.02]">
+                                                <div className={cn(
+                                                    "h-full rounded-full transition-all duration-700",
+                                                    alertLevel === 'danger' && "bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.4)]",
+                                                    alertLevel === 'warning' && "bg-warning shadow-[0_0_8px_rgba(245,158,11,0.4)]",
+                                                    alertLevel === 'ok' && "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                                                )} style={{ width: `${Math.min(100, (item.currentStock / (item.minStock * 4)) * 100)}%` }} />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div className="rounded-lg bg-muted/30 p-2">
+                                                <p className="font-bold text-foreground">{Number(item.currentStock).toFixed(1)}</p>
+                                                <p className="text-muted-foreground text-[10px]">{item.unit}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-primary/5 p-2">
+                                                <p className="font-bold text-primary">{Number(item.dailyConsumption).toFixed(2)}</p>
+                                                <p className="text-muted-foreground text-[10px]">/{l[item.usageInterval || 'daily']}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2">
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                className="flex-1 h-9 rounded-lg text-xs gap-1.5"
+                                                onClick={() => handleDebit(item.id)}
+                                            >
+                                                <Minus className="h-3 w-3" />{l.debit}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="flex-1 h-9 rounded-lg text-xs gap-1.5"
+                                                onClick={() => handleAddStock(item.id, 1)}
+                                            >
+                                                <Plus className="h-3 w-3" />{l.restock}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-9 w-9 rounded-lg"
+                                                onClick={() => toggleHideItem(item.id)}
+                                            >
+                                                {item.hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                            </Button>
+                                            {alertLevel !== 'ok' && !item.hidden && (
+                                                <Button
+                                                    size="icon"
+                                                    className="h-9 w-9 rounded-lg bg-orange-500 hover:bg-orange-600 text-white"
+                                                    onClick={() => handleAddToShopping(item)}
+                                                >
+                                                    <ShoppingCart className="h-3.5 w-3.5" />
+                                                </Button>
                                             )}
                                         </div>
-                                    </div>
-                                    <div className="shrink-0">
-                                        <div className={cn(
-                                            "flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-sm border-b-2",
-                                            alertLevel === 'danger' && "bg-destructive/10 text-destructive border-destructive/20",
-                                            alertLevel === 'warning' && "bg-warning/10 text-warning border-warning/20",
-                                            alertLevel === 'ok' && "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                        )}>
-                                            <Calendar className="h-3.5 w-3.5" />
-                                            {daysLeft === Infinity ? '∞' : `${daysLeft}${l.daysLeft}`}
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className="mb-4">
-                                    <div className="h-2 rounded-full bg-muted/40 overflow-hidden border border-black/[0.02] dark:border-white/[0.02]">
-                                        <div className={cn(
-                                            "h-full rounded-full transition-all duration-700",
-                                            alertLevel === 'danger' && "bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.4)]",
-                                            alertLevel === 'warning' && "bg-warning shadow-[0_0_8px_rgba(245,158,11,0.4)]",
-                                            alertLevel === 'ok' && "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                                        )} style={{ width: `${Math.min(100, (item.currentStock / (item.minStock * 4)) * 100)}%` }} />
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                    <div className="flex flex-1 min-w-[100px] gap-1 group/control">
-                                        <Button 
-                                            variant="secondary" 
-                                            className="h-10 flex-1 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest bg-muted/50 hover:bg-muted shadow-sm" 
-                                            onClick={() => handleDebit(item.id)}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full h-8 text-xs"
+                                            onClick={() => openEdit(item)}
                                         >
-                                            <Minus className="h-3 w-3" />{l.debit}
-                                        </Button>
-                                        <Button 
-                                            variant="secondary" 
-                                            size="icon" 
-                                            className="h-10 w-10 shrink-0 rounded-xl bg-muted/30 shadow-sm" 
-                                            onClick={() => { 
-                                                setCustomAction({ id: item.id, type: 'debit' }); 
-                                                setCustomAmount(String(item.dailyConsumption).replace('.', ',')); 
-                                                setScreen('custom'); 
-                                            }}
-                                        >
-                                            <Settings2 className="h-4 w-4" />
+                                            {l.editItem}
                                         </Button>
                                     </div>
-
-                                    <div className="flex flex-1 min-w-[100px] gap-1 group/control">
-                                        <Button 
-                                            className="h-10 flex-1 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-primary/10" 
-                                            onClick={() => handleAddStock(item.id, 1)}
-                                        >
-                                            <Plus className="h-3 w-3" />{l.restock}
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            size="icon" 
-                                            className="h-10 w-10 shrink-0 rounded-xl shadow-sm border border-black/[0.04] dark:border-white/[0.04]" 
-                                            onClick={() => { 
-                                                setCustomAction({ id: item.id, type: 'restock' }); 
-                                                setCustomAmount('1'); 
-                                                setScreen('custom'); 
-                                            }}
-                                        >
-                                            <Settings2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    
-                                    <div className="flex gap-1 shrink-0 ml-auto">
-                                        <Button 
-                                            variant="outline" 
-                                            size="icon" 
-                                            className={cn("h-10 w-10 rounded-xl transition-all shadow-sm border border-black/[0.04] dark:border-white/[0.04]", item.hidden ? "bg-primary text-white border-primary" : "bg-transparent")} 
-                                            onClick={() => toggleHideItem(item.id)}
-                                        >
-                                            {item.hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </Button>
-
-                                        {alertLevel !== 'ok' && !item.hidden && (
-                                            <Button 
-                                                size="icon" 
-                                                className="h-10 w-10 rounded-xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20" 
-                                                onClick={() => handleAddToShopping(item)}
-                                            >
-                                                <ShoppingCart className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         );
                     })}
