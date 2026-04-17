@@ -46,6 +46,8 @@ const FAQPage = lazy(() => import("./pages/FAQPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const MealPlannerPage = lazy(() => import("./pages/MealPlannerPage"));
 const SalesPage = lazy(() => import("./pages/SalesPage"));
+const SalesTermsPage = lazy(() => import("./pages/SalesPage/TermsPage"));
+const SalesPrivacyPage = lazy(() => import("./pages/SalesPage/PrivacyPage"));
 
 const queryClient = new QueryClient();
 
@@ -149,7 +151,7 @@ function ProtectedRoute({ element, allowLocked = false, allowOnboarding = false 
 }
 
 /** Rotas públicas acessíveis sem sessão (ex.: retorno da Cakto após pagamento) */
-const PUBLIC_PATHS = ["/auth", "/sucesso", "/success", "/pagina-de-vendas"];
+const PUBLIC_PATHS = ["/auth", "/sucesso", "/success", "/pagina-de-vendas", "/pagina-de-vendas/termos-de-uso", "/pagina-de-vendas/privacidade"];
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
@@ -339,6 +341,8 @@ const App = () => {
                               element={<ProtectedRoute element={<SubscriptionPage />} />}
                             />
                             <Route path="/pagina-de-vendas" element={<SalesPage />} />
+                            <Route path="/pagina-de-vendas/termos-de-uso" element={<SalesTermsPage />} />
+                            <Route path="/pagina-de-vendas/privacidade" element={<SalesPrivacyPage />} />
                             <Route
                               path="/settings/subscription/manage"
                               element={<ProtectedRoute element={<SubscriptionsManagePage />} />}
