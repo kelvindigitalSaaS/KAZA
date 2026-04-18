@@ -13,11 +13,29 @@ import {
 import { startGarbageReminderMonitoring } from "./lib/garbageReminderNotifications";
 import { initSentry } from "./lib/sentry";
 import { isNative } from "./lib/capacitor";
+import { registerSW } from "virtual:pwa-register";
 
 // Initialize error tracking first
 initSentry();
 
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Registro do Service Worker com estratégia "prompt" — não força reload.
+// O SW novo fica em espera e só assume quando o usuário fechar e reabrir o app.
+if (!isNative) {
+  registerSW({
+    onNeedRefresh() {
+      // Nova versão disponível — dispara evento customizado para o app mostrar
+      // um banner discreto (não um alert bloqueante).
+      window.dispatchEvent(new CustomEvent("pwa-update-available"));
+    },
+    onOfflineReady() {
+      // App pronto para uso offline
+      window.dispatchEvent(new CustomEvent("pwa-offline-ready"));
+    },
+    immediate: false
+  });
+}
 
 // Initialise native features after first render
 initNativeUI();

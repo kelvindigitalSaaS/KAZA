@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 type Language = 'pt-BR' | 'en' | 'es';
 
@@ -283,20 +285,52 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const LS_KEY = 'friggo-language';
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+
+  // Leitura inicial do localStorage — instantânea, sem flash
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('friggo-language');
-    return (saved as Language) || 'pt-BR';
+    return (localStorage.getItem(LS_KEY) as Language) || 'pt-BR';
   });
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem('friggo-language', lang);
-  };
-
+  // Sincroniza lang do documento
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+
+  // Sincroniza DO banco quando o usuário loga (fonte de verdade = DB)
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('language_preference')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const dbLang = (data as any)?.language_preference as Language | undefined;
+        if (dbLang && dbLang !== localStorage.getItem(LS_KEY)) {
+          setLanguageState(dbLang);
+          localStorage.setItem(LS_KEY, dbLang);
+        }
+      })
+      .catch(() => { /* falha silenciosa — localStorage mantém o valor */ });
+  }, [user?.id]);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem(LS_KEY, lang);
+    // Persiste no banco (best-effort)
+    if (user) {
+      (supabase as any)
+        .from('profiles')
+        .update({ language_preference: lang })
+        .eq('user_id', user.id)
+        .then(() => {})
+        .catch(() => {});
+    }
+  };
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t: translations[language] }}>

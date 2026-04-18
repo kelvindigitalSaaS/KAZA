@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   Search,
@@ -16,17 +17,12 @@ import {
   Moon,
   Cookie,
   Check,
+  Clock,
+  Bell,
+  BellOff,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { PageTransition } from "@/components/PageTransition";
 
 const MEAL_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -47,8 +43,9 @@ export default function MealPlannerPage() {
   const [selectedMealType, setSelectedMealType] = useState<string | null>(null);
   const [addedRecipes, setAddedRecipes] = useState<Set<string>>(new Set());
 
-  // Dialog state for meal details
-  const [showTimeDialog, setShowTimeDialog] = useState(false);
+  // Bottom sheet state
+  const [showSheet, setShowSheet] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [pendingMeal, setPendingMeal] = useState<{
     recipeId: string;
     recipeName: string;
@@ -77,25 +74,33 @@ export default function MealPlannerPage() {
     setPendingMeal({ recipeId, recipeName, mealType });
     setPlannedTime("");
     setNotifyMembers(true);
-    setShowTimeDialog(true);
+    setShowSheet(true);
   };
 
   const handleConfirmMeal = async () => {
-    if (!pendingMeal) return;
-
-    await addToMealPlan({
-      recipe_id: pendingMeal.recipeId,
-      recipe_name: pendingMeal.recipeName,
-      planned_date: dateParam,
-      meal_type: pendingMeal.mealType as any,
-      planned_time: plannedTime || undefined,
-      notify_members: notifyMembers,
-    });
-
-    setAddedRecipes((prev) => new Set(prev).add(`${pendingMeal.recipeId}-${pendingMeal.mealType}`));
-    setShowTimeDialog(false);
-    setPendingMeal(null);
+    if (!pendingMeal || saving) return;
+    setSaving(true);
+    try {
+      await addToMealPlan({
+        recipe_id: pendingMeal.recipeId,
+        recipe_name: pendingMeal.recipeName,
+        planned_date: dateParam,
+        meal_type: pendingMeal.mealType as any,
+        planned_time: plannedTime || undefined,
+        notify_members: notifyMembers,
+      });
+      setAddedRecipes((prev) => new Set(prev).add(`${pendingMeal.recipeId}-${pendingMeal.mealType}`));
+      setShowSheet(false);
+      setPendingMeal(null);
+    } catch {
+      toast.error("Erro ao salvar refeição. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const mealCfg = pendingMeal ? MEAL_CONFIG[pendingMeal.mealType] : null;
+  const MealIcon = mealCfg?.icon;
 
   return (
     <PageTransition direction="left" className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] flex flex-col">
@@ -221,52 +226,138 @@ export default function MealPlannerPage() {
         )}
       </div>
 
-      {/* Time & Notification Dialog */}
-      <AlertDialog open={showTimeDialog} onOpenChange={setShowTimeDialog}>
-        <AlertDialogContent>
-          <AlertDialogTitle>Detalhes da refeição</AlertDialogTitle>
-          <AlertDialogDescription>
-            {pendingMeal && `${pendingMeal.recipeName} — ${MEAL_CONFIG[pendingMeal.mealType]?.label || pendingMeal.mealType}`}
-          </AlertDialogDescription>
+      {/* ── Schedule Bottom Sheet ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showSheet && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+              onClick={() => !saving && setShowSheet(false)}
+            />
 
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Horário (opcional)
-              </label>
-              <Input
-                type="time"
-                value={plannedTime}
-                onChange={(e) => setPlannedTime(e.target.value)}
-                className="mt-2 h-10"
-              />
-            </div>
-
-            {isMultiPro && (
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="notify-members"
-                  checked={notifyMembers}
-                  onCheckedChange={(checked) => setNotifyMembers(!!checked)}
-                />
-                <label
-                  htmlFor="notify-members"
-                  className="text-sm font-medium text-foreground cursor-pointer flex-1"
-                >
-                  Notificar membros do plano
-                </label>
+            {/* Sheet */}
+            <motion.div
+              key="sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 320, mass: 0.8 }}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-[#fafafa] dark:bg-[#0d2820] shadow-2xl"
+              style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-black/10 dark:bg-white/10" />
               </div>
-            )}
-          </div>
 
-          <div className="flex gap-2 justify-end">
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmMeal}>
-              Confirmar
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+              {/* Close button */}
+              <button
+                onClick={() => !saving && setShowSheet(false)}
+                className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="px-6 pb-8 pt-2 space-y-5">
+                {/* Recipe + meal type label */}
+                {pendingMeal && mealCfg && MealIcon && (
+                  <div className="flex items-center gap-3">
+                    <div className={cn("h-11 w-11 flex items-center justify-center rounded-2xl border", mealCfg.bg)}>
+                      <MealIcon className={cn("h-5 w-5", mealCfg.color)} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-base font-bold text-foreground truncate">{pendingMeal.recipeName}</p>
+                      <p className={cn("text-xs font-semibold", mealCfg.color)}>{mealCfg.label}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Time picker */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    <Clock className="h-3.5 w-3.5" />
+                    Horário (opcional)
+                  </label>
+                  <input
+                    type="time"
+                    value={plannedTime}
+                    onChange={(e) => setPlannedTime(e.target.value)}
+                    className="w-full h-13 bg-black/[0.04] dark:bg-white/[0.06] border-none rounded-xl text-base font-bold px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+
+                {/* Notify members toggle — only for multiPRO */}
+                {isMultiPro && (
+                  <button
+                    onClick={() => setNotifyMembers((v) => !v)}
+                    className={cn(
+                      "w-full flex items-center gap-3 rounded-2xl px-4 py-4 transition-all border-2",
+                      notifyMembers
+                        ? "bg-primary/5 border-primary/20"
+                        : "bg-black/[0.03] dark:bg-white/[0.03] border-transparent"
+                    )}
+                  >
+                    <div className={cn(
+                      "h-9 w-9 flex items-center justify-center rounded-xl shrink-0",
+                      notifyMembers ? "bg-primary/10" : "bg-black/5 dark:bg-white/5"
+                    )}>
+                      {notifyMembers
+                        ? <Bell className="h-4 w-4 text-primary" />
+                        : <BellOff className="h-4 w-4 text-muted-foreground" />
+                      }
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className={cn("text-sm font-bold", notifyMembers ? "text-primary" : "text-muted-foreground")}>
+                        Notificar membros
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {notifyMembers ? "Todos serão avisados desta refeição" : "Sem notificação"}
+                      </p>
+                    </div>
+                    {/* Toggle pill */}
+                    <div className={cn(
+                      "w-12 h-6 rounded-full transition-colors shrink-0 relative",
+                      notifyMembers ? "bg-primary" : "bg-black/10 dark:bg-white/10"
+                    )}>
+                      <div className={cn(
+                        "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all",
+                        notifyMembers ? "left-[calc(100%-1.375rem)]" : "left-0.5"
+                      )} />
+                    </div>
+                  </button>
+                )}
+
+                {/* Confirm button */}
+                <button
+                  onClick={handleConfirmMeal}
+                  disabled={saving}
+                  className="w-full h-14 flex items-center justify-center rounded-2xl text-white text-[15px] font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: "#165A52" }}
+                >
+                  {saving ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                      className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+                    />
+                  ) : (
+                    <>
+                      <Check className="h-5 w-5 mr-2" />
+                      Adicionar refeição
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </PageTransition>
   );
 }

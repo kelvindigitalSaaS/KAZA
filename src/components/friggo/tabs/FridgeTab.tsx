@@ -418,8 +418,8 @@ export function FridgeTab() {
                                     <div key={c.id} className={cn(
                                         "flex items-center justify-between rounded-2xl border p-4 transition-all",
                                         isOut ? "bg-destructive/10 border-destructive/20" :
-                                        isCritical ? "bg-warning/10 border-warning/20" :
-                                        "bg-primary/5 border-primary/10"
+                                            isCritical ? "bg-warning/10 border-warning/20" :
+                                                "bg-primary/5 border-primary/10"
                                     )}>
                                         <div className="flex items-center gap-3">
                                             <span className="text-2xl">{c.icon}</span>
@@ -433,8 +433,8 @@ export function FridgeTab() {
                                         <div className={cn(
                                             "rounded-full px-3 py-1 text-xs font-bold",
                                             isOut ? "bg-destructive/20 text-destructive" :
-                                            isCritical ? "bg-warning/20 text-warning" :
-                                            "bg-primary/10 text-primary"
+                                                isCritical ? "bg-warning/20 text-warning" :
+                                                    "bg-primary/10 text-primary"
                                         )}>
                                             {isOut ? (language === 'pt-BR' ? 'Esgotado' : 'Out') : `${daysLeft}d`}
                                         </div>

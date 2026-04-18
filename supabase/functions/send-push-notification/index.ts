@@ -8,6 +8,20 @@ const webPushVapidPrivate = Deno.env.get("WEB_PUSH_VAPID_PRIVATE")!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, apikey, x-client-info",
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...CORS },
+  });
+}
+
 interface PushPayload {
   group_id: string;
   title: string;
@@ -18,7 +32,7 @@ interface PushPayload {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response("ok", { headers: CORS });
   }
 
   try {
@@ -26,10 +40,7 @@ serve(async (req) => {
     const { group_id, title, body, data, exclude_user_id } = payload;
 
     if (!group_id || !title || !body) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: group_id, title, body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ error: "Missing required fields: group_id, title, body" }, 400);
     }
 
     // Get all active members of the group
@@ -46,17 +57,11 @@ serve(async (req) => {
     const { data: members, error: membersError } = await membersQuery;
 
     if (membersError) {
-      return new Response(
-        JSON.stringify({ error: membersError.message }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ error: membersError.message }, 500);
     }
 
     if (!members || members.length === 0) {
-      return new Response(
-        JSON.stringify({ success: true, sent: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ success: true, sent: 0 });
     }
 
     const userIds = members.map((m) => m.user_id);
@@ -69,20 +74,15 @@ serve(async (req) => {
       .eq("is_active", true);
 
     if (subsError) {
-      return new Response(
-        JSON.stringify({ error: subsError.message }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ error: subsError.message }, 500);
     }
 
     let sentCount = 0;
 
     // Send web push notifications
     if (subscriptions && subscriptions.length > 0) {
-      // Import web-push library for sending
       for (const sub of subscriptions) {
         try {
-          // Construct the push message
           const pushPayloadJson = JSON.stringify({
             title,
             body,
@@ -92,7 +92,6 @@ serve(async (req) => {
           });
 
           // Note: Full web-push implementation requires the npm package
-          // For now, this is a placeholder that would integrate with web-push
           // In production, use: import * as webpush from 'web-push';
           // webpush.sendNotification(subscription, pushPayloadJson);
 
@@ -103,15 +102,13 @@ serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({ success: true, sent: sentCount }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return json({ success: true, sent: sentCount });
   } catch (error) {
     console.error(error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    return json(
+      { error: error instanceof Error ? error.message : "Internal server error" },
+      500
     );
   }
 });
+

@@ -306,7 +306,7 @@ export function ShoppingTab() {
       name: itemName,
       category:
         chosenStore === "pharmacy" ? "hygiene" :
-        chosenStore === "fair"     ? "vegetable" : "pantry",
+          chosenStore === "fair" ? "vegetable" : "pantry",
       quantity: product?.defaultQuantity || 1,
       unit: product?.unit || newItemUnit,
       store: chosenStore
@@ -356,10 +356,10 @@ export function ShoppingTab() {
 
     const itemsToRestock = Array.isArray(consumables)
       ? consumables.filter((c) => {
-          const daysLeft =
-            c.dailyConsumption > 0 ? c.currentStock / c.dailyConsumption : 100;
-          return daysLeft <= 3;
-        })
+        const daysLeft =
+          c.dailyConsumption > 0 ? c.currentStock / c.dailyConsumption : 100;
+        return daysLeft <= 3;
+      })
       : [];
 
     itemsToRestock.forEach((item) => {
@@ -375,7 +375,7 @@ export function ShoppingTab() {
       if (!item.expirationDate) return false;
       const daysLeft = Math.ceil(
         (new Date(item.expirationDate).getTime() - Date.now()) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       );
       return daysLeft <= 2 && daysLeft >= 0;
     });
@@ -923,62 +923,62 @@ export function ShoppingTab() {
       <div className="flex items-center justify-between mt-2">
         {!groupByCategory && (
           <div className="flex items-center gap-2 flex-wrap">
-          {/* Todos chip — always visible */}
-          <button
-            onClick={() => setActiveFilter("all")}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97]",
-              activeFilter === "all"
-                ? "text-primary-foreground shadow-sm shadow-primary/25"
-                : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
-            )}
-            style={activeFilter === "all" ? { background: "#165A52" } : {}}
-          >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            {storeFilters[0].label}
-            <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold", activeFilter === "all" ? "bg-white/20" : "bg-black/[0.04] dark:bg-white/10 text-muted-foreground")}>
-              {shoppingList.length}
-            </span>
-          </button>
-
-          {/* Show store filters only when not "all" OR when toggled via filter icon */}
-          {activeFilter !== "all" && storeFilters.slice(1).map((filter) => {
-            const Icon = filter.icon;
-            const count = shoppingList.filter((i) => i.store === filter.id).length;
-            return (
-              <button
-                key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97]",
-                  activeFilter === filter.id
-                    ? "text-primary-foreground shadow-sm shadow-primary/25"
-                    : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
-                )}
-                style={activeFilter === filter.id ? { background: "#165A52" } : {}}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {filter.label}
-                {count > 0 && (
-                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold", activeFilter === filter.id ? "bg-white/20" : "bg-black/[0.04] dark:bg-white/10 text-muted-foreground")}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-
-          {/* Filter icon to expand store filters when "all" is active */}
-          {activeFilter === "all" && (
+            {/* Todos chip — always visible */}
             <button
-              onClick={() => setActiveFilter("market")}
-              className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-muted-foreground transition-all active:scale-[0.97]"
+              onClick={() => setActiveFilter("all")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97]",
+                activeFilter === "all"
+                  ? "text-primary-foreground shadow-sm shadow-primary/25"
+                  : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
+              )}
+              style={activeFilter === "all" ? { background: "#165A52" } : {}}
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              {l.filters}
+              <ShoppingCart className="h-3.5 w-3.5" />
+              {storeFilters[0].label}
+              <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold", activeFilter === "all" ? "bg-white/20" : "bg-black/[0.04] dark:bg-white/10 text-muted-foreground")}>
+                {shoppingList.length}
+              </span>
             </button>
-          )}
-        </div>
+
+            {/* Show store filters only when not "all" OR when toggled via filter icon */}
+            {activeFilter !== "all" && storeFilters.slice(1).map((filter) => {
+              const Icon = filter.icon;
+              const count = shoppingList.filter((i) => i.store === filter.id).length;
+              return (
+                <button
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97]",
+                    activeFilter === filter.id
+                      ? "text-primary-foreground shadow-sm shadow-primary/25"
+                      : "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground"
+                  )}
+                  style={activeFilter === filter.id ? { background: "#165A52" } : {}}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {filter.label}
+                  {count > 0 && (
+                    <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold", activeFilter === filter.id ? "bg-white/20" : "bg-black/[0.04] dark:bg-white/10 text-muted-foreground")}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Filter icon to expand store filters when "all" is active */}
+            {activeFilter === "all" && (
+              <button
+                onClick={() => setActiveFilter("market")}
+                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-muted-foreground transition-all active:scale-[0.97]"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                {l.filters}
+              </button>
+            )}
+          </div>
         )}
 
         <button

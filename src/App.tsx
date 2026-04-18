@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -16,6 +16,7 @@ import {
   closeInAppBrowser
 } from "@/lib/nativeBrowser";
 import { registerBackButton } from "@/lib/nativeUI";
+import { isNative } from "@/lib/capacitor";
 import { supabase } from "@/integrations/supabase/client";
 import { Sentry } from "@/lib/sentry";
 import { OfflineOverlay } from "@/components/friggo/OfflineOverlay";
@@ -50,7 +51,7 @@ const MealPlannerPage = lazy(() => import("./pages/MealPlannerPage"));
 const SalesPage = lazy(() => import("./pages/SalesPage"));
 const SalesTermsPage = lazy(() => import("./pages/SalesPage/TermsPage"));
 const SalesPrivacyPage = lazy(() => import("./pages/SalesPage/PrivacyPage"));
-const InvitePage = lazy(() => import("./pages/InvitePage"));
+const InvitePage = lazy(() => import("./pages/InvitePage").then(m => ({ default: m.InvitePage })));
 
 const queryClient = new QueryClient();
 
@@ -179,6 +180,57 @@ function AuthGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/** Phone mockup frame — visível apenas em browsers de desktop (≥768 px).
+ *  Em mobile e no app nativo os wrappers viram pass-throughs via CSS.
+ *  Só aplicamos a moldura nas rotas /app/ */
+function MobileFrame({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+
+  const isFrameRoute = pathname.startsWith("/app") || pathname.startsWith("/auth");
+
+  useEffect(() => {
+    if (!isNative && isFrameRoute && window.innerWidth >= 768) {
+      document.body.classList.add("desktop-mobile-frame-active");
+    } else {
+      document.body.classList.remove("desktop-mobile-frame-active");
+    }
+
+    return () => {
+      document.body.classList.remove("desktop-mobile-frame-active");
+    };
+  }, [pathname, isFrameRoute]);
+
+  if (isNative || !isFrameRoute) return <>{children}</>;
+
+  return (
+    <div className="mobile-frame-bg">
+      <div className="mobile-frame-device">
+        <div className="mobile-frame-notch" aria-hidden />
+        <div className="mobile-frame-screen">
+          {children}
+        </div>
+        <div className="mobile-frame-home-bar" aria-hidden />
+      </div>
+      <span className="mobile-frame-label">friggo</span>
+    </div>
+  );
+}
+
+/** Só exibe o guia de instalação PWA dentro do /app — nunca na página de vendas */
+function AppPWAInstallGuide() {
+  const { pathname } = useLocation();
+  if (!pathname.startsWith("/app")) return null;
+  return <PWAInstallGuide />;
+}
+
+/** Rota raiz: redireciona usuários autenticados direto para o app; outros veem a página de vendas */
+function RootRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <SplashLoader />;
+  if (user) return <Navigate to="/app/home" replace />;
+  return <Suspense fallback={<PageSkeleton />}><SalesPage /></Suspense>;
+}
+
 const App = () => {
   // Listen for deep-link returns (auth callback, Stripe checkout)
   useEffect(() => {
@@ -244,119 +296,121 @@ const App = () => {
                 <ThemeProvider>
                   <TooltipProvider>
                     <OfflineOverlay />
-                    <PWAInstallGuide />
                     <AccountSessionTracker />
                     <Toaster />
                     <Sonner />
-                    <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                      <AuthGuard>
-                        <Suspense fallback={<PageSkeleton />}>
-                          <Routes>
-                            {/* Raiz pública — exibe a página de vendas */}
-                            <Route path="/" element={<SalesPage />} />
+                    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+                      <AppPWAInstallGuide />
+                      <MobileFrame>
+                        <AuthGuard>
+                          <Suspense fallback={<PageSkeleton />}>
+                            <Routes>
+                              {/* Raiz: redireciona logados para /app/home, outros veem vendas */}
+                              <Route path="/" element={<RootRoute />} />
 
-                            {/* Páginas públicas */}
-                            <Route path="/auth" element={<Auth />} />
-                            <Route path="/sucesso" element={<SuccessPage />} />
-                            <Route path="/success" element={<SuccessPage />} />
-                            <Route path="/invite" element={<InvitePage />} />
-                            <Route path="/pagina-de-vendas" element={<SalesPage />} />
-                            <Route path="/pagina-de-vendas/termos-de-uso" element={<SalesTermsPage />} />
-                            <Route path="/pagina-de-vendas/privacidade" element={<SalesPrivacyPage />} />
+                              {/* Páginas públicas */}
+                              <Route path="/auth" element={<Auth />} />
+                              <Route path="/sucesso" element={<SuccessPage />} />
+                              <Route path="/success" element={<SuccessPage />} />
+                              <Route path="/invite" element={<InvitePage />} />
+                              <Route path="/pagina-de-vendas" element={<SalesPage />} />
+                              <Route path="/pagina-de-vendas/termos-de-uso" element={<SalesTermsPage />} />
+                              <Route path="/pagina-de-vendas/privacidade" element={<SalesPrivacyPage />} />
 
-                            {/* App interno — todas as rotas protegidas sob /app */}
-                            <Route
-                              path="/app/home"
-                              element={<ProtectedRoute element={<Index />} />}
-                            />
-                            <Route
-                              path="/app/checkout"
-                              element={<ProtectedRoute element={<Checkout />} />}
-                            />
-                            <Route
-                              path="/app/monthly-report"
-                              element={<ProtectedRoute element={<MonthlyReportPage />} />}
-                            />
-                            <Route
-                              path="/app/night-checkup"
-                              element={<ProtectedRoute element={<NightCheckupPage />} />}
-                            />
-                            <Route
-                              path="/app/plans"
-                              element={<Navigate to="/app/settings/subscription" replace />}
-                            />
-                            <Route
-                              path="/app/trio-setup"
-                              element={<ProtectedRoute element={<TrioSetupPage />} />}
-                            />
-                            <Route
-                              path="/app/checkout/success"
-                              element={<ProtectedRoute element={<CheckoutSuccessPage />} allowLocked={true} />}
-                            />
-                            <Route
-                              path="/app/checkout/cancel"
-                              element={<ProtectedRoute element={<CheckoutCancelPage />} allowLocked={true} />}
-                            />
-                            <Route
-                              path="/app/add-item"
-                              element={<ProtectedRoute element={<AddItemPage />} />}
-                            />
-                            <Route
-                              path="/app/consume/:itemId"
-                              element={<ProtectedRoute element={<ConsumePage />} />}
-                            />
-                            <Route
-                              path="/app/recipe/:recipeId"
-                              element={<ProtectedRoute element={<RecipePage />} />}
-                            />
-                            <Route
-                              path="/app/consumables"
-                              element={<ProtectedRoute element={<ConsumableTrackerPage />} />}
-                            />
-                            <Route
-                              path="/app/notifications"
-                              element={<ProtectedRoute element={<NotificationsPage />} />}
-                            />
-                            <Route
-                              path="/app/profile"
-                              element={<ProtectedRoute element={<ProfilePage />} />}
-                            />
-                            <Route
-                              path="/app/activity-history"
-                              element={<ProtectedRoute element={<HistoryPage />} />}
-                            />
-                            <Route
-                              path="/app/garbage-reminder"
-                              element={<ProtectedRoute element={<GarbageReminderPage />} />}
-                            />
-                            <Route
-                              path="/app/settings/subscription"
-                              element={<ProtectedRoute element={<SubscriptionPage />} />}
-                            />
-                            <Route
-                              path="/app/settings/subscription/manage"
-                              element={<ProtectedRoute element={<SubscriptionsManagePage />} />}
-                            />
-                            <Route
-                              path="/app/settings/install"
-                              element={<ProtectedRoute element={<InstallGuidePage />} />}
-                            />
-                            <Route
-                              path="/app/settings/faq"
-                              element={<ProtectedRoute element={<FAQPage />} />}
-                            />
-                            <Route
-                              path="/app/settings/privacy"
-                              element={<ProtectedRoute element={<PrivacyPage />} />}
-                            />
-                            <Route
-                              path="/app/plan/meal-planner"
-                              element={<ProtectedRoute element={<MealPlannerPage />} />}
-                            />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </Suspense>
-                      </AuthGuard>
+                              {/* App interno — todas as rotas protegidas sob /app */}
+                              <Route
+                                path="/app/home"
+                                element={<ProtectedRoute element={<Index />} />}
+                              />
+                              <Route
+                                path="/app/checkout"
+                                element={<ProtectedRoute element={<Checkout />} />}
+                              />
+                              <Route
+                                path="/app/monthly-report"
+                                element={<ProtectedRoute element={<MonthlyReportPage />} />}
+                              />
+                              <Route
+                                path="/app/night-checkup"
+                                element={<ProtectedRoute element={<NightCheckupPage />} />}
+                              />
+                              <Route
+                                path="/app/plans"
+                                element={<Navigate to="/app/settings/subscription" replace />}
+                              />
+                              <Route
+                                path="/app/trio-setup"
+                                element={<ProtectedRoute element={<TrioSetupPage />} />}
+                              />
+                              <Route
+                                path="/app/checkout/success"
+                                element={<ProtectedRoute element={<CheckoutSuccessPage />} allowLocked={true} />}
+                              />
+                              <Route
+                                path="/app/checkout/cancel"
+                                element={<ProtectedRoute element={<CheckoutCancelPage />} allowLocked={true} />}
+                              />
+                              <Route
+                                path="/app/add-item"
+                                element={<ProtectedRoute element={<AddItemPage />} />}
+                              />
+                              <Route
+                                path="/app/consume/:itemId"
+                                element={<ProtectedRoute element={<ConsumePage />} />}
+                              />
+                              <Route
+                                path="/app/recipe/:recipeId"
+                                element={<ProtectedRoute element={<RecipePage />} />}
+                              />
+                              <Route
+                                path="/app/consumables"
+                                element={<ProtectedRoute element={<ConsumableTrackerPage />} />}
+                              />
+                              <Route
+                                path="/app/notifications"
+                                element={<ProtectedRoute element={<NotificationsPage />} />}
+                              />
+                              <Route
+                                path="/app/profile"
+                                element={<ProtectedRoute element={<ProfilePage />} />}
+                              />
+                              <Route
+                                path="/app/activity-history"
+                                element={<ProtectedRoute element={<HistoryPage />} />}
+                              />
+                              <Route
+                                path="/app/garbage-reminder"
+                                element={<ProtectedRoute element={<GarbageReminderPage />} />}
+                              />
+                              <Route
+                                path="/app/settings/subscription"
+                                element={<ProtectedRoute element={<SubscriptionPage />} />}
+                              />
+                              <Route
+                                path="/app/settings/subscription/manage"
+                                element={<ProtectedRoute element={<SubscriptionsManagePage />} />}
+                              />
+                              <Route
+                                path="/app/settings/install"
+                                element={<ProtectedRoute element={<InstallGuidePage />} />}
+                              />
+                              <Route
+                                path="/app/settings/faq"
+                                element={<ProtectedRoute element={<FAQPage />} />}
+                              />
+                              <Route
+                                path="/app/settings/privacy"
+                                element={<ProtectedRoute element={<PrivacyPage />} />}
+                              />
+                              <Route
+                                path="/app/plan/meal-planner"
+                                element={<ProtectedRoute element={<MealPlannerPage />} />}
+                              />
+                              <Route path="*" element={<NotFound />} />
+                            </Routes>
+                          </Suspense>
+                        </AuthGuard>
+                      </MobileFrame>
                     </BrowserRouter>
                   </TooltipProvider>
                 </ThemeProvider>

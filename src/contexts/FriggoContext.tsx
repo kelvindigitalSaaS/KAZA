@@ -219,7 +219,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
         supabase.from("items").select("*").eq("home_id", hid).order("created_at", { ascending: false }),
         supabase.from("shopping_items").select("*").eq("home_id", hid).order("created_at", { ascending: false }),
         supabase.from("consumables").select("*").eq("home_id", hid),
-        supabase.from("recipes").select("id, is_favorite").eq("home_id", hid).eq("is_favorite", true),
+        supabase.from("user_recipe_favorites").select("recipe_id").eq("user_id", user.id),
         supabase.from("meal_plans").select("*").eq("home_id", hid).order("planned_date", { ascending: true }),
         supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("homes").select("*").eq("id", hid).maybeSingle(),
@@ -236,7 +236,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       setItems((itemsRes.data || []).map(toKazaItem));
       setShoppingList((shoppingRes.data || []).map(toShoppingItem));
       setConsumables((consumablesRes.data || []).map(toConsumable));
-      setFavoriteRecipes((recipesRes.data || []).map((r: any) => r.id));
+      setFavoriteRecipes((recipesRes.data || []).map((r: any) => r.recipe_id));
       setMealPlan(
         (mealPlansRes.data || []).map((p: any) => ({
           id: p.id,
@@ -737,20 +737,20 @@ export function KazaProvider({ children }: { children: ReactNode }) {
 
   // ── recipes / meal plan ──────────────────────────────────────────────────
   const toggleFavoriteRecipe = async (recipeId: string) => {
-    if (!user || !homeId) return;
+    if (!user) return;
     const isFav = favoriteRecipes.includes(recipeId);
     try {
       if (isFav) {
         await supabase
-          .from("recipes")
-          .update({ is_favorite: false })
-          .eq("id", recipeId).eq("home_id", homeId);
+          .from("user_recipe_favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("recipe_id", recipeId);
         setFavoriteRecipes((prev) => prev.filter((id) => id !== recipeId));
       } else {
         await supabase
-          .from("recipes")
-          .update({ is_favorite: true })
-          .eq("id", recipeId).eq("home_id", homeId);
+          .from("user_recipe_favorites")
+          .insert({ user_id: user.id, recipe_id: recipeId });
         setFavoriteRecipes((prev) => [...prev, recipeId]);
       }
     } catch (err) {
@@ -846,11 +846,32 @@ export function KazaProvider({ children }: { children: ReactNode }) {
 
   // ── onboarding / profile ─────────────────────────────────────────────────
   const completeOnboarding = async (data: OnboardingData) => {
-    if (!user || !homeId) {
+    if (!user) {
       setOnboardingData(buildDefaultOnboarding(data));
       return;
     }
     try {
+      // Se o usuário não tem home (trigger do DB não criou), criamos aqui como fallback
+      let effectiveHomeId = homeId;
+      if (!effectiveHomeId) {
+        const db = supabase as any;
+        const { data: newHome, error: homeErr } = await db
+          .from("homes")
+          .insert({ owner_user_id: user.id, name: "Minha Casa" })
+          .select("id")
+          .single();
+        if (homeErr) throw homeErr;
+        effectiveHomeId = (newHome as any).id as string;
+        setHomeId(effectiveHomeId);
+
+        // Cria membership, settings e prefs
+        await Promise.all([
+          db.from("home_members").insert({ home_id: effectiveHomeId, user_id: user.id, role: "owner" }),
+          db.from("home_settings").insert({ home_id: effectiveHomeId }),
+          db.from("notification_preferences").insert({ home_id: effectiveHomeId }),
+        ]);
+      }
+
       const rawCpf = String(data.cpf || "").replace(/\D/g, "");
       if (rawCpf.length > 0) {
         const { data: existing } = await supabase
@@ -880,15 +901,15 @@ export function KazaProvider({ children }: { children: ReactNode }) {
         supabase.from("homes").update({
           home_type: data.homeType || "apartment",
           residents: data.residents || 1
-        }).eq("id", homeId),
+        }).eq("id", effectiveHomeId),
         supabase.from("home_settings").update({
           fridge_type: data.fridgeType || "regular",
           fridge_brand: data.fridgeBrand || null,
           cooling_level: data.coolingLevel || 3,
           habits: data.habits || [],
           hidden_sections: data.hiddenSections || []
-        }).eq("home_id", homeId),
-        updateNotificationPreferences(homeId, data.notificationPrefs)
+        }).eq("home_id", effectiveHomeId),
+        updateNotificationPreferences(effectiveHomeId, data.notificationPrefs)
       ]);
       const err = results.find((r: any) => r?.error)?.error;
       if (err) throw err;

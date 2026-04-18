@@ -15,7 +15,10 @@ export default defineConfig(({ mode }: { mode: string }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt" evita que o SW force reload automático ao detectar nova versão.
+      // O app só atualiza quando o usuário abre de novo ou confirma — sem reload
+      // surpresa em segundo plano (crítico para iOS/Android PWA).
+      registerType: "prompt",
       includeAssets: [
         "icons/100.png",
         "icons/152.png",
@@ -25,10 +28,23 @@ export default defineConfig(({ mode }: { mode: string }) => ({
       ],
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest,webp}"],
-        // Allow larger assets to be precached (default is 2 MiB)
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // Não ativa o SW imediatamente — espera o app fechar e reabrir
+        skipWaiting: false,
+        clientsClaim: false,
         importScripts: ["sw-custom.js"],
         runtimeCaching: [
+          {
+            // App shell (navegação SPA) — sempre serve do cache primeiro,
+            // depois atualiza em background. Evita tela em branco ao reabrir.
+            urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "pages",
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: "CacheFirst",
@@ -44,6 +60,16 @@ export default defineConfig(({ mode }: { mode: string }) => ({
               cacheName: "images",
               expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 }
             }
+          },
+          {
+            // Supabase REST — Network-first com fallback rápido
+            urlPattern: /^https:\/\/.*\.supabase\.co\/(rest|auth|storage)\/.*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "supabase-api",
+              networkTimeoutSeconds: 8,
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 }
+            }
           }
         ],
         navigateFallback: "index.html",
@@ -58,7 +84,7 @@ export default defineConfig(({ mode }: { mode: string }) => ({
         background_color: "#DAF1DE",
         display: "standalone",
         orientation: "portrait",
-        start_url: "/",
+        start_url: "/app/home",
         scope: "/",
         categories: ["food", "lifestyle", "utilities"],
         icons: [

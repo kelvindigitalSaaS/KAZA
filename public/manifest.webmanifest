@@ -2,7 +2,7 @@
   "name": "Kaza",
   "short_name": "Kaza",
   "description": "Tudo o que sua casa precisa, antes de acabar. Geladeira, receitas, lista de compras e mais.",
-  "start_url": "/",
+  "start_url": "/app/home",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

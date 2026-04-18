@@ -714,31 +714,31 @@ export function HomeTab() {
                         </div>
                     </div>
                     {!onboardingData?.hiddenSections?.includes('home-low-consumables') && (
-                    <div className="space-y-2">
-                        {lowConsumables.map(c => (
-                            <motion.div
-                                key={c.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="flex items-center gap-3 rounded-2xl border border-red-200/40 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/10 backdrop-blur-xl px-4 py-3"
-                            >
-                                <span className="text-xl">{c.icon}</span>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
-                                    <p className="text-[10px] text-muted-foreground">
-                                        {c.currentStock.toFixed(1)} {c.unit} · {c.daysLeft === Infinity ? '∞' : `${c.daysLeft}${l.daysLeft}`}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => handleAddConsumableToShopping(c)}
-                                    className="flex h-8 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-semibold text-primary transition-all active:scale-[0.95]"
+                        <div className="space-y-2">
+                            {lowConsumables.map(c => (
+                                <motion.div
+                                    key={c.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="flex items-center gap-3 rounded-2xl border border-red-200/40 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/10 backdrop-blur-xl px-4 py-3"
                                 >
-                                    <ShoppingCart className="h-3 w-3" />
-                                    {l.addToList}
-                                </button>
-                            </motion.div>
-                        ))}
-                    </div>
+                                    <span className="text-xl">{c.icon}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            {c.currentStock.toFixed(1)} {c.unit} · {c.daysLeft === Infinity ? '∞' : `${c.daysLeft}${l.daysLeft}`}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleAddConsumableToShopping(c)}
+                                        className="flex h-8 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-semibold text-primary transition-all active:scale-[0.95]"
+                                    >
+                                        <ShoppingCart className="h-3 w-3" />
+                                        {l.addToList}
+                                    </button>
+                                </motion.div>
+                            ))}
+                        </div>
                     )}
                 </motion.section>
             )}

@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useKaza } from "@/contexts/FriggoContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { AlarmClock, ArrowLeft, Bell, Building2, Calendar, Check, Clock, Home, MapPin, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/PageTransition";
-import {
-  startGarbageReminderMonitoring,
-  syncGarbageReminderToDb
-} from "@/lib/garbageReminderNotifications";
+import { startGarbageReminderMonitoring } from "@/lib/garbageReminderNotifications";
 
 const WEEKDAYS = {
   "pt-BR": [
@@ -40,36 +37,60 @@ const WEEKDAYS = {
 export default function GarbageReminderPage() {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const { onboardingData, homeId } = useKaza();
+  const { homeId } = useKaza();
+  const { user } = useAuth();
 
   const [enabled, setEnabled] = useState(false);
-  const [selectedDays, setSelectedDays] = useState<number[]>([1, 4]); // Monday and Thursday
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 4]);
   const [reminderTime, setReminderTime] = useState("20:00");
-  const [garbageLocation, setGarbageLocation] = useState<"street" | "building">(
-    "street"
-  );
+  const [garbageLocation, setGarbageLocation] = useState<"street" | "building">("street");
   const [buildingFloor, setBuildingFloor] = useState("");
 
-  const STORAGE_KEY = "kaza-garbage-reminder";
+  const LS_KEY = "kaza-garbage-reminder";
 
-  // Load from localStorage (with migration from old friggo key)
+  // Aplica um objeto de config nos estados locais
+  const applyConfig = (data: any) => {
+    setEnabled(data.enabled ?? false);
+    setSelectedDays(data.selected_days ?? data.selectedDays ?? [1, 4]);
+    setReminderTime(data.reminder_time ?? data.reminderTime ?? "20:00");
+    setGarbageLocation(data.garbage_location ?? data.garbageLocation ?? "street");
+    setBuildingFloor(data.building_floor ?? data.buildingFloor ?? "");
+  };
+
+  // 1. Carrega do localStorage imediatamente (cache rápido)
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("friggo-garbage-reminder");
-    if (saved) {
+    const cached = localStorage.getItem(LS_KEY) || localStorage.getItem("friggo-garbage-reminder");
+    if (cached) {
       try {
-        const data = JSON.parse(saved);
-        setEnabled(data.enabled ?? false);
-        setSelectedDays(data.selectedDays ?? [1, 4]);
-        setReminderTime(data.reminderTime ?? "20:00");
-        setGarbageLocation(data.garbageLocation ?? "street");
-        setBuildingFloor(data.buildingFloor ?? "");
-        // Migrate old key
-        localStorage.removeItem("friggo-garbage-reminder");
-      } catch (e) {
-        console.error("Error parsing garbage reminder settings:", e);
-      }
+        applyConfig(JSON.parse(cached));
+        localStorage.removeItem("friggo-garbage-reminder"); // migra chave antiga
+      } catch { /* ignora JSON inválido */ }
     }
   }, []);
+
+  // 2. Sincroniza do banco (fonte de verdade) quando homeId e user estiverem prontos
+  useEffect(() => {
+    if (!homeId || !user) return;
+    (supabase as any)
+      .from("garbage_reminders")
+      .select("*")
+      .eq("home_id", homeId)
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }: { data: any }) => {
+        if (!data) return;
+        applyConfig(data);
+        // Atualiza o cache local com os dados do banco
+        localStorage.setItem(LS_KEY, JSON.stringify({
+          enabled: data.enabled,
+          selectedDays: data.selected_days,
+          reminderTime: data.reminder_time,
+          garbageLocation: data.garbage_location,
+          buildingFloor: data.building_floor ?? "",
+        }));
+      })
+      .catch(() => { /* mantém o valor do cache local */ });
+  }, [homeId, user?.id]);
 
   const labels = {
     "pt-BR": {
@@ -146,14 +167,34 @@ export default function GarbageReminderPage() {
   const l = labels[language === "pt-BR" ? "pt-BR" : language === "es" ? "es" : "en"];
   const weekdays = WEEKDAYS[language === "pt-BR" ? "pt-BR" : language === "es" ? "es" : "en"];
 
-  const handleSave = () => {
-    const data = { enabled, selectedDays, reminderTime, garbageLocation, buildingFloor };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  const handleSave = async () => {
+    const cfg = { enabled, selectedDays, reminderTime, garbageLocation, buildingFloor };
+
+    // DB é a fonte de verdade — grava primeiro
+    if (homeId && user) {
+      try {
+        await (supabase as any).from("garbage_reminders").upsert({
+          home_id: homeId,
+          user_id: user.id,
+          enabled,
+          selected_days: selectedDays,
+          reminder_time: reminderTime,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo",
+          garbage_location: garbageLocation,
+          building_floor: buildingFloor || null,
+        }, { onConflict: "home_id,user_id" });
+      } catch (e) {
+        console.warn("[garbage] save to DB failed", e);
+      }
+    }
+
+    // Atualiza cache local para o scheduler de notificações (lê do localStorage)
+    localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+
     if (enabled && selectedDays.length > 0) {
       startGarbageReminderMonitoring();
     }
-    // Espelhar no banco (best-effort, não bloqueia UX)
-    void syncGarbageReminderToDb(homeId);
+
     toast.success(l.saved, { duration: 2000 });
     navigate(-1);
   };

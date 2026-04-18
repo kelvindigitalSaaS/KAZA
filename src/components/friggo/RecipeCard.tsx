@@ -98,8 +98,8 @@ export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
                 recipe.difficulty === "fácil"
                   ? "text-green-500"
                   : recipe.difficulty === "médio"
-                  ? "text-amber-500"
-                  : "text-red-500"
+                    ? "text-amber-500"
+                    : "text-red-500"
               )}
             >
               {recipe.difficulty}

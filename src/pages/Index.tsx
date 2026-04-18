@@ -122,8 +122,8 @@ function KazaApp() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-20 overflow-hidden">
-      <main className="mx-auto max-w-lg px-4 pt-safe relative h-full">
+    <div className="min-h-[100dvh] bg-[#fafafa] dark:bg-[#091f1c] pb-nav-safe overflow-hidden">
+      <main className="mx-auto max-w-lg px-3 sm:px-4 pt-safe relative h-full">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeTab}

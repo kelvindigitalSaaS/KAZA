@@ -95,14 +95,19 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
           return;
         }
       }
-      const saved = localStorage.getItem("friggo-garbage-reminder");
-      if (saved) {
-        const data = JSON.parse(saved);
-        setEnabled(data.enabled ?? false);
-        setSelectedDays(data.selectedDays ?? [1, 4]);
-        setReminderTime(data.reminderTime ?? "20:00");
-        setGarbageLocation(data.garbageLocation ?? "street");
-        setBuildingFloor(data.buildingFloor ?? "");
+      // Fallback: lê do cache local (chave nova, depois chave antiga para migração)
+      const cached = localStorage.getItem("kaza-garbage-reminder") || localStorage.getItem("friggo-garbage-reminder");
+      if (cached) {
+        try {
+          const data = JSON.parse(cached);
+          setEnabled(data.enabled ?? false);
+          setSelectedDays(data.selected_days ?? data.selectedDays ?? [1, 4]);
+          setReminderTime(data.reminder_time ?? data.reminderTime ?? "20:00");
+          setGarbageLocation(data.garbage_location ?? data.garbageLocation ?? "street");
+          setBuildingFloor(data.building_floor ?? data.buildingFloor ?? "");
+          // migra chave antiga
+          localStorage.removeItem("friggo-garbage-reminder");
+        } catch { /* ignora */ }
       }
     };
     loadFromDB();
@@ -219,15 +224,7 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
   };
 
   const handleSave = async () => {
-    const data = {
-      enabled,
-      selectedDays,
-      reminderTime,
-      garbageLocation,
-      buildingFloor
-    };
-    localStorage.setItem("friggo-garbage-reminder", JSON.stringify(data));
-
+    // DB é a fonte de verdade — grava primeiro
     if (user && homeId) {
       const { error } = await supabase
         .from("garbage_reminders")
@@ -237,6 +234,7 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
           enabled,
           selected_days: selectedDays,
           reminder_time: reminderTime,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo",
           garbage_location: garbageLocation,
           building_floor: buildingFloor || null,
         }, { onConflict: "home_id,user_id" });
@@ -245,6 +243,11 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
         console.error("[DEV] garbage_reminders upsert error:", error);
       }
     }
+
+    // Atualiza cache local para o scheduler de notificações
+    localStorage.setItem("kaza-garbage-reminder", JSON.stringify({
+      enabled, selectedDays, reminderTime, garbageLocation, buildingFloor,
+    }));
 
     // Start monitoring if enabled
     if (enabled && selectedDays.length > 0) {

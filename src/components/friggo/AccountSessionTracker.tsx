@@ -51,47 +51,61 @@ export function AccountSessionTracker() {
     const groupId = subscription?.groupId ?? null;
 
     // Upsert inicial
-    const upsert = () =>
-      supabase
-        .from("account_sessions")
-        .upsert(
-          {
-            user_id: user.id,
-            group_id: groupId,
-            device_id: deviceId.current,
-            platform: platform.current,
-            is_connected: true,
-            force_disconnected: false,
-            last_seen_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,device_id" }
-        )
-        .select("force_disconnected")
-        .single()
-        .then(({ data }) => {
-          if ((data as any)?.force_disconnected) {
-            signOut();
-          }
-        });
+    const upsert = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("account_sessions")
+          .upsert(
+            {
+              user_id: user.id,
+              group_id: groupId,
+              device_id: deviceId.current,
+              platform: platform.current,
+              is_connected: true,
+              force_disconnected: false,
+              last_seen_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,device_id" }
+          )
+          .select("force_disconnected")
+          .single();
+
+        if (error) throw error;
+        if ((data as any)?.force_disconnected) {
+          signOut();
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.error("[AccountSessionTracker] Upsert session error:", err);
+        }
+      }
+    };
 
     upsert();
 
     // Heartbeat: atualiza last_seen_at + verifica force_disconnect
     const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from("account_sessions")
-        .update({
-          last_seen_at: new Date().toISOString(),
-          is_connected: true,
-          group_id: groupId,
-        })
-        .eq("user_id", user.id)
-        .eq("device_id", deviceId.current)
-        .select("force_disconnected")
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("account_sessions")
+          .update({
+            last_seen_at: new Date().toISOString(),
+            is_connected: true,
+            group_id: groupId,
+          })
+          .eq("user_id", user.id)
+          .eq("device_id", deviceId.current)
+          .select("force_disconnected")
+          .single();
 
-      if ((data as any)?.force_disconnected) {
-        signOut();
+        if (error) throw error;
+        if ((data as any)?.force_disconnected) {
+          signOut();
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.error("[AccountSessionTracker] Heartbeat error:", err);
+        }
       }
     }, 30 * 1000);
 
@@ -103,7 +117,8 @@ export function AccountSessionTracker() {
         .update({ is_connected: false })
         .eq("user_id", user.id)
         .eq("device_id", deviceId.current)
-        .then(() => {});
+        .then(() => {})
+        .catch(() => {}); // silencia erro na limpeza
     };
   }, [user, subscription?.groupId, signOut]);
 

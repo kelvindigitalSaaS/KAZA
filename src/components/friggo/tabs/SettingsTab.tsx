@@ -304,7 +304,11 @@ export function SettingsTab() {
       <main className="space-y-6 px-3">
         {/* Profile — horizontal layout: avatar left, info right */}
         <section className="flex items-center gap-4 pt-2 pb-1 px-1">
-          <button onClick={() => navigate("/app/profile")} className="relative group shrink-0">
+          <div onClick={(e) => {
+            // Prevent navigation if the user clicks the file upload buttons inside AvatarUpload
+            if ((e.target as HTMLElement).closest('button')) return;
+            navigate("/app/profile")
+          }} className="relative group shrink-0 cursor-pointer">
             <AvatarUpload
               currentUrl={onboardingData?.avatarUrl}
               size={72}
@@ -313,7 +317,7 @@ export function SettingsTab() {
             <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 flex items-center justify-center shadow-sm">
               <Edit className="h-3 w-3 text-[#7A7A72] dark:text-white/60" />
             </div>
-          </button>
+          </div>
           <div className="flex flex-col gap-1 min-w-0">
             <p className="text-[18px] font-bold text-[#2C2C2A] dark:text-white leading-tight truncate">
               {onboardingData?.name || user?.email?.split("@")[0]}

@@ -54,8 +54,8 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   ];
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[480px] z-50 rounded-[2rem] border border-black/[0.05] dark:border-white/[0.08] bg-white/70 dark:bg-[#111]/70 backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] pb-0">
-      <div className="mx-auto flex h-[4.25rem] w-full items-center justify-around px-2">
+    <nav className="fixed bottom-nav-float left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[min(480px,calc(100vw-1.5rem))] z-50 rounded-[2rem] border border-black/[0.05] dark:border-white/[0.08] bg-white/75 dark:bg-[#111]/75 backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)]">
+      <div className="mx-auto flex h-[4.25rem] w-full items-center justify-around px-1 sm:px-4">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

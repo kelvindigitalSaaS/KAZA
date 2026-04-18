@@ -126,8 +126,8 @@ export function PlansScreen({ onClose }: PlansScreenProps) {
             language === "pt-BR"
               ? "Assinatura ativada!"
               : language === "en"
-              ? "Subscription activated!"
-              : "¡Suscripción activada!"
+                ? "Subscription activated!"
+                : "¡Suscripción activada!"
           );
         }}
         onCancel={() => setCheckoutPlan(null)}
@@ -305,13 +305,13 @@ export function PlansScreen({ onClose }: PlansScreenProps) {
                     </Badge>
                   </div>
                 )}
-                    {plan === "premium" && (
-                      <div className="absolute left-0 top-0">
-                        <Badge className="rounded-br-lg rounded-tl-lg bg-emerald-600 text-white">
-                          Oferta exclusiva
-                        </Badge>
-                      </div>
-                    )}
+                {plan === "premium" && (
+                  <div className="absolute left-0 top-0">
+                    <Badge className="rounded-br-lg rounded-tl-lg bg-emerald-600 text-white">
+                      Oferta exclusiva
+                    </Badge>
+                  </div>
+                )}
                 {plan === "premium" && (
                   <div className="absolute inset-0 pointer-events-none" />
                 )}

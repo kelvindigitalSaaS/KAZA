@@ -158,37 +158,53 @@ export function useGroupMembers() {
 
   const inviteByEmail = useCallback(
     async (email: string) => {
-      if (!groupId || !user) {
-        toast.error("Erro: grupo ou usuário não encontrado");
+      if (!user) {
+        toast.error("Você precisa estar logado para enviar convites.");
         return false;
       }
 
       try {
-        // Call edge function to send invite
+        // Pass group_id if we already have it; the edge function will
+        // auto-create a group for multiPRO users who don't have one yet.
+        const body: Record<string, string> = { invited_email: email };
+        if (groupId) body.group_id = groupId;
+
         const { data, error } = await supabase.functions.invoke("send-invite-email", {
-          body: {
-            group_id: groupId,
-            invited_email: email,
-          },
+          body,
         });
 
         if (error) {
           let errorMsg = "Erro ao enviar convite";
-
-          if (typeof error === "object") {
-            if (error.message) {
-              if (error.message.includes("Unauthorized")) {
-                errorMsg = "Você não tem permissão para enviar convites";
-              } else if (error.message.includes("group not found")) {
-                errorMsg = "Grupo não encontrado";
-              } else if (error.message.includes("já foi convidado")) {
-                errorMsg = "Este email já foi convidado para este grupo";
-              } else {
-                errorMsg = error.message;
+          
+          // Try to extract JSON from FunctionsHttpError context
+          if (error && typeof error === 'object' && 'context' in error) {
+            try {
+              const res = (error as any).context as Response;
+              // Clone the response so we don't lock the stream if already read
+              const errorBody = await res.clone().json();
+              if (errorBody && errorBody.error) {
+                errorMsg = errorBody.error;
               }
+            } catch (e) {
+              // Ignore if not JSON
             }
-          } else if (typeof error === "string") {
-            errorMsg = error;
+          }
+
+          if (errorMsg === "Erro ao enviar convite") {
+            const msg =
+              typeof error === "object" && error !== null
+                ? (error as any).message ?? ""
+                : String(error);
+
+            if (msg.includes("Unauthorized")) {
+              errorMsg = "Você não tem permissão para enviar convites";
+            } else if (msg.includes("já foi convidado") || msg.includes("já possui um convite")) {
+              errorMsg = "Este email já tem um convite pendente";
+            } else if (msg.includes("plano PRO")) {
+              errorMsg = "Você precisa de um plano PRO para convidar membros";
+            } else if (msg && msg !== "FunctionsHttpError: Edge Function returned a non-2xx status code") {
+              errorMsg = msg;
+            }
           }
 
           toast.error(errorMsg);
@@ -196,17 +212,16 @@ export function useGroupMembers() {
           return false;
         }
 
-        if (!data || !data.success) {
+        if (!data?.success) {
           toast.error("Erro ao enviar convite. Tente novamente.");
           return false;
         }
 
-        toast.success(`Email enviado com sucesso para ${email}! ✓`);
+        toast.success(`Convite enviado para ${email}! ✓`);
         return true;
       } catch (err) {
         console.error("Error sending invite:", err);
-        const errorMsg = err instanceof Error ? err.message : "Erro ao enviar convite";
-        toast.error(errorMsg);
+        toast.error(err instanceof Error ? err.message : "Erro ao enviar convite");
         return false;
       }
     },
