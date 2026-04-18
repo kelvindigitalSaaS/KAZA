@@ -169,8 +169,14 @@ export function useGroupMembers() {
         const body: Record<string, string> = { invited_email: email };
         if (groupId) body.group_id = groupId;
 
+        // Fetch session to ensure we have a fresh token
+        const { data: { session } } = await supabase.auth.getSession();
+
         const { data, error } = await supabase.functions.invoke("send-invite-email", {
           body,
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
         });
 
         if (error) {
@@ -264,6 +270,27 @@ export function useGroupMembers() {
     [groupId, user]
   );
 
+  const cancelInvite = useCallback(
+    async (inviteId: string) => {
+      if (!groupId || !user) return;
+
+      try {
+        const { error } = await supabase
+          .from("sub_account_invites")
+          .delete()
+          .eq("id", inviteId)
+          .eq("group_id", groupId);
+
+        if (error) throw error;
+        toast.info("Convite cancelado.");
+      } catch (err) {
+        console.error("Error canceling invite:", err);
+        toast.error("Erro ao cancelar o convite");
+      }
+    },
+    [groupId, user]
+  );
+
   return {
     members,
     pendingInvites,
@@ -274,5 +301,6 @@ export function useGroupMembers() {
     maxSlots,
     inviteByEmail,
     removeMember,
+    cancelInvite,
   };
 }

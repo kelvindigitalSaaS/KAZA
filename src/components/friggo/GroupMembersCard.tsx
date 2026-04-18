@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Plus, Mail, Trash2, Loader2 } from "lucide-react";
+import { Users, Plus, Mail, Trash2, Loader2, RefreshCw, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export function GroupMembersCard() {
-  const { slots, filledSlots, maxSlots, inviteByEmail, removeMember, loading } =
+  const { slots, filledSlots, maxSlots, inviteByEmail, removeMember, cancelInvite, loading } =
     useGroupMembers();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -52,6 +52,13 @@ export function GroupMembersCard() {
     if (!removeConfirm) return;
     await removeMember(removeConfirm.memberId, removeConfirm.memberName);
     setRemoveConfirm(null);
+  };
+
+  const handleResend = async (inviteId: string, email: string) => {
+    // Delete the old invite
+    await cancelInvite(inviteId);
+    // Send a new one
+    await inviteByEmail(email);
   };
 
   if (loading) {
@@ -133,6 +140,22 @@ export function GroupMembersCard() {
                         Convite enviado
                       </p>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleResend(slot.invite!.id, slot.invite!.invited_email)}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                      title="Reenviar convite"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => cancelInvite(slot.invite!.id)}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                      title="Cancelar convite"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
                 </>
               )}

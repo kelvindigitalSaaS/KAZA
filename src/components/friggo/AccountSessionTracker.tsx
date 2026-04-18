@@ -73,7 +73,16 @@ export function AccountSessionTracker() {
         if (error) throw error;
         if ((data as any)?.force_disconnected) {
           signOut();
+          return; // não desconectar outros se este foi forçado a sair
         }
+
+        // Ao fazer login, desconectar todos os outros dispositivos do mesmo usuário
+        // para garantir que apenas 1 dispositivo está ativo por vez (best effort)
+        void supabase
+          .from("account_sessions")
+          .update({ force_disconnected: true })
+          .eq("user_id", user.id)
+          .neq("device_id", deviceId.current);
       } catch (err) {
         if (import.meta.env.DEV) {
           console.error("[AccountSessionTracker] Upsert session error:", err);

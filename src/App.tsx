@@ -26,6 +26,7 @@ import { AccountSessionTracker } from "@/components/friggo/AccountSessionTracker
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const PaywallPage = lazy(() => import("./pages/PaywallPage"));
 const SuccessPage = lazy(() => import("@/pages/SuccessPage"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const MonthlyReportPage = lazy(() => import("@/pages/MonthlyReportPage"));
@@ -143,7 +144,7 @@ function ProtectedRoute({ element, allowLocked = false, allowOnboarding = false 
   }
 
   if (isLocked && !allowLocked) {
-    return <Navigate to="/app/home?subscription=open" replace />;
+    return <Navigate to="/paywall" replace />;
   }
 
   // Mandatory Onboarding Flow
@@ -313,6 +314,7 @@ const App = () => {
                               <Route path="/sucesso" element={<SuccessPage />} />
                               <Route path="/success" element={<SuccessPage />} />
                               <Route path="/invite" element={<InvitePage />} />
+                              <Route path="/paywall" element={<PaywallPage />} />
                               <Route path="/pagina-de-vendas" element={<SalesPage />} />
                               <Route path="/pagina-de-vendas/termos-de-uso" element={<SalesTermsPage />} />
                               <Route path="/pagina-de-vendas/privacidade" element={<SalesPrivacyPage />} />
