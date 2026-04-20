@@ -99,6 +99,9 @@ export default function ProfilePage() {
             saving: 'Guardando...',
             success: '¡Perfil actualizado!',
             error: 'Error al guardar perfil',
+            cpf: 'CPF (Para fines de prueba)',
+            cpfPlaceholder: '000.000.000-00',
+            invalidCpf: 'CPF inválido',
         },
     };
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import {
   User,
@@ -299,7 +300,7 @@ export function SettingsTab() {
   return (
     <PageTransition
       direction="right"
-      className="min-h-[100dvh] bg-[#F7F6F3] dark:bg-[#091f1c] pb-32 pt-8"
+      className="min-h-[100dvh] bg-[#FAFAFA] dark:bg-[#091f1c] pb-nav-safe pt-8"
     >
       <main className="space-y-6 px-3">
         {/* Profile — horizontal layout: avatar left, info right */}
@@ -329,9 +330,9 @@ export function SettingsTab() {
             ) : trialDaysRemaining > 0 ? (
               <button
                 onClick={() => navigate("/app/settings/subscription/manage")}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[11px] font-black uppercase tracking-wider w-fit hover:bg-amber-500/30 transition-colors active:scale-95"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-400/30 text-amber-600 dark:text-amber-300 text-[11px] font-black uppercase tracking-wider w-fit hover:bg-amber-500/20 dark:hover:bg-amber-500/30 transition-colors active:scale-95"
               >
-                <Star className="h-3 w-3" />
+                <Star className="h-3 w-3 fill-amber-500/20" />
                 {language === "pt-BR" ? `Trial · ${trialDaysRemaining}d` : language === "es" ? `Trial · ${trialDaysRemaining}d` : `Trial · ${trialDaysRemaining}d`}
               </button>
             ) : (
@@ -444,117 +445,7 @@ export function SettingsTab() {
           </div>
 
           {/* Plan cards — always visible for upgrade/subscribe (hidden only if actively paid) */}
-          {(planTier !== "premium" || trialDaysRemaining > 0) && (
-            <div className="space-y-4">
-              {/* IndividualPRO Card — White/light */}
-              <div className="rounded-2xl bg-white dark:bg-[#11302c] border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm p-5">
-                <div className="mb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-[18px] font-black text-[#2C2C2A] dark:text-white leading-tight">IndividualPRO</h4>
-                      <p className="text-[12px] text-[#9A998F] dark:text-white/40 font-medium mt-0.5">
-                        {language === "pt-BR" ? "Para quem organiza a casa sozinho." : "For solo home management."}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-[28px] font-black text-[#2C2C2A] dark:text-white leading-none tracking-tight">R$19,90</span>
-                      <span className="text-[13px] font-semibold text-[#9A998F] dark:text-white/40">/mês</span>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="space-y-2 mb-4">
-                  {[
-                    "1 conta, 1 usuário",
-                    "Estoque completo e ilimitado",
-                    "Alertas de validade e reposição",
-                    "Lista de compras + receitas com IA",
-                    "Notificações inteligentes da rotina",
-                  ].map((f) => (
-                    <div key={f} className="flex items-center gap-2.5">
-                      <div className="h-4 w-4 rounded-full bg-[#3D6B55]/15 flex items-center justify-center shrink-0">
-                        <Check className="h-2.5 w-2.5 text-[#3D6B55]" />
-                      </div>
-                      <span className="text-[13px] text-[#2C2C2A] dark:text-white/80 font-medium">{f}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => window.open("https://pay.cakto.com.br/356go8z", "_blank")}
-                  className="w-full h-12 rounded-xl bg-[#2C2C2A] dark:bg-white/10 hover:bg-[#1a1a1a] dark:hover:bg-white/15 text-white font-black text-[14px] tracking-wide transition-all active:scale-[0.97] shadow-sm border border-[#2C2C2A] dark:border-white/10"
-                >
-                  {language === "pt-BR" ? "Escolher IndividualPRO" : "Choose IndividualPRO"}
-                </button>
-              </div>
-
-              {/* MultiPRO Card — Dark green premium */}
-              <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#2a5d4a] dark:border-emerald-400/30" style={{
-                background: "linear-gradient(145deg, #1a3d32 0%, #0f2e24 60%, #0a211a 100%)"
-              }}>
-                {/* "MAIS COMPLETO" badge */}
-                <div className="absolute top-4 right-4 px-2.5 py-1 rounded-md bg-[#C9A84C] text-[#1a3d32] text-[9px] font-black uppercase tracking-wider">
-                  {language === "pt-BR" ? "MAIS COMPLETO" : "MOST COMPLETE"}
-                </div>
-
-                <div className="p-5">
-                  <div className="mb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="text-[18px] font-black text-white leading-tight">MultiPRO</h4>
-                        <p className="text-[12px] text-white/50 font-medium mt-0.5">
-                          {language === "pt-BR" ? "1 conta principal + convida até 3." : "1 main account + invite up to 3."}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-[28px] font-black text-white leading-none tracking-tight">R$37,90</span>
-                        <span className="text-[13px] font-semibold text-white/40">/mês</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-1">
-                    <p className="text-[11px] font-bold text-emerald-300/80 flex items-center gap-1">
-                      <Check className="h-3 w-3" />
-                      {language === "pt-BR" ? "Tudo do IndividualPRO, mais:" : "Everything in IndividualPRO, plus:"}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 mb-5">
-                    {[
-                      { text: "Conta principal convida até 3 pessoas", bold: true },
-                      { text: "Casa compartilhada em tempo real", bold: false },
-                      { text: "Notificações e permissões por perfil", bold: false },
-                      { text: "Controle de membros e sessões", bold: false },
-                    ].map(({ text, bold }) => (
-                      <div key={text} className="flex items-center gap-2.5">
-                        <div className="h-4 w-4 rounded-full bg-emerald-400/20 flex items-center justify-center shrink-0">
-                          <Check className="h-2.5 w-2.5 text-emerald-400" />
-                        </div>
-                        <span className={cn("text-[13px] text-white/80 font-medium", bold && "font-bold text-white")}>{text}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => window.open("https://pay.cakto.com.br/wbjq4ne_846287", "_blank")}
-                    className="w-full h-12 rounded-xl font-black text-[14px] tracking-wide transition-all active:scale-[0.97] shadow-md"
-                    style={{
-                      background: "linear-gradient(135deg, #2a5d4a 0%, #1a4a38 100%)",
-                      color: "#ffffff",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                    }}
-                  >
-                    {language === "pt-BR" ? "Testar MultiPRO — 7 dias grátis" : "Try MultiPRO — 7 days free"}
-                  </button>
-                </div>
-              </div>
-
-              <p className="text-center text-[10px] text-[#B0AFA7] dark:text-white/30 font-medium pt-0.5">
-                {language === "pt-BR" ? "Cancele quando quiser · PIX e cartão via Cakto" : "Cancel anytime · PIX and card via Cakto"}
-              </p>
-            </div>
-          )}
         </section>
 
         {/* Preferences */}
@@ -599,22 +490,21 @@ export function SettingsTab() {
               </div>
               <div className="flex gap-1.5">
                 {([
-                  { value: "pt-BR", flag: "🇧🇷", label: "PT" },
-                  { value: "en", flag: "🇺🇸", label: "EN" },
-                  { value: "es", flag: "🇪🇸", label: "ES" },
-                ] as const).map(({ value, flag, label }) => (
+                  { value: "pt-BR", label: "PT" },
+                  { value: "en", label: "EN" },
+                  { value: "es", label: "ES" },
+                ] as const).map(({ value, label }) => (
                   <button
                     key={value}
                     onClick={() => setLanguage(value as any)}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-0.5 h-12 w-12 rounded-xl text-[9px] font-bold transition-all",
+                      "flex items-center justify-center h-12 w-12 rounded-xl text-[13px] font-black tracking-wide transition-all uppercase",
                       language === value
                         ? "bg-white text-[#091f1c] shadow-sm"
                         : "bg-[#F0EFE8] text-[#7A7A72] dark:bg-white/10 dark:text-white/50 hover:bg-[#E8E7E0] dark:hover:bg-white/15"
                     )}
                   >
-                    <span className="text-xl leading-none">{flag}</span>
-                    <span>{label}</span>
+                    {label}
                   </button>
                 ))}
               </div>
@@ -817,7 +707,7 @@ export function SettingsTab() {
         </section>
 
         <div className="text-center py-6 pb-12">
-          <p className="text-[13px] text-[#B0AFA7] dark:text-white/30 font-medium">Kaza v2.0.0</p>
+          <p className="text-[13px] text-[#B0AFA7] dark:text-white/30 font-medium">KAZA App</p>
           <p className="text-xs text-[#B0AFA7] dark:text-white/30 mt-1">{l.madeWith}</p>
         </div>
       </main>

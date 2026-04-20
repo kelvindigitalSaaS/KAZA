@@ -22,6 +22,8 @@ export function InvitePage() {
     invited_email: string;
     master_name: string;
     group_id: string;
+    plan_tier?: string;
+    in_trial?: boolean;
   } | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
@@ -51,6 +53,8 @@ export function InvitePage() {
           invited_email: invite.invited_email,
           master_name: invite.master_name,
           group_id: invite.group_id,
+          plan_tier: invite.plan_tier,
+          in_trial: invite.in_trial,
         });
 
         // If user is already logged in, accept the invite via backend
@@ -89,7 +93,8 @@ export function InvitePage() {
     };
 
     processInvite();
-  }, [token, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const handleWelcomeClose = () => {
     navigate("/app");
@@ -127,7 +132,7 @@ export function InvitePage() {
             <AlertDialogTitle>Bem-vindo ao KAZA!</AlertDialogTitle>
             <AlertDialogDescription>
               Você foi convidado por <strong>{inviteInfo.master_name}</strong> e agora faz parte
-              do plano KAZA MultiPRO. Você pode compartilhar o planejador de refeições,
+              do plano KAZA {inviteInfo.plan_tier === "multiPRO" ? "MultiPRO" : inviteInfo.plan_tier}{inviteInfo.in_trial ? " (Teste)" : ""}. Você pode compartilhar o planejador de refeições,
               consumíveis e alertas com os membros do seu grupo.
             </AlertDialogDescription>
             <AlertDialogAction onClick={handleWelcomeClose}>Continuar</AlertDialogAction>
@@ -145,6 +150,8 @@ export function InvitePage() {
         invitedEmail={inviteInfo.invited_email}
         masterName={inviteInfo.master_name}
         groupId={inviteInfo.group_id}
+        planTier={inviteInfo.plan_tier}
+        inTrial={inviteInfo.in_trial}
         onComplete={() => navigate("/app/home")}
       />
     );

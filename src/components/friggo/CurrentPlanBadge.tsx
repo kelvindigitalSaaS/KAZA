@@ -39,11 +39,11 @@ export function CurrentPlanBadge({ showUpgradeSheet = true, className }: Current
  case 'premium':
  case 'individualPRO':
  case 'multiPRO':
- return 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30 shadow-sm';
+ return 'bg-amber-400/20 text-amber-200 border-amber-400/30 shadow-sm backdrop-blur-xl';
  case 'standard':
- return 'bg-primary/20 text-primary border-primary/30';
+ return 'bg-white/15 text-white/90 border-white/20 backdrop-blur-xl';
  default:
- return 'bg-muted text-gray-500';
+ return 'bg-white/10 text-white/70 border-white/15 backdrop-blur-xl';
  }
  };
 

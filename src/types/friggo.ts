@@ -96,7 +96,6 @@ export interface OnboardingData {
   habits: string[];
   notificationPrefs?: string[];
   hiddenSections?: string[];
-  cpf?: string;
 }
 
 export interface ItemHistoryEntry {
@@ -131,6 +130,7 @@ export interface ConsumableItem {
   dailyConsumption: number;
   minStock: number;
   usageInterval: "daily" | "weekly" | "fortnightly" | "monthly";
+  hidden?: boolean;
 }
 
 export interface DefrostTimer {

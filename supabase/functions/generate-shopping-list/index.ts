@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -18,9 +19,9 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `Você é um assistente inteligente de compras para famílias brasileiras.
+    const systemPrompt = `VocÃª Ã© um assistente inteligente de compras para famÃ­lias brasileiras.
 Analise os itens em falta e sugira uma lista de compras otimizada, categorizada por tipo de loja.
-Considere o número de moradores e hábitos da casa.
+Considere o nÃºmero de moradores e hÃ¡bitos da casa.
 
 Retorne no formato JSON:
 {
@@ -31,7 +32,7 @@ Retorne no formato JSON:
       "unit": "kg",
       "category": "market|fair|pharmacy",
       "priority": "high|medium|low",
-      "reason": "Está acabando"
+      "reason": "EstÃ¡ acabando"
     }
   ],
   "tips": ["Dica 1 para economizar", "Dica 2"]
@@ -43,10 +44,10 @@ Itens em estoque baixo: ${lowStockItems.map((i: any) => `${i.name} (${i.quantity
 
 Itens vencidos/descartados: ${expiredItems.join(', ') || 'Nenhum'}
 
-Número de moradores: ${residents || 2}
-Hábitos: ${habits?.join(', ') || 'Não informado'}
+NÃºmero de moradores: ${residents || 2}
+HÃ¡bitos: ${habits?.join(', ') || 'NÃ£o informado'}
 
-Considere uma família brasileira típica e sugira quantidades adequadas para 1-2 semanas.`;
+Considere uma famÃ­lia brasileira tÃ­pica e sugira quantidades adequadas para 1-2 semanas.`;
 
     console.log('Generating shopping list');
 

@@ -128,11 +128,11 @@ const faqData = {
         question: "What is smart fridge?",
         answer:
           "If you have a smart refrigerator (Samsung, LG, etc), you can connect it to Kaza to control temperature, receive door-open alerts, and defrost reminders."
-      {
-        question: "How does the expiration alert work?",
-        answer:
-          "Kaza monitora as datas de validade de todos os seus itens e envia notificações. Além disso, se você guardar carnes na dispensa em vez da geladeira, o Kaza enviará um alerta de perigo imediato."
-      },
+      }
+    ]
+  },
+  es: {
+    title: "Preguntas Frecuentes",
     notFound: "¿No encontraste tu respuesta?",
     items: [
       {
@@ -194,19 +194,19 @@ const faqData = {
         question: "¿Qué es la nevera smart?",
         answer:
           "Si tienes una nevera inteligente (Samsung, LG, etc), puedes conectarla a Kaza para controlar temperatura, recibir alertas de puerta abierta y recordatorios de descongelación."
-      {
-        question: "How do smart recipes work?",
-        answer:
-          "Baseado nos itens que você tem na geladeira, especialmente os que estão próximos de vencer, o Kaza sugere receitas exclusivas para aproveitar tudo sem desperdício."
-      },
+      }
+    ]
+  }
+};
+
 export function FAQSheet({ open, onClose }: FAQSheetProps) {
   const { language } = useLanguage();
   const data = faqData[language];
-      {
-        question: "How do smart recipes work?",
-        answer:
-          "Basándose en los artículos que tienes en la nevera, especialmente los que están por vencer, Kaza sugiere recetas para aprovechar todo sin desperdicios."
-      },
+
+  return (
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl p-0">
+        <SheetHeader className="px-4 pt-5 pb-2">
           <SheetTitle className="flex items-center gap-2 text-lg font-bold">
             <HelpCircle className="h-5 w-5 text-primary" />
             {data.title}

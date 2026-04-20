@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -175,7 +176,7 @@ export default function Auth() {
         });
         if (error) throw error;
         if (data.user) {
-          await supabase.from("profiles").upsert(
+          await (supabase.from("profiles") as any).upsert(
             {
               user_id: data.user.id,
               name: formData.name,

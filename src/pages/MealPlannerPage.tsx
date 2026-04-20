@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useKaza } from "@/contexts/FriggoContext";
@@ -20,6 +21,7 @@ import {
   Clock,
   Bell,
   BellOff,
+  Plus,
   X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -49,7 +51,7 @@ export default function MealPlannerPage() {
   const [pendingMeal, setPendingMeal] = useState<{
     recipeId: string;
     recipeName: string;
-    mealType: string;
+    mealType?: string;
   } | null>(null);
   const [plannedTime, setPlannedTime] = useState("");
   const [notifyMembers, setNotifyMembers] = useState(true);
@@ -70,7 +72,7 @@ export default function MealPlannerPage() {
     )
     .slice(0, 30);
 
-  const handleAddMeal = (recipeId: string, recipeName: string, mealType: string) => {
+  const handleAddMeal = (recipeId: string, recipeName: string, mealType?: string) => {
     setPendingMeal({ recipeId, recipeName, mealType });
     setPlannedTime("");
     setNotifyMembers(true);
@@ -175,52 +177,28 @@ export default function MealPlannerPage() {
           filteredRecipes.map((recipe) => (
             <div
               key={recipe.id}
-              className="rounded-[1.5rem] bg-white dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.08] overflow-hidden shadow-sm"
+              className="rounded-[1.5rem] bg-white dark:bg-[#11302c]/40 border border-black/[0.04] dark:border-white/[0.05] overflow-hidden shadow-[0_4px_20px_-8px_rgba(0,0,0,0.06)] transition-all hover:scale-[1.01] cursor-pointer group"
+              onClick={() => handleAddMeal(recipe.id, recipe.name, selectedMealType || undefined)}
             >
               {/* Recipe header */}
-              <div
-                className="flex items-center gap-3 px-4 py-4 cursor-pointer active:bg-black/[0.02]"
-                onClick={() => navigate(`/app/recipe/${recipe.id}`, { state: { recipe } })}
-              >
-                <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary/10 shrink-0 overflow-hidden">
-                  {recipe.image ? (
-                    <img src={recipe.image} className="h-full w-full object-cover" alt="" />
+              <div className="flex items-center gap-4 px-4 py-4 active:bg-black/[0.02] dark:active:bg-white/[0.02]">
+                <div className="h-14 w-14 flex items-center justify-center rounded-[1rem] bg-emerald-500/10 shrink-0 overflow-hidden shadow-sm border border-emerald-500/10">
+                  {recipe.imageUrl ? (
+                    <img src={recipe.imageUrl} className="h-full w-full object-cover transition-transform group-hover:scale-110" alt="" />
                   ) : (
-                    <ChefHat className="h-5 w-5 text-primary" />
+                    <ChefHat className="h-6 w-6 text-emerald-500" />
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-bold text-foreground truncate">{recipe.name}</p>
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider opacity-60">
+                <div className="flex-1 min-w-0 pr-2">
+                  <p className="text-[16px] font-black text-[#1a3d32] dark:text-emerald-50 truncate leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">{recipe.name}</p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest opacity-70 mt-1">
                     {recipe.category || "Receita"}
                   </p>
                 </div>
+                <div className="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+                  <Plus className="h-5 w-5" />
+                </div>
               </div>
-
-              {/* Meal type buttons */}
-              {(!selectedMealType ? Object.entries(MEAL_CONFIG) : [[selectedMealType, MEAL_CONFIG[selectedMealType]]]).map(
-                ([type, cfg]: any) => {
-                  const Icon = cfg.icon;
-                  const added = addedRecipes.has(`${recipe.id}-${type}`);
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => !added && handleAddMeal(recipe.id, recipe.name, type)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 border-t border-black/[0.03] dark:border-white/[0.04] transition-all active:bg-black/[0.02]",
-                        added && "opacity-50 cursor-default"
-                      )}
-                    >
-                      <div className={cn("h-8 w-8 flex items-center justify-center rounded-xl border", cfg.bg, "shrink-0")}>
-                        {added ? <Check className={cn("h-4 w-4", cfg.color)} /> : <Icon className={cn("h-4 w-4", cfg.color)} />}
-                      </div>
-                      <span className={cn("text-sm font-bold", cfg.color)}>
-                        {added ? `${cfg.label} adicionado` : `Adicionar ao ${cfg.label}`}
-                      </span>
-                    </button>
-                  );
-                }
-              )}
             </div>
           ))
         )}
@@ -266,14 +244,33 @@ export default function MealPlannerPage() {
 
               <div className="px-6 pb-8 pt-2 space-y-5">
                 {/* Recipe + meal type label */}
-                {pendingMeal && mealCfg && MealIcon && (
-                  <div className="flex items-center gap-3">
-                    <div className={cn("h-11 w-11 flex items-center justify-center rounded-2xl border", mealCfg.bg)}>
-                      <MealIcon className={cn("h-5 w-5", mealCfg.color)} />
+                {pendingMeal && (
+                  <div className="space-y-4">
+                    <div className="text-center pb-2">
+                      <p className="text-xl font-black text-foreground">{pendingMeal.recipeName}</p>
+                      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Onde adicionar?</p>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-base font-bold text-foreground truncate">{pendingMeal.recipeName}</p>
-                      <p className={cn("text-xs font-semibold", mealCfg.color)}>{mealCfg.label}</p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.entries(MEAL_CONFIG).map(([type, cfg]) => {
+                        const Icon = cfg.icon;
+                        const isSelected = pendingMeal.mealType === type;
+                        return (
+                          <button
+                            key={type}
+                            onClick={() => setPendingMeal({ ...pendingMeal, mealType: type })}
+                            className={cn(
+                              "flex flex-col items-center justify-center gap-2.5 p-4 rounded-[1.25rem] border-2 transition-all active:scale-[0.97]",
+                              isSelected 
+                                ? `${cfg.bg} ${cfg.color} border-current/20 shadow-md ring-2 ring-current/10 ring-offset-1 dark:ring-offset-[#0d2820]` 
+                                : "bg-black/[0.02] dark:bg-white/[0.02] border-black/[0.04] dark:border-white/[0.04] text-muted-foreground hover:bg-black/[0.04]"
+                            )}
+                          >
+                            <Icon className={cn("h-7 w-7", isSelected && cfg.color)} />
+                            <span className="text-[14px] font-black">{cfg.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -336,9 +333,9 @@ export default function MealPlannerPage() {
                 {/* Confirm button */}
                 <button
                   onClick={handleConfirmMeal}
-                  disabled={saving}
-                  className="w-full h-14 flex items-center justify-center rounded-2xl text-white text-[15px] font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-60"
-                  style={{ background: "#165A52" }}
+                  disabled={saving || !pendingMeal?.mealType}
+                  className="w-full h-14 flex items-center justify-center rounded-2xl text-white text-[15px] font-black shadow-lg shadow-emerald-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:scale-100 mt-2"
+                  style={{ background: "linear-gradient(135deg, #2a5d4a 0%, #1a4a38 100%)" }}
                 >
                   {saving ? (
                     <motion.div

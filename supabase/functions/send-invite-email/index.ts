@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
@@ -5,7 +6,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
 
-// Service-role client — bypasses RLS for admin operations
+// Service-role client â€” bypasses RLS for admin operations
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const CORS = {
@@ -33,7 +34,7 @@ serve(async (req) => {
   }
 
   try {
-    // ── Auth ──────────────────────────────────────────────────────────────
+    // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Missing Authorization header" }, 401);
 
@@ -41,14 +42,14 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return json({ error: "Invalid token" }, 401);
 
-    // ── Payload ───────────────────────────────────────────────────────────
+    // â”€â”€ Payload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const payload: InviteRequest = await req.json();
     const { invited_email } = payload;
     let { group_id } = payload;
 
     if (!invited_email) return json({ error: "Missing invited_email" }, 400);
 
-    // ── Resolve / auto-create group ───────────────────────────────────────
+    // â”€â”€ Resolve / auto-create group â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (!group_id) {
       // Look up the group via the user's subscription
       const { data: sub } = await supabase
@@ -60,14 +61,14 @@ serve(async (req) => {
       if (sub?.group_id) {
         group_id = sub.group_id;
       } else {
-        // User has multiPRO subscription but no group yet — create one now
+        // User has multiPRO subscription but no group yet â€” create one now
         const isPro =
           (sub?.plan_tier === "multiPRO" || sub?.plan_tier === "individualPRO" || sub?.plan === "premium" || sub?.plan === "multiPRO") &&
           sub?.is_active;
 
         if (!isPro) {
           return json(
-            { error: "Você precisa de um plano PRO para convidar membros." },
+            { error: "VocÃª precisa de um plano PRO para convidar membros." },
             403
           );
         }
@@ -81,7 +82,7 @@ serve(async (req) => {
 
         if (groupErr || !newGroup) {
           console.error("Failed to auto-create group:", groupErr);
-          return json({ error: "Não foi possível criar o grupo. Tente novamente." }, 500);
+          return json({ error: "NÃ£o foi possÃ­vel criar o grupo. Tente novamente." }, 500);
         }
 
         group_id = newGroup.id;
@@ -94,7 +95,7 @@ serve(async (req) => {
       }
     }
 
-    // ── Validate caller is master of group ────────────────────────────────
+    // â”€â”€ Validate caller is master of group â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const { data: group, error: groupError } = await supabase
       .from("sub_account_groups")
       .select("id")
@@ -103,10 +104,10 @@ serve(async (req) => {
       .single();
 
     if (groupError || !group) {
-      return json({ error: "Você não tem permissão para convidar neste grupo." }, 403);
+      return json({ error: "VocÃª nÃ£o tem permissÃ£o para convidar neste grupo." }, 403);
     }
 
-    // ── Duplicate invite check ────────────────────────────────────────────
+    // â”€â”€ Duplicate invite check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const { data: existingInvite } = await supabase
       .from("sub_account_invites")
       .select("id")
@@ -118,13 +119,13 @@ serve(async (req) => {
     if (existingInvite) {
       return json(
         {
-          error: `Este email (${invited_email}) já foi convidado. Aguarde a resposta ou reenvie após 7 dias.`,
+          error: `Este email (${invited_email}) jÃ¡ foi convidado. Aguarde a resposta ou reenvie apÃ³s 7 dias.`,
         },
         400
       );
     }
 
-    // ── Master display name ───────────────────────────────────────────────
+    // â”€â”€ Master display name â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const { data: masterProfile } = await supabase
       .from("profiles")
       .select("name")
@@ -134,7 +135,7 @@ serve(async (req) => {
     const masterName =
       (masterProfile as any)?.name || user.email?.split("@")[0] || "Kaza User";
 
-    // ── Create invite record ──────────────────────────────────────────────
+    // â”€â”€ Create invite record â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const { data: invite, error: inviteError } = await supabase
       .from("sub_account_invites")
       .insert({
@@ -147,17 +148,17 @@ serve(async (req) => {
       .single();
 
     if (inviteError) {
-      // Unique constraint → already invited (race condition)
+      // Unique constraint â†’ already invited (race condition)
       if (inviteError.code === "23505") {
         return json(
-          { error: `Este email (${invited_email}) já possui um convite pendente.` },
+          { error: `Este email (${invited_email}) jÃ¡ possui um convite pendente.` },
           400
         );
       }
       return json({ error: inviteError.message }, 400);
     }
 
-    // ── Send email via Resend (best-effort) ───────────────────────────────
+    // â”€â”€ Send email via Resend (best-effort) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const appUrl =
       Deno.env.get("PUBLIC_APP_URL") ||
       supabaseUrl.replace(".supabase.co", "");
@@ -184,7 +185,7 @@ serve(async (req) => {
       <p style="color:rgba(255,255,255,0.7);margin:4px 0 0;font-size:14px">Tecnologia para sua rotina</p>
     </div>
     <div style="padding:32px 24px">
-      <h2 style="color:#165A52;margin:0 0 12px;font-size:20px">Você foi convidado!</h2>
+      <h2 style="color:#165A52;margin:0 0 12px;font-size:20px">VocÃª foi convidado!</h2>
       <p style="color:#548A76;margin:0 0 24px;font-size:15px">
         <strong>${masterName}</strong> te convidou para fazer parte do plano
         <strong>Kaza multiPRO</strong>.<br>
@@ -192,7 +193,7 @@ serve(async (req) => {
       </p>
       <a href="${inviteUrl}"
          style="display:inline-block;background:#165A52;color:#fff;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px">
-        Aceitar convite →
+        Aceitar convite â†’
       </a>
       <p style="color:#90AB9C;margin:20px 0 0;font-size:13px">Este link expira em 7 dias.</p>
     </div>
@@ -205,7 +206,7 @@ serve(async (req) => {
       if (!emailRes.ok) {
         const errText = await emailRes.text();
         console.error("Resend error:", errText);
-        // Non-critical — invite record is already created
+        // Non-critical â€” invite record is already created
       }
     } catch (emailErr) {
       console.error("Email send failed (non-critical):", emailErr);

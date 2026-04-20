@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +35,7 @@ export default function TrioSetupPage() {
     if (filled.length > 0) {
       try {
         localStorage.setItem("trio_members", JSON.stringify(filled));
-      } catch {}
+      } catch { /* ignore */ }
     }
     window.open(TRIO_CHECKOUT_URL, "_blank");
     toast.success(
@@ -192,7 +193,7 @@ export default function TrioSetupPage() {
           </button>
           <button
             onClick={() => {
-              try { localStorage.setItem("trio_members", JSON.stringify(members.filter(m => m.name.trim()))); } catch {}
+              try { localStorage.setItem("trio_members", JSON.stringify(members.filter(m => m.name.trim()))); } catch { /* ignore */ }
               window.open(TRIO_CHECKOUT_URL, "_blank");
               navigate(-1);
             }}

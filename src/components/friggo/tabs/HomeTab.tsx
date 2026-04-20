@@ -337,7 +337,7 @@ export function HomeTab() {
     };
 
     return (
-        <div className="pb-28 space-y-5">
+        <div className="pb-nav-safe space-y-5">
 
             {/* ── HERO HEADER ── */}
             <div className="relative -mx-4 -mt-0 overflow-hidden">

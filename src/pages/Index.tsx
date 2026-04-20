@@ -44,7 +44,7 @@ const tabSpring = { type: "spring" as const, stiffness: 350, damping: 30, mass: 
 
 function KazaApp() {
   // ── ALL hooks must be declared before any early returns ───────────────────
-  const { loading: friggoLoading, isOnboarded } = useKaza();
+  const { loading: friggoLoading, isOnboarded, homeId } = useKaza();
   const { user, loading: authLoading, requireAuth } = useAuth();
   const [activeTab, setActiveTab] = useState(() => {
     try {
@@ -68,14 +68,14 @@ function KazaApp() {
     if (!authLoading && !friggoLoading && user) {
       hasLoadedOnce.current = true;
     }
-  }, [authLoading, friggoLoading, user]);
+  }, [homeId, user?.id, authLoading, friggoLoading]);
 
   const handleTabChange = useCallback((tab: string) => {
     setPrevTab(activeTab);
     setActiveTab(tab);
     try {
       sessionStorage.setItem(TAB_STORAGE_KEY, tab);
-    } catch {}
+    } catch { /* ignore */ }
   }, [activeTab]);
 
   useEffect(() => {

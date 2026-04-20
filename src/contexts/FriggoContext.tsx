@@ -53,7 +53,7 @@ interface KazaContextType {
   addConsumable: (item: Omit<ConsumableItem, "id">) => Promise<void>;
   updateConsumable: (id: string, updates: Partial<ConsumableItem>) => Promise<void>;
   removeConsumable: (id: string) => Promise<void>;
-  clearConsumables: () => void;
+  clearConsumables: () => Promise<void>;
   setConsumablesBulk: (items: Omit<ConsumableItem, "id">[]) => Promise<void>;
   markAllShoppingComplete: () => Promise<void>;
   clearAllShoppingList: () => Promise<void>;
@@ -87,7 +87,7 @@ const VALID_CATEGORIES: ItemCategory[] = [
   "beverage", "cleaning", "hygiene", "pantry"
 ];
 const VALID_LOCATIONS: ItemLocation[] = ["fridge", "freezer", "pantry", "cleaning"];
-const DEFAULT_NOTIFICATION_PREFS = ["expiry", "shopping", "nightCheckup"];
+export const DEFAULT_NOTIFICATION_PREFS = ["expiry", "shopping", "nightCheckup"];
 
 const ALERT_NOTIFICATION_PREF_MAP: Record<Alert["type"], string> = {
   expiring: "expiry",
@@ -141,7 +141,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
   const notifiedAlertIds = useRef<Set<string>>(new Set());
   const hasHydratedAlerts = useRef(false);
 
-  const buildDefaultOnboarding = (
+  const buildDefaultOnboarding = useCallback((
     overrides: Partial<OnboardingData> = {}
   ): OnboardingData => {
     const fallbackName =
@@ -158,18 +158,18 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       ...overrides
     };
-  };
+  }, [user?.user_metadata?.name]);
 
   useEffect(() => {
     notifiedAlertIds.current.clear();
     hasHydratedAlerts.current = false;
   }, [user?.id]);
 
-  const showError = (title: string, err: unknown) => {
+  const showError = useCallback((title: string, err: unknown) => {
     const msg = err instanceof Error ? err.message : String(err);
     if (import.meta.env.DEV) { console.error("[DEV]", title, err); }
     toast({ title, description: msg, variant: "destructive" });
-  };
+  }, [toast]);
 
   const fetchData = useCallback(async () => {
     if (!user) {
@@ -221,8 +221,8 @@ export function KazaProvider({ children }: { children: ReactNode }) {
             const { completeInviteSetup } = await import("@/components/friggo/SubAccountOnboarding");
             await completeInviteSetup(user.id, inviteToken);
             if (legacyRaw) localStorage.removeItem("pending_invite_setup");
-            // Re-run now that home_members entry exists
-            await fetchData();
+            // Reload page to refresh all contexts with new membership
+            window.location.reload();
             return;
           } catch (err) {
             if (import.meta.env.DEV) console.error("[DEV] Invite setup failed:", err);
@@ -329,15 +329,17 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       console.log("[FRIGGO] fetchData: done in", (performance.now() - t0).toFixed(0), "ms");
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id, buildDefaultOnboarding, showError]);
 
-  // Debounce fetchData: multiple auth events (SIGNED_IN, INITIAL_SESSION,
-  // getSession) fire in quick succession and all update `user`, each
-  // re-creating fetchData. Without debounce, 3 concurrent fetches run.
+  // Fetch initial data when user changes
   useEffect(() => {
-    const t = setTimeout(() => { fetchData(); }, 80);
-    return () => clearTimeout(t);
-  }, [fetchData]);
+    if (user?.id) {
+      fetchData();
+    } else if (!user) {
+      // Re-run fetchData to clear state and show demo
+      fetchData();
+    }
+  }, [user?.id]);
 
   // ── alerts ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -763,7 +765,20 @@ export function KazaProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const clearConsumables = () => setConsumables([]);
+  const clearConsumables = async () => {
+    if (!user || !homeId) {
+      setConsumables([]);
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from("consumables").delete().eq("home_id", homeId);
+      if (error) throw error;
+      setConsumables([]);
+    } catch (err) {
+      showError("Erro ao limpar consumíveis", err);
+    }
+  };
 
   const setConsumablesBulk = async (list: Omit<ConsumableItem, "id">[]) => {
     if (!user || !homeId) {
@@ -785,10 +800,13 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       }));
       const { data, error } = await supabase
         .from("consumables")
-        .upsert(rows, { onConflict: "home_id,name" })
+        .insert(rows)
         .select();
       if (error) throw error;
-      setConsumables((data || []).map(toConsumable));
+      // Merge new items into existing list (avoid duplicates by name)
+      const existingNames = new Set(consumables.map(c => c.name.toLowerCase()));
+      const newMapped = (data || []).map(toConsumable).filter(c => !existingNames.has(c.name.toLowerCase()));
+      setConsumables((prev) => [...prev, ...newMapped]);
     } catch (err) {
       showError("Erro ao salvar consumíveis", err);
     }
@@ -913,19 +931,22 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       // Se o usuário não tem home (trigger do DB não criou), criamos aqui como fallback
       let effectiveHomeId = homeId;
       if (!effectiveHomeId) {
-        const db = supabase as any;
-        const { data: newHome, error: homeErr } = await db
-          .from("homes")
-          .insert({ owner_user_id: user.id, name: "Minha Casa" })
-          .select("id")
-          .single();
-        if (homeErr) throw homeErr;
-        effectiveHomeId = (newHome as any).id as string;
+        // Fallback: create home via RPC to bypass RLS chicken-and-egg issues
+        const { data: hId, error: hErr } = await supabase.rpc("create_home_with_owner", {
+          home_name: data.name ? `${data.name}'s Home` : "Minha Casa"
+        });
+        
+        if (hErr) {
+          console.error("[FRIGGO] Error creating home via RPC:", hErr.message, "| Details:", hErr.details, "| Hint:", hErr.hint);
+          throw hErr;
+        }
+        
+        effectiveHomeId = hId;
         setHomeId(effectiveHomeId);
 
-        // Cria membership, settings e prefs
+        // Initial settings and prefs (memberships handled by RPC)
+        const db = supabase as any;
         await Promise.all([
-          db.from("home_members").insert({ home_id: effectiveHomeId, user_id: user.id, role: "owner" }),
           db.from("home_settings").insert({ home_id: effectiveHomeId }),
           db.from("notification_preferences").insert({ home_id: effectiveHomeId }),
         ]);
@@ -992,6 +1013,12 @@ export function KazaProvider({ children }: { children: ReactNode }) {
     hid: string, prefs?: string[], nightCheckupTime?: string
   ): Promise<{ error?: any }> {
     const list = prefs ?? DEFAULT_NOTIFICATION_PREFS;
+    const STEP_NUMBERS: Record<string, number> = {
+      name: 1,
+      password: 2,
+      consumables: 3,
+      complete: 4,
+    };
     const patch: Record<string, unknown> = {
       home_id: hid,
       expiring_items: list.includes("expiry"),

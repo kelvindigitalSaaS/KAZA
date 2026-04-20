@@ -21,7 +21,7 @@ export function PlanLimitCard({ type, currentCount = 0, onUpgrade, className }: 
 
  const getLimitInfo = () => {
  switch (type) {
- case 'items':
+ case 'items': {
  const itemsLimit = subscription.itemsLimit;
  const itemsRemaining = getRemainingItems();
  return {
@@ -31,7 +31,8 @@ export function PlanLimitCard({ type, currentCount = 0, onUpgrade, className }: 
  remaining: itemsRemaining === -1 ? -1 : itemsLimit - currentCount,
  icon: '🧊'
  };
- case 'recipes':
+ }
+ case 'recipes': {
  const recipesRemaining = getRemainingRecipes();
  return {
  label: 'Receitas Hoje',
@@ -40,7 +41,8 @@ export function PlanLimitCard({ type, currentCount = 0, onUpgrade, className }: 
  remaining: recipesRemaining,
  icon: '🍳'
  };
- case 'shopping':
+ }
+ case 'shopping': {
  const shoppingRemaining = getRemainingShoppingItems(currentCount);
  return {
  label: 'Itens na Lista',
@@ -49,6 +51,7 @@ export function PlanLimitCard({ type, currentCount = 0, onUpgrade, className }: 
  remaining: shoppingRemaining,
  icon: '🛒'
  };
+ }
  }
  };
 

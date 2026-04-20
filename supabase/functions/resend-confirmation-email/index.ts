@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
@@ -72,7 +73,7 @@ serve(async (req) => {
 
     if (!resendApiKey) {
       console.error("RESEND_API_KEY not set");
-      return json({ error: "RESEND_API_KEY não configurada." }, 500);
+      return json({ error: "RESEND_API_KEY nÃ£o configurada." }, 500);
     }
 
     // Check if user already exists in auth.users
@@ -81,8 +82,8 @@ serve(async (req) => {
       (u: any) => u.email?.toLowerCase() === email.toLowerCase()
     );
 
-    // If already registered → magiclink (logs them in directly).
-    // If not → signup link (confirms & creates session).
+    // If already registered â†’ magiclink (logs them in directly).
+    // If not â†’ signup link (confirms & creates session).
     const linkType = existingUser ? "magiclink" : "signup";
     const linkRes = await (supabase.auth as any).admin.generateLink({
       type: linkType,
@@ -96,7 +97,7 @@ serve(async (req) => {
         {
           error:
             linkRes?.error?.message ||
-            "Não foi possível gerar o link de acesso.",
+            "NÃ£o foi possÃ­vel gerar o link de acesso.",
         },
         500
       );
@@ -105,15 +106,15 @@ serve(async (req) => {
     const confirmUrl: string = linkRes.data.properties.action_link;
     const isMagicLink = linkType === "magiclink";
     const subject = isMagicLink
-      ? "Seu link de acesso — Kaza"
-      : "Confirme seu email — Kaza";
+      ? "Seu link de acesso â€” Kaza"
+      : "Confirme seu email â€” Kaza";
     const heading = isMagicLink
       ? "Entrar na sua conta Kaza"
-      : "Um clique e sua conta está pronta";
+      : "Um clique e sua conta estÃ¡ pronta";
     const description = isMagicLink
-      ? "Clique no botão abaixo para entrar direto no app."
-      : "Clique no botão abaixo para confirmar seu email e ativar sua conta.";
-    const button = isMagicLink ? "Entrar no Kaza →" : "Confirmar email →";
+      ? "Clique no botÃ£o abaixo para entrar direto no app."
+      : "Clique no botÃ£o abaixo para confirmar seu email e ativar sua conta.";
+    const button = isMagicLink ? "Entrar no Kaza â†’" : "Confirmar email â†’";
 
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -142,7 +143,7 @@ serve(async (req) => {
         ${button}
       </a>
       <p style="color:#90AB9C;margin:20px 0 0;font-size:13px">
-        Se você não solicitou este email, pode ignorar com segurança.
+        Se vocÃª nÃ£o solicitou este email, pode ignorar com seguranÃ§a.
       </p>
     </div>
   </div>

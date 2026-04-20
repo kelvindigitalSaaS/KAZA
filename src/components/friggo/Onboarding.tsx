@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OnboardingData, ConsumableCategory } from "@/types/friggo";
@@ -37,8 +38,10 @@ import {
   Trash2,
   Loader2
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_NOTIFICATION_PREFS } from "@/contexts/FriggoContext";
 
 const onboardingLabels = {
   "pt-BR": {
@@ -327,14 +330,14 @@ const onboardingLabels = {
 
 const steps = [
   "welcome",
-  "planSelection",
   "personalize",
   "cpf",
+  "planSelection",
+  "consumables",
+  "habits",
+  "notifications",
   "homeType",
   "residents",
-  "habits",
-  "consumables",
-  "notifications",
   "complete"
 ];
 
@@ -420,7 +423,8 @@ export function Onboarding() {
   const { completeOnboarding, setConsumablesBulk, onboardingData } = useKaza();
   const { language } = useLanguage();
   const { theme, setTheme } = useTheme();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { toast } = useToast();
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -469,7 +473,32 @@ export function Onboarding() {
         usageType: d.usageType as "daily" | "weekly",
       })));
     }
-  }, [currentStep]);
+  }, [currentStep, l, onboardingConsumables.length]);
+
+  const buildDefaultOnboarding = useCallback((
+    overrides: Partial<OnboardingData> = {}
+  ): OnboardingData => {
+    const fallbackName =
+      typeof user?.user_metadata?.name === "string"
+        ? user.user_metadata.name
+        : "";
+    return {
+      name: fallbackName,
+      homeType: "apartment",
+      residents: 1,
+      fridgeType: "regular",
+      coolingLevel: 3,
+      habits: [],
+      notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
+      ...overrides
+    };
+  }, [user?.user_metadata?.name]);
+
+  const showError = useCallback((title: string, err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (import.meta.env.DEV) { console.error("[DEV]", title, err); }
+    toast({ title, description: msg, variant: "destructive" });
+  }, [toast]);
 
   useEffect(() => {
     setMounted(true);
@@ -492,7 +521,7 @@ export function Onboarding() {
         avatarUrl: onboardingData.avatarUrl || prev.avatarUrl
       }));
     }
-  }, [onboardingData?.cpf, onboardingData?.name, onboardingData?.homeType]);
+  }, [onboardingData]);
 
   const [cpfError, setCpfError] = useState("");
 
@@ -504,15 +533,17 @@ export function Onboarding() {
     if (steps[currentStep] === "personalize") {
       // Skip personalize + cpf together if both already filled
       if (hasNameAndCpf) {
-        const homeTypeIndex = steps.indexOf("homeType");
-        if (homeTypeIndex !== -1) {
-          setPage([homeTypeIndex, 1]);
-          setCurrentStep(homeTypeIndex);
-          return;
+        // Find the first step after 'cpf' that is NOT skippable
+        let next = steps.indexOf("cpf") + 1;
+        while (next < steps.length - 1 && SKIPPABLE_STEPS.includes(steps[next])) {
+          next++;
         }
+        setPage([next, 1]);
+        setCurrentStep(next);
+        return;
       }
       if (!data.name || !data.name.trim()) {
-        toast.error(
+        sonnerToast.error(
           language === "pt-BR"
             ? "Informe seu nome para continuar."
             : language === "es"
@@ -525,9 +556,12 @@ export function Onboarding() {
     if (steps[currentStep] === "cpf") {
       // If CPF already exists in DB, skip validation and advance
       if (hasNameAndCpf) {
-        const nextIndex = currentStep + 1;
-        setPage([nextIndex, 1]);
-        setCurrentStep(nextIndex);
+        let next = currentStep + 1;
+        while (next < steps.length - 1 && SKIPPABLE_STEPS.includes(steps[next])) {
+          next++;
+        }
+        setPage([next, 1]);
+        setCurrentStep(next);
         return;
       }
       const rawCpf = data.cpf || "";
@@ -571,7 +605,7 @@ export function Onboarding() {
   }, [hasNameAndCpf]);
   const handleBack = () => {
     if (currentStep > 0) {
-      // If going back would land on a skippable step, jump over it
+      // Find the previous step that is NOT skippable
       let targetStep = currentStep - 1;
       while (targetStep > 0 && SKIPPABLE_STEPS.includes(steps[targetStep])) {
         targetStep--;
@@ -778,6 +812,15 @@ export function Onboarding() {
             <motion.p variants={staggerItem} className="text-center text-xs text-muted-foreground mt-3">
               Sem cartão. Cancele quando quiser.
             </motion.p>
+            
+            <motion.div variants={staggerItem} className="mt-4 flex justify-center">
+              <button 
+                onClick={handleNext}
+                className="text-[13px] font-bold text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
+              >
+                Continuar para teste grátis
+              </button>
+            </motion.div>
           </motion.div>
         );
       }
@@ -901,6 +944,12 @@ export function Onboarding() {
               {cpfError && (
                 <p className="mt-2 text-sm text-destructive">{cpfError}</p>
               )}
+              <p className="text-sm font-medium text-muted-foreground text-center animate-in fade-in duration-700 delay-300">
+                {selectedPlan === 'multiPRO' 
+                  ? (language === 'pt-BR' ? 'Será possível convidar até +3 pessoas para sua casa.' : language === 'es' ? 'Podrás invitar hasta a +3 personas a tu hogar.' : 'You will be able to invite up to +3 people to your home.')
+                  : (language === 'pt-BR' ? 'Embora somente uma pessoa será administradora da conta.' : language === 'es' ? 'Aunque solo una persona será administradora de la cuenta.' : 'Although only one person will be the account administrator.')
+                }
+              </p>
               {onboardingData?.cpf && (
                 <p className="text-[10px] font-bold text-primary mt-2 px-2">
                   {language === "pt-BR" ? "CPF configurado — não é possível alterar." : language === "es" ? "CPF configurado — no es posible cambiar." : "CPF set — cannot be changed."}
@@ -1037,7 +1086,7 @@ export function Onboarding() {
                       setData((prev) => ({ ...prev, residents: num }))
                     }
                     className={cn(
-                      "h-10 w-10 rounded-xl font-semibold transition-all",
+                      "flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all",
                       data.residents === num
                         ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                         : "bg-muted text-muted-foreground hover:bg-secondary"
@@ -1047,6 +1096,30 @@ export function Onboarding() {
                   </motion.button>
                 ))}
               </div>
+              <motion.div
+                variants={staggerItem}
+                className="mt-10 p-5 rounded-2xl bg-primary/5 border border-primary/10 w-full max-w-sm"
+              >
+                <div className="flex gap-4 items-start">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-foreground">
+                      {selectedPlan === "multiPRO" ? "Plano Sugerido: MultiPRO" : "Plano Selecionado: Individual"}
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedPlan === "multiPRO"
+                        ? (language === "pt-BR" 
+                            ? "Será possível convidar até +3 pessoas para sua casa." 
+                            : "You can invite up to +3 people to your home.")
+                        : (language === "pt-BR"
+                            ? "Somente uma pessoa será administradora da conta, mas você pode listar todos os moradores."
+                            : "Only one person will be the account administrator, but you can list all residents.")}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
           </motion.div>
         );

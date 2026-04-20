@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useKaza } from "@/contexts/FriggoContext";
 import {
   CalendarDays,
@@ -89,7 +90,7 @@ export function PlannerTab() {
   };
 
   return (
-    <div className="space-y-5 pb-24">
+    <div className="space-y-5 pb-nav-safe">
       {/* ── HEADER + VIEW TOGGLE ── */}
       <div className="pt-2 space-y-4">
 
@@ -363,26 +364,5 @@ export function PlannerTab() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {mealPlan.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 text-center rounded-[2.5rem] border border-black/[0.04] dark:border-white/[0.06] bg-white/50 dark:bg-white/5">
-          <div className="h-16 w-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(22,90,82,0.10)" }}>
-            <ChefHat className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="text-lg font-bold">Seu guia semanal</h3>
-          <p className="text-sm text-muted-foreground max-w-[200px] mt-2">
-            Adicione receitas ao seu plano para nunca esquecer o que cozinhar.
-          </p>
-          <Button
-            className="mt-6 rounded-2xl px-6"
-            style={{ background: "#165A52" }}
-            onClick={() => navigate(`/plan/meal-planner?date=${format(new Date(), "yyyy-MM-dd")}`)}
-          >
-            Explorar Receitas
-          </Button>
-        </div>
-      )}
-
     </div>
-  );
-}
+  );}

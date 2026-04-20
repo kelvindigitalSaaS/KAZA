@@ -6,47 +6,42 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, apikey, x-client-info",
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...CORS },
+  });
+}
+
 interface AcceptInviteRequest {
   token: string;
 }
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response("ok", { headers: CORS });
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Missing Authorization header" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    if (!authHeader) return json({ error: "Missing Authorization header" }, 401);
 
     const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid token" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    if (authError || !user) return json({ error: "Invalid token" }, 401);
 
     const payload: AcceptInviteRequest = await req.json();
     const { token: inviteToken } = payload;
 
-    if (!inviteToken) {
-      return new Response(
-        JSON.stringify({ error: "Missing invite token" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    if (!inviteToken) return json({ error: "Missing invite token" }, 400);
 
     // Validate invite exists and is not expired
     const { data: invite, error: inviteError } = await supabase
@@ -57,62 +52,44 @@ serve(async (req) => {
       .single();
 
     if (inviteError || !invite) {
-      return new Response(
-        JSON.stringify({ error: "Invalid or expired invite token" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ error: "Invalid or expired invite token" }, 400);
     }
 
-    // Check if invite has expired
-    const expiresAt = new Date(invite.expires_at);
-    const now = new Date();
-
-    if (now > expiresAt) {
-      return new Response(
-        JSON.stringify({ error: "Invite has expired" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    if (new Date() > new Date(invite.expires_at)) {
+      return json({ error: "Invite has expired" }, 400);
     }
 
     // Check if group exists
     const { data: group, error: groupError } = await supabase
       .from("sub_account_groups")
-      .select("*")
+      .select("id")
       .eq("id", invite.group_id)
       .single();
 
     if (groupError || !group) {
-      return new Response(
-        JSON.stringify({ error: "Group not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ error: "Group not found" }, 404);
     }
 
-    // Call the RPC function to accept invite (does the actual acceptance logic)
-    const { data, error } = await supabase.rpc("accept_invite", {
+    // Call the RPC to accept invite (creates home_members entry etc.)
+    const { error: rpcError } = await supabase.rpc("accept_invite", {
       invite_token: inviteToken,
     });
 
-    if (error) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    if (rpcError) {
+      console.error("accept_invite RPC error:", rpcError);
+      return json({ error: rpcError.message }, 400);
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        group_id: invite.group_id,
-        master_name: invite.master_name,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return json({
+      success: true,
+      group_id: invite.group_id,
+      master_name: invite.master_name,
+    });
   } catch (error) {
     console.error(error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    return json(
+      { error: error instanceof Error ? error.message : "Internal server error" },
+      500
     );
   }
 });

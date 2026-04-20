@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Recipe } from '@/types/friggo';
@@ -56,7 +57,7 @@ function useTimer() {
             for (let i = 0; i < 5; i++) {
                 playTone(880, i * 0.3, 0.2);
             }
-        } catch {}
+        } catch { /* ignore */ }
     }, []);
 
     const start = useCallback((mins: number) => {
@@ -87,7 +88,7 @@ function useTimer() {
             }, 1000);
         }
         return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-    }, [isRunning, seconds > 0]);
+    }, [isRunning, seconds]);
 
     useEffect(() => {
         if (seconds === 0 && initialSeconds > 0) {

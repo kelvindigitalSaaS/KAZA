@@ -14,6 +14,7 @@ import {
   Star,
   Check,
   Sparkles,
+  Lock,
 } from "lucide-react";
 
 const labels = {
@@ -21,19 +22,20 @@ const labels = {
     title: "Assinatura",
     status: "Seu plano",
     memberSince: "Membro desde",
-    trial: "Período de teste multiPRO",
-    trialDesc: "Experimente tudo grátis por 7 dias.",
-    daysLeft: "dias restantes",
-    dayLeft: "dia restante",
-    trialEnded: "Período de teste encerrado",
+    trial: "Teste multiPRO",
+    trialDesc: "Acesso completo — expira em breve.",
+    daysLeft: "dias",
+    dayLeft: "dia",
+    trialEnded: "Teste encerrado",
+    trialEndedDesc: "Assine para continuar usando todos os recursos.",
     viewSubs: "Ver planos disponíveis",
     viewSubsDesc: "Upgrade, downgrade ou gerenciar cobrança",
     freeLabel: "Grátis",
-    activeBadge: "Acesso Premium ativo — obrigado!",
+    activeBadge: "Acesso Premium ativo",
     individualDesc: "1 conta · tudo ilimitado",
-    multiDesc: "Até 3 contas · geladeira compartilhada",
-    trialBadge: "Teste gratuito",
-    whyUpgrade: "Por que fazer upgrade?",
+    multiDesc: "Até 3 contas · casa compartilhada",
+    trialBadge: "Teste ativo",
+    whyUpgrade: "O que está incluído",
     benefits: [
       { icon: Zap, text: "Itens e receitas ilimitados" },
       { icon: Users, text: "Geladeira compartilhada com a família" },
@@ -42,25 +44,29 @@ const labels = {
     ],
     cta: "Escolher plano",
     ctaActive: "Gerenciar assinatura",
-    guarantee: "Cancele quando quiser. Sem multa.",
+    ctaTrial: "Assinar multiPRO",
+    guarantee: "Cancele quando quiser · Sem multa",
+    startTrial: "Iniciar teste grátis",
+    trialCta: "Testar multiPRO — 7 dias grátis",
   },
   en: {
     title: "Subscription",
     status: "Your plan",
     memberSince: "Member since",
     trial: "multiPRO trial",
-    trialDesc: "Try everything free for 7 days.",
-    daysLeft: "days left",
-    dayLeft: "day left",
-    trialEnded: "Trial period ended",
+    trialDesc: "Full access — expires soon.",
+    daysLeft: "days",
+    dayLeft: "day",
+    trialEnded: "Trial ended",
+    trialEndedDesc: "Subscribe to keep using all features.",
     viewSubs: "See available plans",
     viewSubsDesc: "Upgrade, downgrade or manage billing",
     freeLabel: "Free",
-    activeBadge: "Active Premium access — thank you!",
+    activeBadge: "Active Premium access",
     individualDesc: "1 account · everything unlimited",
-    multiDesc: "Up to 3 accounts · shared fridge",
-    trialBadge: "Free trial",
-    whyUpgrade: "Why upgrade?",
+    multiDesc: "Up to 3 accounts · shared home",
+    trialBadge: "Trial active",
+    whyUpgrade: "What's included",
     benefits: [
       { icon: Zap, text: "Unlimited items and recipes" },
       { icon: Users, text: "Shared fridge with family" },
@@ -69,25 +75,29 @@ const labels = {
     ],
     cta: "Choose plan",
     ctaActive: "Manage subscription",
-    guarantee: "Cancel anytime. No penalties.",
+    ctaTrial: "Subscribe multiPRO",
+    guarantee: "Cancel anytime · No penalties",
+    startTrial: "Start free trial",
+    trialCta: "Try multiPRO — 7 days free",
   },
   es: {
     title: "Suscripción",
     status: "Tu plan",
     memberSince: "Miembro desde",
     trial: "Prueba multiPRO",
-    trialDesc: "Prueba todo gratis por 7 días.",
-    daysLeft: "días restantes",
-    dayLeft: "día restante",
+    trialDesc: "Acceso completo — vence pronto.",
+    daysLeft: "días",
+    dayLeft: "día",
     trialEnded: "Prueba finalizada",
+    trialEndedDesc: "Suscríbete para seguir usando todos los recursos.",
     viewSubs: "Ver planes disponibles",
     viewSubsDesc: "Upgrade, downgrade o gestionar cobro",
     freeLabel: "Gratis",
-    activeBadge: "Acceso Premium activo — ¡gracias!",
+    activeBadge: "Acceso Premium activo",
     individualDesc: "1 cuenta · todo ilimitado",
-    multiDesc: "Hasta 3 cuentas · heladera compartida",
-    trialBadge: "Prueba gratuita",
-    whyUpgrade: "¿Por qué mejorar?",
+    multiDesc: "Hasta 3 cuentas · hogar compartido",
+    trialBadge: "Prueba activa",
+    whyUpgrade: "Qué incluye",
     benefits: [
       { icon: Zap, text: "Artículos y recetas ilimitadas" },
       { icon: Users, text: "Heladera compartida con familia" },
@@ -96,7 +106,10 @@ const labels = {
     ],
     cta: "Elegir plan",
     ctaActive: "Gestionar suscripción",
-    guarantee: "Cancela cuando quieras.",
+    ctaTrial: "Suscribir multiPRO",
+    guarantee: "Cancela cuando quieras",
+    startTrial: "Iniciar prueba gratis",
+    trialCta: "Probar multiPRO — 7 días gratis",
   },
 };
 
@@ -118,21 +131,23 @@ export default function SubscriptionPage() {
     ? planTier === "multiPRO" ? l.multiDesc : l.individualDesc
     : isTrial ? l.multiDesc : "";
 
-  const manageRoute = isActive
-    ? "/app/settings/subscription/manage"
-    : "/app/settings/subscription/manage";
+  const manageRoute = "/app/settings/subscription/manage";
+
+  // Trial progress (0–1, where 1 = all days used)
+  const trialProgress = isTrial ? Math.max(0, Math.min(1, (7 - trialDaysRemaining) / 7)) : 0;
+  const circumference = 2 * Math.PI * 22; // radius 22
 
   return (
-    <div className="min-h-screen bg-[#FAF8F4] pb-20 font-sans">
+    <div className="min-h-screen bg-[#FAF8F4] dark:bg-[#091f1c] pb-20 font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#FAF8F4]/95 backdrop-blur-xl border-b border-black/[0.06] px-4 h-16 flex items-center gap-4">
+      <header className="sticky top-0 z-50 bg-[#FAF8F4]/95 dark:bg-[#091f1c]/95 backdrop-blur-xl border-b border-black/[0.06] dark:border-white/[0.06] px-4 h-16 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 flex items-center justify-center rounded-xl bg-black/5 text-[#1a1a1a] transition-all active:scale-90"
+          className="h-10 w-10 flex items-center justify-center rounded-xl bg-black/5 dark:bg-white/10 text-[#1a1a1a] dark:text-white transition-all active:scale-90"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-lg font-bold text-[#1a1a1a]">{l.title}</h1>
+        <h1 className="text-lg font-bold text-[#1a1a1a] dark:text-white">{l.title}</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-6 space-y-5">
@@ -176,26 +191,45 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
+            {/* Trial block — with visual ring */}
             {isTrial && (
-              <div className="mt-4 flex items-center gap-3 bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/10">
-                <Clock className="h-5 w-5 text-emerald-300 shrink-0" />
+              <div className="mt-4 flex items-center gap-4 bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/10">
+                <div className="relative h-14 w-14 shrink-0">
+                  <svg className="h-14 w-14 -rotate-90" viewBox="0 0 48 48">
+                    <circle cx="24" cy="24" r="22" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
+                    <circle
+                      cx="24" cy="24" r="22" fill="none"
+                      stroke="#34d399" strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={circumference * trialProgress}
+                      className="transition-all duration-700"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-[16px] font-black text-emerald-300 leading-none">{trialDaysRemaining}</span>
+                    <span className="text-[7px] text-white/60 font-bold uppercase tracking-wider">{trialDaysRemaining === 1 ? l.dayLeft : l.daysLeft}</span>
+                  </div>
+                </div>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-white">{l.trial}</p>
-                  <p className="text-[11px] text-white/60">{l.trialDesc}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[28px] font-black text-emerald-300 leading-none">{trialDaysRemaining}</p>
-                  <p className="text-[10px] text-white/60">{trialDaysRemaining === 1 ? l.dayLeft : l.daysLeft}</p>
+                  <p className="text-[11px] text-white/60 mt-0.5">{l.trialDesc}</p>
                 </div>
               </div>
             )}
 
+            {/* Trial ended */}
             {!isTrial && !isActive && (
-              <div className="mt-4 bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/10">
-                <p className="text-sm text-white/70 font-medium">{l.trialEnded}</p>
+              <div className="mt-4 bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/10 flex items-center gap-3">
+                <Lock className="h-5 w-5 text-amber-300 shrink-0" />
+                <div>
+                  <p className="text-sm text-white font-bold">{l.trialEnded}</p>
+                  <p className="text-[11px] text-white/60">{l.trialEndedDesc}</p>
+                </div>
               </div>
             )}
 
+            {/* Active badge */}
             {isActive && (
               <div className="mt-4 flex items-center gap-2 bg-emerald-400/20 rounded-2xl px-4 py-3 border border-emerald-400/30">
                 <ShieldCheck className="h-4 w-4 text-emerald-300 shrink-0" />
@@ -205,30 +239,30 @@ export default function SubscriptionPage() {
           </div>
         </motion.section>
 
-        {/* Benefits section */}
+        {/* Benefits section — simplified */}
         {!isActive && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.07 }}
-            className="rounded-[2rem] bg-white border border-black/[0.06] p-6 shadow-sm"
+            className="rounded-[2rem] bg-white dark:bg-[#11302c] border border-black/[0.06] dark:border-white/[0.06] p-6 shadow-sm"
           >
-            <p className="text-[10px] font-bold text-black/40 uppercase tracking-widest mb-4">{l.whyUpgrade}</p>
+            <p className="text-[10px] font-bold text-black/40 dark:text-white/40 uppercase tracking-widest mb-4">{l.whyUpgrade}</p>
             <div className="space-y-3">
               {l.benefits.map(({ icon: Icon, text }, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-                    <Icon className="h-4 w-4 text-emerald-600" />
+                  <div className="h-8 w-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <Icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <span className="text-[14px] font-semibold text-[#1a1a1a]">{text}</span>
-                  <Check className="h-4 w-4 text-emerald-500 ml-auto shrink-0" />
+                  <span className="text-[14px] font-semibold text-[#1a1a1a] dark:text-white">{text}</span>
+                  <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400 ml-auto shrink-0" />
                 </div>
               ))}
             </div>
           </motion.section>
         )}
 
-        {/* CTA button */}
+        {/* CTA button — trial points to multiPRO */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -248,7 +282,9 @@ export default function SubscriptionPage() {
             <Crown className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
-            <p className="text-base font-black text-white">{isActive ? l.ctaActive : l.cta}</p>
+            <p className="text-base font-black text-white">
+              {isActive ? l.ctaActive : isTrial ? l.ctaTrial : l.cta}
+            </p>
             <p className="text-[11px] text-white/70 font-medium">{l.viewSubsDesc}</p>
           </div>
           <ArrowRight className="h-5 w-5 text-white shrink-0" />
@@ -259,7 +295,7 @@ export default function SubscriptionPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.18 }}
-          className="text-center text-[11px] text-black/40 font-medium"
+          className="text-center text-[11px] text-black/40 dark:text-white/40 font-medium"
         >
           {l.guarantee}
         </motion.p>

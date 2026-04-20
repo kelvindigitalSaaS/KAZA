@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 // NOTE: Stripe Embedded Checkout can be unreliable in WebView environments (Capacitor) and
 // requires HTTPS in production. We prefer redirecting to Stripe Checkout via session.url.

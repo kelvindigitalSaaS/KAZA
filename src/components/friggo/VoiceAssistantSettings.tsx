@@ -146,7 +146,7 @@ export function VoiceAssistantSettings({
       if (saved) {
         try {
           setConfigs(JSON.parse(saved));
-        } catch {}
+        } catch { /* ignore parse errors */ }
       }
     }
   }, [open]);

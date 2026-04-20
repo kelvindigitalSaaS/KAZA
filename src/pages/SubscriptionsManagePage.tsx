@@ -24,6 +24,7 @@ import {
   WifiOff,
   LogOut,
   RefreshCw,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -408,70 +409,141 @@ export default function SubscriptionsManagePage() {
             <p className="text-xs text-white/60 font-medium mt-0.5">{l.availableDesc}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 items-start">
-            <PlanCard
-              planId="individualPRO"
-              label={l.individualPRO}
-              maxAccounts={PLANS.individualPRO.maxAccounts}
-              accountLabel={l.account}
-              price={PLANS.individualPRO.price}
-              period={PLANS.individualPRO.period}
-              features={l.individualFeatures}
-              isActive={activePlanId === "individualPRO"}
-              disabled={!canOpenPlan("individualPRO")}
-              onClick={() => openCheckout("individualPRO")}
-              currentLabel={l.current}
-              icon={<User className="h-4 w-4" />}
-              prominent={false}
-            />
-            <PlanCard
-              planId="multiPRO"
-              label={l.multiPRO}
-              maxAccounts={PLANS.multiPRO.maxAccounts}
-              accountLabel={l.accounts}
-              price={PLANS.multiPRO.price}
-              period={PLANS.multiPRO.period}
-              features={l.multiFeatures}
-              isActive={activePlanId === "multiPRO"}
-              disabled={!canOpenPlan("multiPRO")}
-              onClick={() => openCheckout("multiPRO")}
-              currentLabel={l.current}
-              popularLabel={l.mostPopular}
-              icon={<Users className="h-5 w-5" />}
-              prominent={true}
-            />
-          </div>
-
-          {/* Segurança Cakto */}
-          <div className="rounded-[1.5rem] bg-[#11302c] border border-white/10 p-5 shadow-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-8 w-8 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-                <Lock className="h-4 w-4 text-emerald-300" />
+          <div className="space-y-4">
+            {/* IndividualPRO Card — White/light */}
+            <div className="rounded-2xl bg-[#EDECEA] dark:bg-white/10 border border-[#E2E1DC] dark:border-white/10 overflow-hidden shadow-sm p-5">
+              <div className="mb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="text-[18px] font-black text-[#2C2C2A] dark:text-white leading-tight">IndividualPRO</h4>
+                    <p className="text-[12px] text-[#9A998F] dark:text-white/40 font-medium mt-0.5">
+                      {language === "pt-BR" ? "Para quem organiza a casa sozinho." : "For solo home management."}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-[28px] font-black text-[#2C2C2A] dark:text-white leading-none tracking-tight">R$19,90</span>
+                    <span className="text-[13px] font-semibold text-[#9A998F] dark:text-white/40">/mês</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-[13px] text-white">{l.security}</p>
-                <p className="text-[11px] text-white/60 font-medium">{l.securityDesc}</p>
+
+              <div className="space-y-2 mb-4">
+                {[
+                  "1 conta, 1 usuário",
+                  "Estoque completo e ilimitado",
+                  "Alertas de validade e reposição",
+                  "Lista de compras + receitas com IA",
+                  "Notificações inteligentes da rotina",
+                ].map((f) => (
+                  <div key={f} className="flex items-center gap-2.5">
+                    <div className="h-4 w-4 rounded-full bg-[#3D6B55]/15 flex items-center justify-center shrink-0">
+                      <Check className="h-2.5 w-2.5 text-[#3D6B55]" />
+                    </div>
+                    <span className="text-[13px] text-[#2C2C2A] dark:text-white/80 font-medium">{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => canOpenPlan("individualPRO") && openCheckout("individualPRO")}
+                disabled={!canOpenPlan("individualPRO")}
+                className={cn(
+                  "w-full h-12 rounded-xl font-black text-[14px] tracking-wide transition-all shadow-sm border",
+                  canOpenPlan("individualPRO")
+                    ? "bg-[#2C2C2A] dark:bg-white/10 hover:bg-[#1a1a1a] dark:hover:bg-white/15 text-white active:scale-[0.97] border-[#2C2C2A] dark:border-white/10"
+                    : "bg-gray-300 dark:bg-white/5 text-gray-500 cursor-not-allowed border-gray-300 dark:border-white/5"
+                )}
+              >
+                {activePlanId === "individualPRO" 
+                  ? l.current 
+                  : isTrial 
+                    ? (language === "pt-BR" ? "Assinar Plano (assume após teste)" : "Subscribe (after trial)")
+                    : (language === "pt-BR" ? "Escolher IndividualPRO" : "Choose IndividualPRO")}
+              </button>
+            </div>
+
+            {/* MultiPRO Card — Dark green premium */}
+            <div className="relative rounded-2xl overflow-hidden shadow-xl shadow-emerald-900/20 border border-[#2a5d4a] dark:border-emerald-400/30 transition-transform duration-300 hover:scale-[1.02]" style={{
+              background: "linear-gradient(145deg, #1a3d32 0%, #0f2e24 60%, #0a211a 100%)"
+            }}>
+
+              <div className="p-5">
+                <div className="mb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="text-[18px] font-black text-white leading-tight">MultiPRO</h4>
+                      <p className="text-[12px] text-white/50 font-medium mt-0.5">
+                        {language === "pt-BR" ? "1 conta principal + convida até 3." : "1 main account + invite up to 3."}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0 relative mt-2">
+                      <div className="absolute -top-6 right-0 px-2.5 py-1 rounded-full bg-[#E5B54A] shadow-md text-[#11302c] text-[10px] font-black uppercase tracking-widest break-nowrap whitespace-nowrap z-10 rotate-2">
+                        {language === "pt-BR" ? "MAIS COMPLETO" : "MOST COMPLETE"}
+                      </div>
+                      <span className="text-[32px] font-black text-white leading-none tracking-tight">R$37,90</span>
+                      <span className="text-[13px] font-semibold text-white/40">/mês</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-1">
+                  <p className="text-[11px] font-bold text-emerald-300/80 flex items-center gap-1">
+                    <Check className="h-3 w-3" />
+                    {language === "pt-BR" ? "Tudo do IndividualPRO, mais:" : "Everything in IndividualPRO, plus:"}
+                  </p>
+                </div>
+
+                <div className="space-y-2 mb-5">
+                  {[
+                    { text: "Conta principal convida até 3 pessoas", bold: true },
+                    { text: "Casa compartilhada em tempo real", bold: false },
+                    { text: "Notificações e permissões por perfil", bold: false },
+                    { text: "Controle de membros e sessões", bold: false },
+                  ].map(({ text, bold }) => (
+                    <div key={text} className="flex items-center gap-2.5">
+                      <div className="h-4 w-4 rounded-full bg-emerald-400/20 flex items-center justify-center shrink-0">
+                        <Check className="h-2.5 w-2.5 text-emerald-400" />
+                      </div>
+                      <span className={cn("text-[13px] text-white/80 font-medium", bold && "font-bold text-white")}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => canOpenPlan("multiPRO") && openCheckout("multiPRO")}
+                  disabled={!canOpenPlan("multiPRO")}
+                  className={cn(
+                    "w-full h-12 rounded-xl font-black text-[14px] tracking-wide transition-all shadow-md",
+                    canOpenPlan("multiPRO")
+                      ? "active:scale-[0.97]"
+                      : "opacity-60 cursor-not-allowed"
+                  )}
+                  style={{
+                    background: "linear-gradient(135deg, #2a5d4a 0%, #1a4a38 100%)",
+                    color: "#ffffff",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                  }}
+                >
+                  {activePlanId === "multiPRO" 
+                    ? l.current 
+                    : isTrial 
+                      ? (language === "pt-BR" ? "Garantir MultiPRO (Adiciona + dias)" : "Secure MultiPRO (+ days)")
+                      : (language === "pt-BR" ? "Testar MultiPRO — 7 dias grátis" : "Try MultiPRO — 7 days free")}
+                </button>
               </div>
             </div>
-            <div className="flex items-center justify-between pt-3 border-t border-white/10">
-              <div className="flex gap-2">
-                <div className="flex items-center gap-1 bg-emerald-500/20 px-2 py-1 rounded-lg border border-emerald-400/30">
-                  <Zap className="h-3 w-3 text-emerald-300" />
-                  <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wider">PIX</span>
-                </div>
-                <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg border border-white/20">
-                  <CreditCard className="h-3 w-3 text-white" />
-                  <span className="text-[10px] font-black text-white uppercase tracking-wider">
-                    {language === "pt-BR" ? "Cartão" : "Card"}
-                  </span>
-                </div>
+
+            <div className="flex flex-col items-center justify-center gap-2 pt-3 pb-2 mt-2">
+              <span className="text-[12px] text-white/40 font-bold text-center leading-tight">
+                {language === "pt-BR" ? "Cancele quando quiser. Cobrança transparente." : "Cancel anytime. Transparent billing."}
+              </span>
+              <div className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-sm px-4 py-2.5 text-white/80 rounded-full border border-white/[0.05] shadow-sm">
+                 <Lock className="h-3 w-3 text-emerald-400/80" />
+                 <span className="text-[10px] font-black uppercase tracking-widest opacity-80 shrink-0">
+                    {language === "pt-BR" ? "PAGAMENTO 100% SEGURO VIA" : "100% SECURE PAYMENT VIA"}
+                 </span>
+                 <img src={CAKTO_LOGO} alt="Cakto" className="h-4 object-contain opacity-100 ml-1 drop-shadow-sm invert opacity-80" />
               </div>
-              <img
-                src={CAKTO_LOGO}
-                alt="Cakto"
-                className="h-5 object-contain opacity-80"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
             </div>
           </div>
         </section>

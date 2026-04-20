@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {
   createContext,
   useContext,
@@ -231,11 +232,11 @@ export function SubscriptionProvider({
         .eq("user_id", user.id)
         .maybeSingle();
 
-      // @ts-ignore
-      let planType = profile?.plan_type || "free";
-      // @ts-ignore
-      let trialStart = profile?.trial_start_date ? new Date(profile.trial_start_date) : new Date();
-      let daysPassed = Math.floor((new Date().getTime() - trialStart.getTime()) / (1000 * 3600 * 24));
+      // @ts-expect-error -- supabase generated types incomplete
+      const planType = profile?.plan_type || "free";
+      // @ts-expect-error -- supabase generated types incomplete
+      const trialStart = profile?.trial_start_date ? new Date(profile.trial_start_date) : new Date();
+      const daysPassed = Math.floor((new Date().getTime() - trialStart.getTime()) / (1000 * 3600 * 24));
       let remaining = Math.max(0, 7 - daysPassed);
       let locked = planType !== 'premium' && remaining === 0;
 
@@ -256,7 +257,7 @@ export function SubscriptionProvider({
 
       setTrialDaysRemaining(remaining);
       setIsLocked(locked);
-      // @ts-ignore
+      // @ts-expect-error -- supabase generated types incomplete
       setRegistrationDate(profile?.created_at ? new Date(profile.created_at) : null);
 
       const { data, error } = await supabase
@@ -289,7 +290,7 @@ export function SubscriptionProvider({
 
         // Determina o planTier efetivo
         const rawPlanTier: string = (data as any).plan_tier || "free";
-        let effectivePlanTier: PlanTier = inTrial
+        const effectivePlanTier: PlanTier = inTrial
           ? "multiPRO"
           : (rawPlanTier === "individualPRO" || rawPlanTier === "multiPRO")
             ? rawPlanTier as PlanTier
@@ -318,9 +319,9 @@ export function SubscriptionProvider({
           isActive: data.is_active,
           paymentProvider: data.payment_provider,
           paymentId: data.payment_id,
-          // @ts-ignore
+          // @ts-expect-error -- supabase generated types incomplete
           lastPaymentDate: profile?.last_payment_date ? new Date(profile.last_payment_date) : null,
-          // @ts-ignore
+          // @ts-expect-error -- supabase generated types incomplete
           paymentMethod: profile?.payment_method || null,
         });
       } else {
@@ -471,7 +472,7 @@ export function SubscriptionProvider({
             .select("cpf")
             .eq("user_id", user?.id)
             .maybeSingle();
-          // @ts-ignore
+          // @ts-expect-error -- supabase generated types incomplete
           cpf = profileSensitive?.cpf ?? null;
         } catch {
           // Non-critical

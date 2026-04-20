@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,11 +31,11 @@ const ICON_OPTIONS = [
 ];
 
 const defaultConsumables: ConsumableItem[] = [
-    { id: '1', name: 'Papel Higiênico', icon: '🧻', currentStock: 12, unit: 'rolos', dailyConsumption: 1, minStock: 4, hidden: false, usageInterval: 'daily' },
-    { id: '2', name: 'Papel Toalha', icon: '🧺', currentStock: 4, unit: 'rolos', dailyConsumption: 0.5, minStock: 2, hidden: false, usageInterval: 'daily' },
-    { id: '3', name: 'Detergente', icon: '🧴', currentStock: 2, unit: 'unidades', dailyConsumption: 0.1, minStock: 1, hidden: false, usageInterval: 'daily' },
-    { id: '4', name: 'Sabonete', icon: '🧼', currentStock: 3, unit: 'unidades', dailyConsumption: 0.15, minStock: 2, hidden: false, usageInterval: 'daily' },
-    { id: '5', name: 'Pasta de Dente', icon: '🪥', currentStock: 2, unit: 'tubos', dailyConsumption: 0.05, minStock: 1, hidden: false, usageInterval: 'daily' },
+    { id: '1', name: 'Papel Higiênico', icon: '🧻', currentStock: 12, unit: 'rolos', dailyConsumption: 1, minStock: 4, hidden: false, usageInterval: 'daily', category: 'hygiene' },
+    { id: '2', name: 'Papel Toalha', icon: '🧺', currentStock: 4, unit: 'rolos', dailyConsumption: 0.5, minStock: 2, hidden: false, usageInterval: 'daily', category: 'kitchen' },
+    { id: '3', name: 'Detergente', icon: '🧴', currentStock: 2, unit: 'unidades', dailyConsumption: 0.1, minStock: 1, hidden: false, usageInterval: 'daily', category: 'cleaning' },
+    { id: '4', name: 'Sabonete', icon: '🧼', currentStock: 3, unit: 'unidades', dailyConsumption: 0.15, minStock: 2, hidden: false, usageInterval: 'daily', category: 'hygiene' },
+    { id: '5', name: 'Pasta de Dente', icon: '🪥', currentStock: 2, unit: 'tubos', dailyConsumption: 0.05, minStock: 1, hidden: false, usageInterval: 'daily', category: 'hygiene' },
 ];
 
 const LABELS = {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -18,13 +19,13 @@ export function isValidCPF(value?: string | null): boolean {
   let sum = 0;
   for (let i = 0; i < 9; i++) sum += nums[i] * (10 - i);
   let rev = sum % 11;
-  let check1 = rev < 2 ? 0 : 11 - rev;
+  const check1 = rev < 2 ? 0 : 11 - rev;
   if (check1 !== nums[9]) return false;
 
   sum = 0;
   for (let i = 0; i < 10; i++) sum += nums[i] * (11 - i);
   rev = sum % 11;
-  let check2 = rev < 2 ? 0 : 11 - rev;
+  const check2 = rev < 2 ? 0 : 11 - rev;
   return check2 === nums[10];
 }
 

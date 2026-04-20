@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
@@ -7,7 +8,7 @@ import {
   ChefHat, Sparkles, Box, ListChecks, ChevronRight, AlertCircle, PlayCircle, Lock, Globe, Monitor, Mail, Eye,
   Home, Refrigerator, Clock, AlertTriangle, BarChart3, Moon, Plus, TrendingDown, ChevronDown,
   Package, Timer, Star, Trash2, CheckCircle2,
-  ArrowRight, Menu, Quote
+  ArrowRight, Menu, Quote, Zap, Shield, Heart
 } from "lucide-react";
 
 import LogoImage from "@/assets/logo inicial black pagina de vendas.svg";
@@ -63,210 +64,6 @@ function PushNotificationOverlay({ show, notification }: { show: boolean; notifi
         </motion.div>
       )}
     </AnimatePresence>
-  );
-}
-
-// HeroPhoneMockup removed — hero uses InteractiveDemoPhone directly
-
-const _HeroPhoneMockup_UNUSED = () => {
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setStep(1), 600),
-      setTimeout(() => setStep(2), 1200),
-      setTimeout(() => setStep(3), 1800),
-      setTimeout(() => setStep(4), 2400),
-      setTimeout(() => setStep(5), 3000),
-      setTimeout(() => setStep(6), 3600),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  return (
-    <div className="relative w-full h-full flex justify-center items-center">
-      <motion.div
-        initial={{ y: 60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.9, type: "spring", stiffness: 90 }}
-        className="relative w-[260px] h-[520px] rounded-[2.8rem] border-[7px] border-[#1A1A1A] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden"
-      >
-        {/* Dynamic Island */}
-        <div className="w-[90px] h-6 bg-[#1A1A1A] absolute top-1.5 left-1/2 -translate-x-1/2 rounded-full z-30 flex items-center justify-end px-2.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-900 border border-blue-800/50"></div>
-        </div>
-
-        {/* App Screen Content */}
-        <div className="w-full h-full flex flex-col bg-[#fafafa] overflow-hidden">
-
-          {/* Hero Header */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: step >= 1 ? 1 : 0 }}
-            className="relative overflow-hidden"
-          >
-            <div className="absolute inset-0 rounded-b-[1.5rem]" style={{ background: 'linear-gradient(135deg, #0F3D38 0%, #165A52 100%)' }} />
-            <div className="relative px-4 pt-10 pb-5">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: step >= 1 ? 1 : 0, y: step >= 1 ? 0 : 10 }}
-                transition={{ delay: 0.1 }}
-                className="flex items-center gap-1.5 mb-1"
-              >
-                <span className="text-sm">👋</span>
-                <span className="text-[8px] font-bold text-white/60 bg-white/10 px-1.5 py-0.5 rounded-full">IndividualPRO</span>
-              </motion.div>
-              <motion.h2
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: step >= 1 ? 1 : 0, y: step >= 1 ? 0 : 10 }}
-                transition={{ delay: 0.2 }}
-                className="text-[18px] font-bold text-white leading-tight"
-              >
-                Boa tarde, Ana
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: step >= 2 ? 1 : 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-[10px] text-white/50 mt-1 font-medium"
-              >
-                ⚠️ 2 item(ns) vencendo hoje!
-              </motion.p>
-
-              {/* Action Cards */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: step >= 2 ? 1 : 0, y: step >= 2 ? 0 : 10 }}
-                className="grid grid-cols-3 gap-1.5 mt-3"
-              >
-                {[
-                  { icon: "📊", label: "Relatório" },
-                  { icon: "🌙", label: "Check-up" },
-                  { icon: "➕", label: "Adicionar" },
-                ].map((card, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: step >= 2 ? 1 : 0, scale: step >= 2 ? 1 : 0.8 }}
-                    transition={{ delay: 0.1 * i }}
-                    className="rounded-xl p-2 text-left"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <span className="text-[11px]">{card.icon}</span>
-                    <p className="text-[8px] font-semibold text-white mt-1 leading-snug">{card.label}</p>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          </motion.div>
-
-          {/* Stats Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: step >= 3 ? 1 : 0, y: step >= 3 ? 0 : 15 }}
-            className="grid grid-cols-4 gap-1.5 px-3 mt-3"
-          >
-            {[
-              { value: "24", label: "Geladeira", color: "#3B82F6", bg: "#EFF6FF" },
-              { value: "2", label: "Vencendo", color: "#F59E0B", bg: "#FFFBEB" },
-              { value: "3", label: "Alertas", color: "#EF4444", bg: "#FEF2F2" },
-              { value: "7", label: "Comprar", color: "#10B981", bg: "#ECFDF5" },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: step >= 3 ? 1 : 0, scale: step >= 3 ? 1 : 0.8 }}
-                transition={{ delay: 0.08 * i }}
-                className="flex flex-col items-center rounded-xl p-2 border"
-                style={{ background: stat.bg, borderColor: `${stat.color}15` }}
-              >
-                <span className="text-[14px] font-bold leading-none" style={{ color: stat.color }}>{stat.value}</span>
-                <span className="text-[7px] mt-0.5 font-medium text-gray-500">{stat.label}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Tip Card */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: step >= 4 ? 1 : 0, x: step >= 4 ? 0 : -20 }}
-            className="mx-3 mt-2.5 rounded-xl p-2.5 border border-amber-200/50"
-            style={{ background: 'rgba(255,251,235,0.8)' }}
-          >
-            <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(245,158,11,0.15)' }}>
-                <span className="text-[10px]">💡</span>
-              </div>
-              <div>
-                <p className="text-[7px] font-bold text-amber-600/60 uppercase tracking-wider">Dica do dia</p>
-                <p className="text-[10px] font-semibold text-gray-800 leading-snug">Bolo de Iogurte</p>
-                <p className="text-[8px] text-gray-500 mt-0.5 leading-snug">Use o iogurte antes que vença</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Recently Added */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: step >= 5 ? 1 : 0, y: step >= 5 ? 0 : 15 }}
-            className="px-3 mt-2.5"
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[10px] font-bold text-gray-800">Adicionados recentemente</p>
-              <p className="text-[8px] text-[#2D6A4F] font-medium">Ver todos →</p>
-            </div>
-            <div className="space-y-1.5">
-              {[
-                { name: "Leite Integral", loc: "Geladeira", emoji: "🥛", exp: "3 dias" },
-                { name: "Arroz Branco", loc: "Despensa", emoji: "🍚", exp: "6 meses" },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -15 }}
-                  animate={{ opacity: step >= 5 ? 1 : 0, x: step >= 5 ? 0 : -15 }}
-                  transition={{ delay: 0.1 * i }}
-                  className="flex items-center gap-2 rounded-xl border border-gray-100 bg-white p-2 shadow-sm"
-                >
-                  <span className="text-[14px]">{item.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold text-gray-800 truncate">{item.name}</p>
-                    <p className="text-[7px] text-gray-400">{item.loc} • {item.exp}</p>
-                  </div>
-                  <ChevronRight className="w-3 h-3 text-gray-300" />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Bottom Nav */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: step >= 6 ? 1 : 0, y: step >= 6 ? 0 : 20 }}
-            className="mt-auto"
-          >
-            <div
-              className="mx-2 mb-2 rounded-2xl flex items-center justify-around h-12 border"
-              style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', borderColor: 'rgba(0,0,0,0.04)' }}
-            >
-              {[
-                { icon: Home, label: "Início", active: true },
-                { icon: Refrigerator, label: "Estoque", active: false },
-                { icon: ChefHat, label: "Receitas", active: false },
-                { icon: ShoppingCart, label: "Lista", active: false },
-                { icon: Settings, label: "Perfil", active: false },
-              ].map((tab, i) => (
-                <div key={i} className="flex flex-col items-center gap-0.5">
-                  <div className={`relative flex items-center justify-center w-6 h-6 rounded-lg ${tab.active ? 'bg-[#2D6A4F]/10' : ''}`}>
-                    <tab.icon className={`w-3.5 h-3.5 ${tab.active ? 'text-[#2D6A4F]' : 'text-gray-400'}`} />
-                  </div>
-                  <span className={`text-[7px] ${tab.active ? 'text-[#2D6A4F] font-semibold' : 'text-gray-400'}`}>{tab.label}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-    </div>
   );
 }
 
@@ -769,11 +566,131 @@ const TRUSTED_FEATURES = [
 ];
 
 // ═══════════════════════════════════════════════
+// SCROLL-AWARE HEADER HOOK
+// ═══════════════════════════════════════════════
+
+function useScrollDirection() {
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (ticking.current) return;
+      ticking.current = true;
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        // Always show when near top
+        if (currentScrollY < 80) {
+          setIsVisible(true);
+        } else if (currentScrollY > lastScrollY.current + 5) {
+          // Scrolling down
+          setIsVisible(false);
+        } else if (currentScrollY < lastScrollY.current - 5) {
+          // Scrolling up
+          setIsVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
+        ticking.current = false;
+      });
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return isVisible;
+}
+
+// ═══════════════════════════════════════════════
+// POLICY MODAL COMPONENT
+// ═══════════════════════════════════════════════
+
+function PolicyModal({ isOpen, onClose, title, content }: { isOpen: boolean, onClose: () => void, title: string, content: React.ReactNode }) {
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; }
+  }, [isOpen]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           exit={{ opacity: 0 }}
+           className="fixed inset-0 z-[100] flex justify-center items-center p-4 sm:p-6"
+        >
+           <div className="absolute inset-0 bg-[#0A1F18]/80 backdrop-blur-md" onClick={onClose} />
+           
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.95, y: 20 }}
+             animate={{ opacity: 1, scale: 1, y: 0 }}
+             exit={{ opacity: 0, scale: 0.95, y: 20 }}
+             className="relative w-full max-w-3xl max-h-[85vh] bg-[#FAF8F4] overflow-hidden rounded-[2.5rem] shadow-2xl flex flex-col"
+           >
+             <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-200/60 bg-white">
+               <h2 className="text-2xl sm:text-3xl font-black text-[#1B3A2D] font-display" style={{ fontFamily: 'Instrument Serif' }}>{title}</h2>
+               <button onClick={onClose} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-[#1B3A2D] transition-colors">
+                 <X className="w-5 h-5" />
+               </button>
+             </div>
+             
+             <div className="p-6 sm:p-8 overflow-y-auto font-medium text-[#1B3A2D] space-y-8 bg-[#FAF8F4]">
+                {content}
+             </div>
+           </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ═══════════════════════════════════════════════
 // MAIN PAGE COMPONENT
 // ═══════════════════════════════════════════════
 
 export default function SalesPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+  const headerVisible = useScrollDirection();
+
+  // SEO: set document title and meta
+  useEffect(() => {
+    document.title = "KAZA — Gestão Doméstica Inteligente | Controle de Estoque, Receitas e Lista de Compras";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute("content", "KAZA organiza o estoque da sua casa, avisa sobre validades, sugere receitas com o que você tem e monta a lista de compras automaticamente. Controle de consumíveis, check-up noturno, lembrete do lixo e compartilhamento familiar. Experimente grátis.");
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = "KAZA organiza o estoque da sua casa, avisa sobre validades, sugere receitas com o que você tem e monta a lista de compras automaticamente. Controle de consumíveis, check-up noturno, lembrete do lixo e compartilhamento familiar. Experimente grátis.";
+      document.head.appendChild(meta);
+    }
+
+    // JSON-LD structured data
+    const existingLd = document.querySelector('script[data-kaza-ld]');
+    if (!existingLd) {
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.setAttribute("data-kaza-ld", "true");
+      script.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "KAZA",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Web, Android, iOS",
+        "description": "Gestão doméstica inteligente. Controle de estoque, receitas, lista de compras e compartilhamento familiar.",
+        "offers": [
+          { "@type": "Offer", "name": "IndividualPRO", "price": "19.90", "priceCurrency": "BRL" },
+          { "@type": "Offer", "name": "MultiPRO", "price": "37.90", "priceCurrency": "BRL" }
+        ],
+        "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "500" }
+      });
+      document.head.appendChild(script);
+    }
+  }, []);
 
   return (
     <>
@@ -841,20 +758,25 @@ export default function SalesPage() {
         }
       `}</style>
 
-      <div className="min-h-screen font-sora text-[#1B3A2D] selection:bg-emerald-300/40 selection:text-emerald-900 overflow-x-hidden" style={{ background: '#FAF8F4' }}>
+      <div className="min-h-screen font-sora text-[#1B3A2D] selection:bg-emerald-300/40 selection:text-emerald-900 overflow-x-hidden" style={{ background: '#FAF8F4' }} lang="pt-BR">
 
-        {/* ═══ 1. NAVBAR ═══ */}
-        <header className="fixed top-0 inset-x-0 sales-nav-blur z-50">
-          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <Link to="/pagina-de-vendas" className="flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
-              <img src={LogoImage} alt="KAZA Logo" className="h-[34px] object-contain" />
+        {/* ═══ 1. NAVBAR — Scroll-aware on mobile ═══ */}
+        <header
+          className="fixed top-0 inset-x-0 sales-nav-blur z-50"
+          style={{
+            transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
+            transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 h-20 flex items-center justify-between">
+            <Link to="/pagina-de-vendas" className="flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg" aria-label="KAZA - Voltar ao início">
+              <img src={LogoImage} alt="KAZA — Gestão doméstica inteligente" className="h-[34px] object-contain" />
             </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-1" aria-label="Navegação principal">
               {[
                 { label: "Funcionalidades", href: "#funcionalidades" },
                 { label: "Como funciona", href: "#como-funciona" },
-                { label: "Experimente", href: "#demo" },
                 { label: "Planos", href: "#planos" },
               ].map((item) => (
                 <a key={item.href} href={item.href} className="px-4 py-2 text-[13px] font-semibold text-[#1B3A2D]/70 hover:text-[#2D6A4F] transition-colors rounded-lg hover:bg-emerald-50/50">
@@ -867,12 +789,13 @@ export default function SalesPage() {
               <Link to="/auth" className="hidden md:block text-[13px] font-semibold text-[#1B3A2D]/70 hover:text-[#2D6A4F] transition-colors px-4 py-2">
                 Entrar
               </Link>
-              <Link to="/auth" className="bg-[#2D6A4F] text-white px-6 py-2.5 rounded-full text-[13px] font-bold hover:bg-[#1B3A2D] transition-all hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 outline-none">
+              <Link to="/auth" className="bg-[#2D6A4F] text-white px-6 py-2.5 rounded-full text-[13px] font-bold hover:bg-[#1B3A2D] transition-all hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 outline-none" aria-label="Criar conta grátis no KAZA">
                 Começar grátis
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center hover:bg-emerald-50 transition-colors"
+                aria-label="Abrir menu de navegação"
               >
                 <Menu className="w-5 h-5 text-[#1B3A2D]" />
               </button>
@@ -890,9 +813,13 @@ export default function SalesPage() {
                 style={{ background: 'rgba(250,250,254,0.98)' }}
               >
                 <div className="px-6 py-4 flex flex-col gap-2">
-                  {["Funcionalidades", "Como funciona", "Experimente", "Planos"].map((label) => (
-                    <a key={label} href={`#${label.toLowerCase().replace(/ /g, "-")}`} onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-sm font-semibold text-[#1B3A2D]/80 hover:text-[#2D6A4F] hover:bg-emerald-50 rounded-xl transition-colors">
-                      {label}
+                  {[
+                    { label: "Funcionalidades", href: "#funcionalidades" },
+                    { label: "Como funciona", href: "#como-funciona" },
+                    { label: "Planos", href: "#planos" },
+                  ].map((item) => (
+                    <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-sm font-semibold text-[#1B3A2D]/80 hover:text-[#2D6A4F] hover:bg-emerald-50 rounded-xl transition-colors">
+                      {item.label}
                     </a>
                   ))}
                 </div>
@@ -906,7 +833,7 @@ export default function SalesPage() {
         <main className="w-full flex flex-col overflow-x-hidden">
 
           {/* ═══ 2. HERO — Left text + Right phone ═══ */}
-          <section className="relative pt-12 lg:pt-20 pb-20 lg:pb-28 w-full overflow-hidden grain-bg">
+          <section className="relative pt-6 lg:pt-20 pb-20 lg:pb-28 w-full overflow-hidden grain-bg">
 
             {/* Background blobs */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -915,32 +842,22 @@ export default function SalesPage() {
               <div className="absolute bottom-[-10%] left-[30%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-20" style={{ background: 'radial-gradient(circle, #94D2BD 0%, #B5DFC8 40%, transparent 70%)' }} />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6">
-              <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-6">
+              <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center lg:items-start lg:pt-12">
 
                 {/* Left — Copy */}
-                <div className="flex flex-col items-start relative pt-4">
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 border border-emerald-200/60 shadow-sm"
-                    style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)' }}
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#2D6A4F]" />
-                    <span className="text-[11px] font-bold text-[#2D6A4F] uppercase tracking-wider">Gestão doméstica inteligente</span>
-                  </motion.div>
+                <div className="flex flex-col items-center text-center lg:text-left lg:items-start relative">
 
                   <motion.h1
                     initial={{ opacity: 0, y: 25 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.7 }}
-                    className="text-[2.6rem] sm:text-5xl lg:text-[3.8rem] font-extrabold leading-[1.08] tracking-tight mb-6"
+                    className="text-[2.6rem] sm:text-5xl lg:text-[3.8rem] font-extrabold leading-[1.08] tracking-tight mb-3 lg:mb-6"
                   >
-                    SUA CASA{' '}
-                    <span className="font-instrument italic font-normal gradient-text">ORGANIZADA</span>
+                    PARE DE{' '}
+                    <span className="font-instrument italic font-normal gradient-text">DESPERDIÇAR</span>
                     <br />
-                    COM INTELIGÊNCIA
+                    COMIDA E DINHEIRO
                   </motion.h1>
 
                   <motion.p
@@ -949,27 +866,28 @@ export default function SalesPage() {
                     transition={{ delay: 0.35, duration: 0.5 }}
                     className="text-[#1B3A2D]/60 text-base lg:text-lg font-medium leading-relaxed max-w-lg mb-8"
                   >
-                    Controle o estoque, receba alertas, sugira receitas e organize a lista de compras — tudo em um só app que entende sua rotina.
+                    O KAZA monitora tudo que entra na sua casa — da geladeira à despensa. Avisa antes de vencer, sugere receitas pra usar o que tem e monta a lista de compras sozinho.
                   </motion.p>
 
                   <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.45 }}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8"
+                    className="flex flex-col sm:flex-row items-center sm:items-center gap-4 mb-8"
                   >
                     <Link
                       to="/auth"
                       className="relative overflow-hidden bg-[#2D6A4F] text-white px-8 py-4 rounded-2xl text-center transition-all shadow-[0_8px_30px_-8px_rgba(45,106,79,0.5)] hover:-translate-y-1 hover:shadow-[0_14px_40px_-8px_rgba(45,106,79,0.6)] font-bold text-base flex items-center gap-2 group"
+                      aria-label="Começar a usar o KAZA gratuitamente"
                     >
                       Começar agora — grátis
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
-                    <a href="#demo" className="flex items-center gap-2 text-[#1B3A2D]/70 hover:text-[#2D6A4F] font-semibold text-sm transition-colors group">
+                    <a href="#planos" className="flex items-center gap-2 text-[#1B3A2D]/70 hover:text-[#2D6A4F] font-semibold text-sm transition-colors group">
                       <div className="w-10 h-10 rounded-full border-2 border-[#1B3A2D]/15 flex items-center justify-center group-hover:border-[#2D6A4F]/40 transition-colors">
-                        <PlayCircle className="w-5 h-5" />
+                        <Eye className="w-5 h-5" />
                       </div>
-                      Ver demo
+                      Ver planos
                     </a>
                   </motion.div>
 
@@ -994,12 +912,12 @@ export default function SalesPage() {
                         ))}
                         <span className="text-[12px] font-bold text-[#1B3A2D] ml-1.5">4.9</span>
                       </div>
-                      <p className="text-[11px] text-[#1B3A2D]/50 font-medium">+500 famílias já organizam a casa</p>
+                      <p className="text-[11px] text-[#1B3A2D]/50 font-medium">+500 famílias organizam a casa com KAZA</p>
                     </div>
                   </motion.div>
                 </div>
 
-                {/* Right — Interactive Phone (Demo ao vivo na Hero) */}
+                {/* Right — Interactive Phone */}
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1056,9 +974,9 @@ export default function SalesPage() {
           </section>
 
           {/* ═══ 3. TRUSTED PARTNER BAR ═══ */}
-          <section className="py-10 border-y border-emerald-100/50 bg-white/60">
-            <div className="max-w-7xl mx-auto px-6">
-              <p className="text-center text-[11px] font-bold text-[#1B3A2D]/30 uppercase tracking-[0.2em] mb-6">Funcionalidades que você pode confiar</p>
+          <section className="py-10 border-y border-emerald-100/50 bg-white/60" aria-label="Funcionalidades confiáveis">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6">
+              <p className="text-center text-[11px] font-bold text-[#1B3A2D]/30 uppercase tracking-[0.2em] mb-6">Tudo que sua casa precisa em um só lugar</p>
               <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 items-center">
                 {TRUSTED_FEATURES.map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-[#1B3A2D]/35">
@@ -1070,19 +988,18 @@ export default function SalesPage() {
             </div>
           </section>
 
-          {/* ═══ 4. POWERFUL FEATURES ═══ */}
-          <section id="funcionalidades" className="py-24 lg:py-32 relative">
-            <div className="max-w-7xl mx-auto px-6">
+          {/* ═══ 4. POWERFUL FEATURES — Themed colored cards ═══ */}
+          <section id="funcionalidades" className="py-24 lg:py-32 relative" aria-labelledby="funcionalidades-heading">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6">
               <FadeInSection>
                 <div className="text-center max-w-2xl mx-auto mb-16 lg:mb-20">
                   <span className="inline-block px-4 py-1.5 border border-emerald-200/60 text-[#2D6A4F] font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-emerald-50/50">Funcionalidades</span>
-                  <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
-                    Funcionalidades{' '}
-                    <span className="font-instrument italic font-normal gradient-text">poderosas</span>
-                    {' '}para sua casa
+                  <h2 id="funcionalidades-heading" className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
+                    Tudo que você precisa pra{' '}
+                    <span className="font-instrument italic font-normal gradient-text">acabar com o desperdício</span>
                   </h2>
                   <p className="text-[#1B3A2D]/55 text-base lg:text-lg font-medium leading-relaxed">
-                    Tudo que você precisa para acabar com a carga mental da rotina doméstica — do estoque à lista de compras.
+                    Do item que está vencendo na geladeira ao sabão em pó que está acabando — o KAZA cuida de cada detalhe da sua rotina doméstica.
                   </p>
                 </div>
               </FadeInSection>
@@ -1092,59 +1009,65 @@ export default function SalesPage() {
                   {
                     icon: Box,
                     emoji: "📦",
-                    title: "Controle de Estoque",
-                    desc: "Gerencie geladeira, despensa e limpeza com alertas de validade e reposição automática.",
-                    gradient: "from-teal-500 to-emerald-600",
-                    bg: "bg-teal-50",
+                    title: "Estoque Completo",
+                    desc: "Cadastre tudo: geladeira, despensa, freezer e limpeza. O KAZA monitora quantidades, validades e avisa quando algo está acabando.",
+                    borderColor: "#0D9488",
+                    bgIcon: "bg-teal-50",
+                    borderClass: "border-l-4 border-l-teal-500",
                   },
                   {
                     icon: ChefHat,
                     emoji: "🍳",
-                    title: "Receitas Inteligentes",
-                    desc: "Sugestões de receitas baseadas no que existe em casa. Use antes que vença!",
-                    gradient: "from-amber-500 to-orange-500",
-                    bg: "bg-amber-50",
+                    title: "Receitas que Evitam Desperdício",
+                    desc: "O KAZA sugere receitas com base no que você já tem em casa — priorizando os itens que estão perto de vencer.",
+                    borderColor: "#D97706",
+                    bgIcon: "bg-amber-50",
+                    borderClass: "border-l-4 border-l-amber-500",
                   },
                   {
                     icon: Calendar,
                     emoji: "📅",
-                    title: "Plano de Refeições",
-                    desc: "Monte a semana com café, almoço, jantar e lanches organizados.",
-                    gradient: "from-sky-500 to-blue-600",
-                    bg: "bg-sky-50",
+                    title: "Planejador de Refeições",
+                    desc: "Monte o cardápio da semana: café, almoço, jantar e lanche. O KAZA calcula os ingredientes e adiciona o que falta na lista.",
+                    borderColor: "#2563EB",
+                    bgIcon: "bg-sky-50",
+                    borderClass: "border-l-4 border-l-sky-500",
                   },
                   {
                     icon: ListChecks,
                     emoji: "🛒",
-                    title: "Lista Inteligente",
-                    desc: "A lista se atualiza com o que acabou, vai vencer ou faltará em breve.",
-                    gradient: "from-[#2D6A4F] to-[#1B3A2D]",
-                    bg: "bg-emerald-50",
+                    title: "Lista de Compras Automática",
+                    desc: "A lista se monta sozinha com base no que acabou, no que vai vencer e no que o planejador precisa. Só ir ao mercado.",
+                    borderColor: "#2D6A4F",
+                    bgIcon: "bg-emerald-50",
+                    borderClass: "border-l-4 border-l-emerald-600",
                   },
                   {
-                    icon: Users,
-                    emoji: "👥",
-                    title: "Perfis Compartilhados",
-                    desc: "No MultiPRO, a conta principal convida até 3 pessoas. Todos compartilham a mesma casa com gestão centralizada.",
-                    gradient: "from-emerald-600 to-teal-700",
-                    bg: "bg-emerald-50",
+                    icon: Moon,
+                    emoji: "🌙",
+                    title: "Check-up Noturno",
+                    desc: "Antes de dormir, revise o que consumiu ou descartou no dia. O KAZA atualiza tudo e gera seu relatório de aproveitamento.",
+                    borderColor: "#6366F1",
+                    bgIcon: "bg-indigo-50",
+                    borderClass: "border-l-4 border-l-indigo-500",
                     featured: true,
                   },
                   {
-                    icon: Bell,
-                    emoji: "🔔",
-                    title: "Alertas por Perfil",
-                    desc: "Cada acesso recebe alertas específicos conforme seu papel na casa.",
-                    gradient: "from-rose-500 to-pink-600",
-                    bg: "bg-rose-50",
+                    icon: Trash2,
+                    emoji: "🗑️",
+                    title: "Lembrete do Lixo",
+                    desc: "Configure os dias de coleta e o KAZA avisa na hora certa — com vibração se necessário. Nunca mais esqueça o lixo.",
+                    borderColor: "#E11D48",
+                    bgIcon: "bg-rose-50",
+                    borderClass: "border-l-4 border-l-rose-500",
                   },
                 ].map((feature, i) => (
                   <FadeInSection key={i} delay={i * 0.08}>
-                    <div className={`group relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-default ${feature.featured ? 'bg-[#1B3A2D] text-white' : 'bg-white border border-gray-100/80 hover:border-emerald-200/60'}`}>
+                    <div className={`group relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-default ${feature.featured ? 'bg-[#1B3A2D] text-white' : 'bg-white border border-gray-100/80 hover:border-emerald-200/60'} ${feature.featured ? '' : feature.borderClass}`}>
                       {feature.featured && (
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500 rounded-full blur-[60px] opacity-20" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-[60px] opacity-20" />
                       )}
-                      <div className={`relative z-10 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm transition-transform group-hover:scale-110 ${feature.featured ? 'bg-white/10 border border-white/10' : feature.bg + ' border border-gray-100'}`}>
+                      <div className={`relative z-10 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm transition-transform group-hover:scale-110 ${feature.featured ? 'bg-white/10 border border-white/10' : feature.bgIcon + ' border border-gray-100'}`}>
                         {feature.emoji}
                       </div>
                       <h3 className={`font-bold text-lg mb-3 relative z-10 ${feature.featured ? 'text-white' : 'text-[#1B3A2D]'}`}>
@@ -1161,17 +1084,17 @@ export default function SalesPage() {
           </section>
 
           {/* ═══ 5. HOW IT WORKS ═══ */}
-          <section id="como-funciona" className="py-24 lg:py-32 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #F0F7F4 0%, #FAF8F4 100%)' }}>
-            <div className="max-w-7xl mx-auto px-6">
+          <section id="como-funciona" className="py-24 lg:py-32 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #F0F7F4 0%, #FAF8F4 100%)' }} aria-labelledby="como-funciona-heading">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6">
               <FadeInSection>
                 <div className="text-center max-w-2xl mx-auto mb-16 lg:mb-20">
                   <span className="inline-block px-4 py-1.5 border border-emerald-200/60 text-[#2D6A4F] font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-white/60">Passo a Passo</span>
-                  <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
-                    Como o KAZA{' '}
-                    <span className="font-instrument italic font-normal gradient-text">funciona</span>
+                  <h2 id="como-funciona-heading" className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
+                    Comece a usar em{' '}
+                    <span className="font-instrument italic font-normal gradient-text">3 minutos</span>
                   </h2>
                   <p className="text-[#1B3A2D]/55 text-base lg:text-lg font-medium leading-relaxed">
-                    Crie sua conta em segundos e comece a organizar sua casa imediatamente.
+                    Sem complicação. Crie a conta, cadastre o primeiro item e o KAZA já começa a trabalhar pra você.
                   </p>
                 </div>
               </FadeInSection>
@@ -1182,22 +1105,22 @@ export default function SalesPage() {
                     step: "01",
                     emoji: "📱",
                     color: "#2D6A4F",
-                    title: "Cadastre-se e configure",
-                    desc: "Crie sua conta, escolha entre IndividualPRO ou MultiPRO e configure seus alertas preferidos.",
+                    title: "Crie sua conta",
+                    desc: "Basta email ou Google. Escolha se vai usar sozinho (IndividualPRO) ou com a família (MultiPRO).",
                   },
                   {
                     step: "02",
                     emoji: "📦",
                     color: "#52B788",
-                    title: "Adicione seus itens",
-                    desc: "Cadastre os itens da geladeira, despensa e área de limpeza. O KAZA começa a monitorar tudo.",
+                    title: "Cadastre o que tem em casa",
+                    desc: "Adicione itens da geladeira, despensa e limpeza. Coloque a validade e o KAZA monitora a partir daí.",
                   },
                   {
                     step: "03",
                     emoji: "🚀",
                     color: "#74C69D",
-                    title: "Relaxe e receba alertas",
-                    desc: "O KAZA avisa sobre validades, sugere receitas e monta a lista de compras automaticamente.",
+                    title: "O KAZA faz o resto",
+                    desc: "Alertas de validade, sugestões de receitas, lista de compras automática e relatório de desperdício — tudo rodando sozinho.",
                   },
                 ].map((item, i) => (
                   <FadeInSection key={i} delay={i * 0.12}>
@@ -1220,17 +1143,17 @@ export default function SalesPage() {
           </section>
 
           {/* ═══ 6. MULTIPRO ═══ */}
-          <section className="py-24 lg:py-32 bg-white relative">
-            <div className="max-w-7xl mx-auto px-6">
+          <section className="py-24 lg:py-32 bg-white relative" aria-labelledby="multipro-heading">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6">
               <FadeInSection>
                 <div className="text-center max-w-3xl mx-auto mb-16">
                   <span className="inline-block px-4 py-1.5 border border-emerald-200/60 text-[#2D6A4F] font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-emerald-50/50">MultiPRO</span>
-                  <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
+                  <h2 id="multipro-heading" className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
                     Uma casa, até 4 acessos,{' '}
-                    <span className="font-instrument italic font-normal gradient-text">cada um fazendo sua parte</span>
+                    <span className="font-instrument italic font-normal gradient-text">todo mundo sincronizado</span>
                   </h2>
                   <p className="text-[#1B3A2D]/55 text-base lg:text-lg font-medium leading-relaxed">
-                    No MultiPRO, a conta principal convida até 3 pessoas. Cada membro faz tudo no dia a dia — compras, receitas, estoque e plano alimentar. A gestão de quem entra ou sai fica só com quem criou a conta.
+                    A conta mestre convida até 3 pessoas. Cada membro vê o estoque, marca itens comprados, usa receitas e recebe alertas. Sem precisar mandar lista no WhatsApp.
                   </p>
                 </div>
               </FadeInSection>
@@ -1322,251 +1245,47 @@ export default function SalesPage() {
             </div>
           </section>
 
-          {/* ═══ 7. DEMO INTERATIVA ═══ */}
-          <section id="demo" className="py-20 lg:py-28 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #1B3A2D 0%, #0A1F18 100%)' }}>
-            <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(#2D6A4F 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
-            <div className="max-w-7xl mx-auto px-6 relative z-10">
-              <div className="text-center max-w-3xl mx-auto mb-14 lg:mb-18">
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  className="inline-block px-4 py-1.5 border border-emerald-400/20 text-emerald-400 font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-emerald-400/5"
-                >
-                  Demo ao vivo
-                </motion.span>
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 }}
-                  className="text-3xl md:text-5xl font-extrabold text-white mb-5 tracking-tight leading-tight"
-                >
-                  Explore o KAZA{' '}
-                  <span className="font-instrument italic font-normal text-emerald-300">funcionando</span>
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 }}
-                  className="text-emerald-200/50 text-base lg:text-lg font-medium max-w-xl mx-auto"
-                >
-                  Navegue por cada tela, veja notificações aparecerem e sinta a experiência completa — direto aqui.
-                </motion.p>
-              </div>
-
-              {/* Mobile: só o phone. Desktop: phone + tela de login */}
-              <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16">
-
-                {/* Phone mockup */}
-                <motion.div
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.7 }}
-                  className="relative"
-                >
-                  <InteractiveDemoPhone />
-                  <div className="absolute inset-0 -z-10 blur-[80px] opacity-20" style={{ background: 'radial-gradient(ellipse at center, #2D6A4F 0%, transparent 70%)' }} />
-                </motion.div>
-
-                {/* Desktop login mockup — só visível em lg+ */}
-                <motion.div
-                  initial={{ opacity: 0, x: 60 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3, duration: 0.8 }}
-                  className="hidden lg:flex flex-col items-start gap-4"
-                >
-                  <p className="text-emerald-400/60 text-[11px] font-bold uppercase tracking-widest mb-1">No desktop, funciona assim</p>
-
-                  {/* Browser chrome */}
-                  <div className="w-[480px] rounded-2xl overflow-hidden shadow-[0_30px_80px_-15px_rgba(0,0,0,0.6)] border border-white/10">
-                    {/* Browser bar */}
-                    <div className="flex items-center gap-2 px-4 py-3" style={{ background: 'rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-400/60"></div>
-                        <div className="w-3 h-3 rounded-full bg-amber-400/60"></div>
-                        <div className="w-3 h-3 rounded-full bg-emerald-400/60"></div>
-                      </div>
-                      <div className="flex-1 mx-3 bg-white/8 border border-white/10 rounded-lg px-3 py-1 flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full border border-emerald-400/40 shrink-0"></div>
-                        <span className="text-[10px] text-white/30 font-medium">app.kaza.com.br/auth</span>
-                      </div>
-                    </div>
-
-                    {/* Login page content */}
-                    <div className="flex h-[420px]" style={{ background: 'linear-gradient(160deg, #165A52 0%, #0e3d38 55%, #091f1c 100%)' }}>
-                      {/* Left side — branding */}
-                      <div className="w-[45%] flex flex-col justify-center items-center px-6 gap-4 border-r border-white/5">
-                        <div className="w-16 h-16 rounded-[18px] flex items-center justify-center mb-2" style={{ background: 'rgba(255,255,255,0.10)', boxShadow: '0 8px 24px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.12)' }}>
-                          <img src="/icons/192.png" alt="" className="w-12 h-12 rounded-[12px] object-contain" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-white font-extrabold text-lg tracking-tight">KAZA</p>
-                          <p className="text-emerald-300/50 text-[10px] font-medium mt-0.5">Sua casa organizada</p>
-                        </div>
-                        <div className="mt-2 space-y-2 w-full">
-                          {["Estoque inteligente", "Alertas de validade", "Lista compartilhada"].map((f, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 shrink-0"></div>
-                              <p className="text-[9px] text-white/40 font-medium">{f}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Right side — form */}
-                      <div className="flex-1 flex flex-col justify-center px-6 gap-3">
-                        <p className="text-white font-bold text-sm mb-1">Entrar na conta</p>
-
-                        {/* Google button */}
-                        <div className="w-full py-2 rounded-xl border border-white/15 flex items-center justify-center gap-2" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                          <span className="text-[11px]">G</span>
-                          <span className="text-[10px] text-white/60 font-semibold">Continuar com Google</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 my-0.5">
-                          <div className="flex-1 h-px bg-white/10"></div>
-                          <span className="text-[9px] text-white/25 font-medium">ou</span>
-                          <div className="flex-1 h-px bg-white/10"></div>
-                        </div>
-
-                        {/* Email field */}
-                        <div className="rounded-xl border border-white/15 px-3 py-2" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                          <p className="text-[8px] text-emerald-400/60 font-bold uppercase tracking-wider mb-0.5">Email</p>
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-3 h-3 text-white/30" />
-                            <p className="text-[10px] text-white/25">seu@email.com</p>
-                          </div>
-                        </div>
-
-                        {/* Password field */}
-                        <div className="rounded-xl border border-white/15 px-3 py-2" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                          <p className="text-[8px] text-emerald-400/60 font-bold uppercase tracking-wider mb-0.5">Senha</p>
-                          <div className="flex items-center gap-2">
-                            <Lock className="w-3 h-3 text-white/30" />
-                            <p className="text-[10px] text-white/25">••••••••</p>
-                          </div>
-                        </div>
-
-                        {/* Login button */}
-                        <div className="w-full py-2.5 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2D6A4F 0%, #1B3A2D 100%)' }}>
-                          <span className="text-[11px] text-white font-bold">Entrar</span>
-                        </div>
-
-                        <p className="text-[9px] text-white/20 text-center font-medium">Não tem conta? Criar agora</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-emerald-400/30 text-[10px] font-medium text-center w-full mt-2">Funciona em qualquer navegador, sem instalação</p>
-                </motion.div>
-              </div>
-            </div>
-          </section>
-
-          {/* ═══ 8. TESTIMONIALS ═══ */}
-          <section className="py-24 lg:py-32 relative" style={{ background: '#FAF8F4' }}>
-            <div className="max-w-7xl mx-auto px-6">
-              <FadeInSection>
-                <div className="text-center max-w-2xl mx-auto mb-16">
-                  <span className="inline-block px-4 py-1.5 border border-emerald-200/60 text-[#2D6A4F] font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-emerald-50/50">Depoimentos</span>
-                  <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
-                    Por que as pessoas{' '}
-                    <span className="font-instrument italic font-normal gradient-text">amam</span>
-                    {' '}o KAZA
-                  </h2>
-                </div>
-              </FadeInSection>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                {[
-                  {
-                    text: "Parei de jogar comida fora. O KAZA me avisa antes de vencer e ainda sugere receitas com o que tenho em casa!",
-                    name: "Carla M.",
-                    role: "Mãe de 2 filhos",
-                    avatar: "CM",
-                  },
-                  {
-                    text: "Com o MultiPRO meu marido já sabe o que comprar no mercado sem eu precisar mandar lista pelo WhatsApp.",
-                    name: "Juliana R.",
-                    role: "Usuária MultiPRO",
-                    avatar: "JR",
-                  },
-                  {
-                    text: "Simples, bonito e funcional. Instalei como app no celular e parece nativo. Melhor investimento pra casa.",
-                    name: "Rafael S.",
-                    role: "Mora sozinho",
-                    avatar: "RS",
-                  },
-                ].map((testimonial, i) => (
-                  <FadeInSection key={i} delay={i * 0.1}>
-                    <div className="relative bg-white rounded-3xl p-8 border border-gray-100/80 shadow-sm hover:shadow-lg transition-shadow">
-                      <Quote className="w-8 h-8 text-emerald-200 mb-4" />
-                      <p className="text-[#1B3A2D]/70 text-sm font-medium leading-relaxed mb-6">
-                        "{testimonial.text}"
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D6A4F] to-[#1B3A2D] flex items-center justify-center text-white text-[11px] font-bold">
-                          {testimonial.avatar}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-[#1B3A2D]">{testimonial.name}</p>
-                          <p className="text-[11px] text-[#1B3A2D]/40 font-medium">{testimonial.role}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </FadeInSection>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ═══ 9. PRICING ═══ */}
-          <section id="planos" className="py-24 lg:py-32 relative overflow-hidden grain-bg" style={{ background: '#FAF8F4' }}>
-            {/* Background blobs — mesmo estilo da hero */}
+          {/* ═══ 7. UNIFIED: PLANS + DEMO (merged Explore + Pricing) ═══ */}
+          <section id="planos" className="py-24 lg:py-32 relative overflow-hidden grain-bg" style={{ background: '#FAF8F4' }} aria-labelledby="planos-heading">
+            {/* Background blobs */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
               <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-25" style={{ background: 'radial-gradient(circle, #A7D5C0 0%, #C8E6D5 40%, transparent 70%)' }} />
               <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full blur-[100px] opacity-20" style={{ background: 'radial-gradient(circle, #94D2BD 0%, #B5DFC8 40%, transparent 70%)' }} />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6">
+            <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-6">
               <FadeInSection>
                 <div className="text-center max-w-2xl mx-auto mb-16">
-                  <span className="inline-block px-4 py-1.5 border border-emerald-200/60 text-[#2D6A4F] font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-white/70">Planos</span>
-                  <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
-                    Escolha o plano{' '}
-                    <span className="font-instrument italic font-normal gradient-text">ideal</span>
-                    {' '}para sua casa
+                  <span className="inline-block px-4 py-1.5 border border-emerald-200/60 text-[#2D6A4F] font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-white/70">Planos e Preços</span>
+                  <h2 id="planos-heading" className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
+                    Experimente o KAZA e{' '}
+                    <span className="font-instrument italic font-normal gradient-text">escolha seu plano</span>
                   </h2>
                   <p className="text-[#1B3A2D]/55 text-lg font-medium">
-                    Use sozinho ou compartilhe com a família.
+                    Teste o app ao lado e veja como funciona. Depois, escolha o plano ideal pra sua casa.
                   </p>
                 </div>
               </FadeInSection>
 
-              {/* Grid: cards à esquerda, telefone à direita */}
+              {/* Grid: planos à esquerda, telefone à direita */}
               <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
                 {/* Planos */}
                 <div className="flex flex-col gap-6">
                   <FadeInSection delay={0}>
                     <div className="bg-white/80 border border-gray-100 rounded-[2rem] p-8 shadow-sm hover:shadow-md transition-all flex flex-col backdrop-blur-sm">
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between items-center text-center sm:text-left gap-4 sm:gap-0 mb-4">
                         <div>
                           <h3 className="font-extrabold text-xl text-[#1B3A2D]">IndividualPRO</h3>
-                          <p className="text-[#1B3A2D]/50 font-medium text-xs mt-0.5">Para quem organiza a casa sozinho.</p>
+                          <p className="text-[#1B3A2D]/50 font-medium text-xs mt-0.5">Pra quem cuida da casa sozinho.</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-center sm:text-right">
                           <span className="text-3xl font-extrabold tracking-tight text-[#1B3A2D]">R$19,90</span>
                           <span className="text-[#1B3A2D]/40 font-medium text-xs">/mês</span>
                         </div>
                       </div>
-                      <ul className="space-y-2.5 mb-6 flex-1">
-                        {["1 conta, 1 usuário", "Estoque completo e ilimitado", "Alertas de validade e reposição", "Lista de compras + receitas com IA", "Notificações inteligentes da rotina"].map((item, i) => (
+                      <ul className="space-y-2.5 mb-6 flex-1 w-fit mx-auto sm:w-auto sm:mx-0 text-left">
+                        {["1 conta, 1 dispositivo", "Estoque ilimitado de itens", "Alertas de validade e consumíveis", "Receitas com base no estoque", "Check-up noturno + relatório mensal"].map((item, i) => (
                           <li key={i} className="flex items-center gap-2.5">
                             <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                               <Check className="w-2.5 h-2.5 text-[#2D6A4F]" />
@@ -1575,7 +1294,7 @@ export default function SalesPage() {
                           </li>
                         ))}
                       </ul>
-                      <Link to="/auth" className="bg-[#1B3A2D] text-white font-bold py-3.5 rounded-2xl text-center transition-all hover:bg-[#234B3B] outline-none w-full block text-sm">
+                      <Link to="/auth" className="bg-[#1B3A2D] text-white font-bold py-3.5 rounded-2xl text-center transition-all hover:bg-[#234B3B] outline-none w-full block text-sm" aria-label="Assinar plano IndividualPRO">
                         Escolher IndividualPRO
                       </Link>
                     </div>
@@ -1584,12 +1303,12 @@ export default function SalesPage() {
                   <FadeInSection delay={0.1}>
                     <div className="relative bg-[#1B3A2D] rounded-[2rem] p-8 shadow-2xl flex flex-col overflow-hidden">
                       <div className="absolute top-0 right-0 w-56 h-56 bg-emerald-600 rounded-full blur-[70px] -z-[1] opacity-30" />
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between items-center text-center sm:text-left gap-4 sm:gap-0 mb-4">
                         <div>
                           <h3 className="font-extrabold text-xl text-white">MultiPRO</h3>
-                          <p className="text-emerald-300/60 font-medium text-xs mt-0.5">1 conta principal + convida até 3 pessoas.</p>
+                          <p className="text-emerald-300/60 font-medium text-xs mt-0.5">1 conta mestre + até 3 convidados.</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-center sm:text-right flex flex-col items-center sm:items-end">
                           <div className="inline-block bg-amber-400 text-[#1B3A2D] text-[9px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full mb-1">Mais completo</div>
                           <div>
                             <span className="text-3xl font-extrabold tracking-tight text-white">R$37,90</span>
@@ -1597,13 +1316,13 @@ export default function SalesPage() {
                           </div>
                         </div>
                       </div>
-                      <ul className="space-y-2.5 mb-6 flex-1">
+                      <ul className="space-y-2.5 mb-6 flex-1 w-fit mx-auto sm:w-auto sm:mx-0 text-left">
                         {[
                           { text: "Tudo do IndividualPRO, mais:", accent: true },
-                          { text: "Conta principal convida até 3 pessoas" },
-                          { text: "Casa compartilhada em tempo real" },
-                          { text: "Notificações e permissões por perfil" },
-                          { text: "Controle de membros e sessões" },
+                          { text: "Convida até 3 pessoas para a casa" },
+                          { text: "Estoque e lista compartilhados em tempo real" },
+                          { text: "Alertas e permissões por perfil" },
+                          { text: "Controle de sessões e membros" },
                         ].map((item, i) => (
                           <li key={i} className="flex items-center gap-2.5">
                             <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${item.accent ? 'bg-amber-400/20' : 'bg-emerald-500/20'}`}>
@@ -1613,14 +1332,14 @@ export default function SalesPage() {
                           </li>
                         ))}
                       </ul>
-                      <Link to="/auth" className="bg-[#2D6A4F] hover:bg-[#3a8464] text-white font-bold py-3.5 rounded-2xl text-center transition-all shadow-[0_8px_24px_-8px_rgba(45,106,79,0.5)] outline-none w-full block hover:-translate-y-0.5 text-sm">
+                      <Link to="/auth" className="bg-[#2D6A4F] hover:bg-[#3a8464] text-white font-bold py-3.5 rounded-2xl text-center transition-all shadow-[0_8px_24px_-8px_rgba(45,106,79,0.5)] outline-none w-full block hover:-translate-y-0.5 text-sm" aria-label="Testar plano MultiPRO com 7 dias grátis">
                         Testar MultiPRO — 7 dias grátis
                       </Link>
                     </div>
                   </FadeInSection>
                 </div>
 
-                {/* Telefone interativo — mesmo estilo da hero */}
+                {/* Telefone interativo */}
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -1662,22 +1381,55 @@ export default function SalesPage() {
             </div>
           </section>
 
-          {/* ═══ 10. TRUST / SECURITY ═══ */}
-          <section className="py-16 lg:py-20" style={{ background: '#FAF8F4' }}>
-            <div className="max-w-6xl mx-auto px-6">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* ═══ 8. TESTIMONIALS ═══ */}
+          <section className="py-24 lg:py-32 relative" style={{ background: '#FAF8F4' }} aria-labelledby="depoimentos-heading">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6">
+              <FadeInSection>
+                <div className="text-center max-w-2xl mx-auto mb-16">
+                  <span className="inline-block px-4 py-1.5 border border-emerald-200/60 text-[#2D6A4F] font-bold text-[10px] rounded-full tracking-widest uppercase mb-5 bg-emerald-50/50">Depoimentos</span>
+                  <h2 id="depoimentos-heading" className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
+                    Quem usa,{' '}
+                    <span className="font-instrument italic font-normal gradient-text">não volta atrás</span>
+                  </h2>
+                </div>
+              </FadeInSection>
+
+              <div className="grid md:grid-cols-3 gap-6">
                 {[
-                  { icon: Lock, label: "Permissões por perfil" },
-                  { icon: User, label: "Sessão individual" },
-                  { icon: Settings, label: "Conta mestre" },
-                  { icon: Smartphone, label: "Controle de sessões" },
-                ].map((item, i) => (
-                  <FadeInSection key={i} delay={i * 0.05}>
-                    <div className="bg-white border border-gray-100/80 p-5 rounded-2xl text-center shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                      <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3 text-[#2D6A4F]">
-                        <item.icon className="w-5 h-5" />
+                  {
+                    text: "Parei de jogar comida fora. O KAZA me avisa antes de vencer e sugere receitas com o que eu já tenho em casa. Economizei mais de R$200 no primeiro mês.",
+                    name: "Carla M.",
+                    role: "Mãe de 2 filhos",
+                    avatar: "CM",
+                  },
+                  {
+                    text: "Meu marido instala o app e já sabe o que comprar. Sem WhatsApp, sem ligação. O estoque é compartilhado e a lista se atualiza em tempo real.",
+                    name: "Juliana R.",
+                    role: "Usuária MultiPRO",
+                    avatar: "JR",
+                  },
+                  {
+                    text: "O check-up noturno virou rotina. Em 30 segundos reviso o que usei no dia. O relatório mensal mostra exatamente quanto economizei de desperdício.",
+                    name: "Rafael S.",
+                    role: "Mora sozinho",
+                    avatar: "RS",
+                  },
+                ].map((testimonial, i) => (
+                  <FadeInSection key={i} delay={i * 0.1} className="h-full">
+                    <div className="relative bg-white rounded-3xl p-8 border border-gray-100/80 shadow-sm hover:shadow-lg transition-shadow h-full flex flex-col">
+                      <Quote className="w-8 h-8 text-emerald-200 mb-4" />
+                      <p className="text-[#1B3A2D]/70 text-sm font-medium leading-relaxed mb-6">
+                        "{testimonial.text}"
+                      </p>
+                      <div className="flex items-center gap-3 mt-auto">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D6A4F] to-[#1B3A2D] flex items-center justify-center text-white text-[11px] font-bold">
+                          {testimonial.avatar}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-[#1B3A2D]">{testimonial.name}</p>
+                          <p className="text-[11px] text-[#1B3A2D]/40 font-medium">{testimonial.role}</p>
+                        </div>
                       </div>
-                      <p className="font-bold text-[13px] text-[#1B3A2D]">{item.label}</p>
                     </div>
                   </FadeInSection>
                 ))}
@@ -1685,8 +1437,9 @@ export default function SalesPage() {
             </div>
           </section>
 
-          {/* ═══ 11. FINAL CTA ═══ */}
-          <section className="py-20 px-6 max-w-7xl mx-auto w-full mb-12">
+
+          {/* ═══ 10. FINAL CTA ═══ */}
+          <section className="py-20 px-5 sm:px-6 max-w-6xl mx-auto w-full mb-12" aria-label="Chamada para ação final">
             <FadeInSection>
               <div className="relative rounded-[2.5rem] p-12 md:p-20 text-center overflow-hidden shadow-2xl" style={{ background: 'linear-gradient(135deg, #1B3A2D 0%, #0A1F18 100%)' }}>
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#2D6A4F 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
@@ -1695,29 +1448,28 @@ export default function SalesPage() {
 
                 <div className="relative z-10 w-full max-w-3xl mx-auto">
                   <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 leading-tight tracking-tight">
-                    Organize mais.
+                    Menos desperdício.
                     <br />
-                    <span className="font-instrument italic font-normal text-emerald-300">Desperdice menos.</span>
+                    <span className="font-instrument italic font-normal text-emerald-300">Mais economia real.</span>
                   </h2>
                   <p className="text-emerald-200/50 text-base md:text-lg font-medium mb-12 leading-relaxed max-w-xl mx-auto">
-                    IndividualPRO por R$19,90/mês para organização solo ou MultiPRO por R$37,90/mês com 7 dias grátis para toda a família.
+                    IndividualPRO por R$19,90/mês pra quem cuida da casa sozinho. MultiPRO por R$37,90/mês com 7 dias grátis pra dividir com a família.
                   </p>
 
                   <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full">
-                    <Link to="/auth" className="w-full sm:w-auto bg-white text-[#1B3A2D] hover:bg-gray-50 font-bold py-4 px-8 rounded-2xl text-center transition-all shadow-sm text-sm">
+                    <Link to="/auth" className="w-full sm:w-auto bg-white text-[#1B3A2D] hover:bg-gray-50 font-bold py-4 px-8 rounded-2xl text-center transition-all shadow-sm text-sm" aria-label="Assinar IndividualPRO">
                       Escolher IndividualPRO
                     </Link>
-                    <Link to="/auth" className="w-full sm:w-auto bg-[#2D6A4F] hover:bg-[#1B3A2D] text-white font-bold py-4 px-8 rounded-2xl text-center transition-all shadow-[0_10px_30px_-10px_rgba(45,106,79,0.5)] hover:-translate-y-1 text-sm">
+                    <Link to="/auth" className="w-full sm:w-auto bg-[#2D6A4F] hover:bg-[#1B3A2D] text-white font-bold py-4 px-8 rounded-2xl text-center transition-all shadow-[0_10px_30px_-10px_rgba(45,106,79,0.5)] hover:-translate-y-1 text-sm" aria-label="Testar MultiPRO com 7 dias grátis">
                       Testar MultiPRO — 7 dias grátis
                     </Link>
                   </div>
 
                   <div className="flex flex-col items-center mt-8 gap-2">
                     <div className="flex items-center gap-3 text-white/30">
-                      <Globe className="w-4 h-4" />
-                      <span className="text-sm font-medium">WebApp • Android • iOS</span>
+                      <Zap className="w-4 h-4" />
+                      <span className="text-sm font-medium">Aceitamos PIX automático e Cartão de Crédito</span>
                     </div>
-                    <p className="text-[11px] text-white/20 font-bold uppercase tracking-[0.15em]">Sem cartão. Cancela quando quiser.</p>
                   </div>
                 </div>
               </div>
@@ -1726,56 +1478,106 @@ export default function SalesPage() {
 
         </main>
 
-        {/* ═══ 12. FOOTER ═══ */}
-        <footer className="bg-white border-t border-gray-100 pt-16 pb-8">
-          <div className="max-w-7xl w-full mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+        {/* ═══ 11. FOOTER ═══ */}
+        <footer className="bg-[#0A1F18] pt-16 pb-8 border-t border-white/5 relative z-10">
+          <div className="max-w-6xl w-full mx-auto px-5 sm:px-6 grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
             <div className="md:col-span-4 flex flex-col">
-              <Link to="/pagina-de-vendas" className="mb-6 inline-block">
-                <img src={LogoImage} alt="KAZA Logo" className="h-[32px] object-contain" />
+              <Link to="/pagina-de-vendas" className="mb-6 inline-block" aria-label="KAZA">
+                <img src={LogoImage} alt="KAZA Logo" className="h-[32px] object-contain brightness-0 invert" />
               </Link>
-              <p className="text-[#1B3A2D]/40 text-sm leading-relaxed max-w-sm font-medium">KAZA — sua casa organizada com inteligência.</p>
+              <p className="text-emerald-100/50 text-sm leading-relaxed max-w-sm font-medium">KAZA — Sua casa organizada. Menos desperdício, mais economia, tudo no automático.</p>
             </div>
 
             <div className="md:col-span-2">
-              <h5 className="font-bold text-[#1B3A2D] mb-4 uppercase tracking-wider text-[11px]">Produto</h5>
+              <h5 className="font-bold text-white mb-4 uppercase tracking-wider text-[11px]">Produto</h5>
               <ul className="space-y-3">
-                <li><a href="#funcionalidades" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Funcionalidades</a></li>
-                <li><a href="#demo" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Demo</a></li>
+                <li><a href="#funcionalidades" className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors">Funcionalidades</a></li>
+                <li><a href="#planos" className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors">Planos</a></li>
               </ul>
             </div>
 
             <div className="md:col-span-2">
-              <h5 className="font-bold text-[#1B3A2D] mb-4 uppercase tracking-wider text-[11px]">Acessar</h5>
+              <h5 className="font-bold text-white mb-4 uppercase tracking-wider text-[11px]">Acessar</h5>
               <ul className="space-y-3">
-                <li><a href="#planos" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Planos</a></li>
-                <li><Link to="/auth" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Criar conta</Link></li>
+                <li><a href="#como-funciona" className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors">Como funciona</a></li>
+                <li><Link to="/auth" className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors">Criar conta</Link></li>
               </ul>
             </div>
 
             <div className="md:col-span-2">
-              <h5 className="font-bold text-[#1B3A2D] mb-4 uppercase tracking-wider text-[11px]">Conteúdo</h5>
+              <h5 className="font-bold text-white mb-4 uppercase tracking-wider text-[11px]">Atendimento</h5>
               <ul className="space-y-3">
-                <li><a href="#" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Blog</a></li>
-                <li><a href="#" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Contato</a></li>
+                <li><a href="#" className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors">Contato</a></li>
+                <li><a href="#" className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors">Suporte</a></li>
               </ul>
             </div>
 
             <div className="md:col-span-2">
-              <h5 className="font-bold text-[#1B3A2D] mb-4 uppercase tracking-wider text-[11px]">Políticas</h5>
+              <h5 className="font-bold text-white mb-4 uppercase tracking-wider text-[11px]">Políticas</h5>
               <ul className="space-y-3">
-                <li><Link to="/pagina-de-vendas/privacidade" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Privacidade</Link></li>
-                <li><Link to="/pagina-de-vendas/termos-de-uso" className="text-[#1B3A2D]/50 hover:text-[#2D6A4F] text-sm font-medium transition-colors">Termos</Link></li>
+                <li><button onClick={() => setPrivacyModalOpen(true)} className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors text-left">Privacidade</button></li>
+                <li><button onClick={() => setTermsModalOpen(true)} className="text-emerald-100/50 hover:text-emerald-300 text-sm font-medium transition-colors text-left">Termos de Uso</button></li>
               </ul>
             </div>
           </div>
 
-          <div className="w-full border-t border-gray-100 pt-8">
-            <div className="max-w-7xl mx-auto px-6 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-xs font-medium text-[#1B3A2D]/30">© {new Date().getFullYear()} KAZA. Todos os direitos reservados.</p>
+          <div className="w-full border-t border-white/5 pt-8">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-xs font-medium text-emerald-100/30">© {new Date().getFullYear()} KAZA. Todos os direitos reservados.</p>
             </div>
           </div>
         </footer>
 
+        {/* ═══ POLICY MODALS ═══ */}
+        <PolicyModal 
+          isOpen={privacyModalOpen} 
+          onClose={() => setPrivacyModalOpen(false)} 
+          title="Política de Privacidade" 
+          content={
+            <>
+              <p className="text-sm font-bold text-[#1B3A2D]/40 mb-8 uppercase tracking-wider">Última atualização: Abril de 2026</p>
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3A2D] mb-3">1. Informações que Coletamos</h3>
+                <p className="leading-relaxed text-[#1B3A2D]/70">A KAZA coleta informações para fornecer serviços melhores e mais personalizados aos nossos usuários. Nós coletamos apenas o necessário para garantir o funcionamento do gerenciador doméstico (estoque, notificações de validade e afins).</p>
+              </section>
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3A2D] mb-3">2. Como Usamos as Informações</h3>
+                <p className="leading-relaxed text-[#1B3A2D]/70">Nós utilizamos os dados da sua despensa para gerar alertas de validade de maneira local e na nuvem. A Inteligência Artificial de receitas cruza apenas seus itens anonimizados para evitar qualquer identificação pessoal durante a geração de ideias de receita.</p>
+              </section>
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3A2D] mb-3">3. Segurança dos Dados</h3>
+                <p className="leading-relaxed text-[#1B3A2D]/70">Sua segurança é primordial. Trabalhamos com servidores de ponta (Supabase) que garantem a criptografia de dados em trânsito e em repouso. Nenhum dado de consumo será vendido para plataformas terceiras de marketing indesejado.</p>
+              </section>
+            </>
+          }
+        />
+        <PolicyModal 
+          isOpen={termsModalOpen} 
+          onClose={() => setTermsModalOpen(false)} 
+          title="Termos de Uso" 
+          content={
+            <>
+              <p className="text-sm font-bold text-[#1B3A2D]/40 mb-8 uppercase tracking-wider">Última atualização: Abril de 2026</p>
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3A2D] mb-3">1. Aceitação</h3>
+                <p className="leading-relaxed text-[#1B3A2D]/70">Ao acessar e usar a plataforma KAZA, você concorda em cumprir estes termos de serviço e todas as leis e regulamentos aplicáveis. Se você não concordar com algum destes termos, está proibido de usar ou acessar este site.</p>
+              </section>
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3A2D] mb-3">2. Licença de Uso</h3>
+                <p className="leading-relaxed text-[#1B3A2D]/70 mb-3">É concedida permissão para baixar temporariamente uma cópia dos materiais (informações ou software) no aplicativo KAZA, apenas para visualização transitória pessoal e não comercial. Esta é a concessão de uma licença, não uma transferência de título, e sob esta licença você não pode:</p>
+                <ul className="list-disc pl-6 space-y-2 leading-relaxed text-[#1B3A2D]/70">
+                  <li>Modificar ou copiar os materiais;</li>
+                  <li>Tentar descompilar ou fazer engenharia reversa de qualquer software contido no app KAZA;</li>
+                  <li>Remover quaisquer direitos autorais ou outras notações de propriedade dos materiais.</li>
+                </ul>
+              </section>
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3A2D] mb-3">3. Limitações</h3>
+                <p className="leading-relaxed text-[#1B3A2D]/70">Em nenhum caso a KAZA ou seus fornecedores serão responsáveis por quaisquer danos (incluindo, sem limitação, danos por perda de dados ou lucro ou devido a interrupção dos negócios) decorrentes do uso ou da incapacidade de usar os materiais da nossa plataforma.</p>
+              </section>
+            </>
+          }
+        />
       </div>
     </>
   );

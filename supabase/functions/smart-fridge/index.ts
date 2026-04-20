@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -83,7 +84,7 @@ async function samsungControl(
 }
 
 // --- LG ThinQ ---
-const LG_AUTH_URL = "https://us.api.rscse.lge.com"; // placeholder — real endpoint varies by region
+const LG_AUTH_URL = "https://us.api.rscse.lge.com"; // placeholder â€” real endpoint varies by region
 
 async function lgDiscover(countryCodes: string[]) {
   // LG ThinQ uses a proprietary auth flow (OAuth2 + custom headers).
@@ -91,7 +92,7 @@ async function lgDiscover(countryCodes: string[]) {
   return {
     error: "lg_manual",
     message:
-      "A API da LG ThinQ requer autenticação OAuth2 via app oficial. " +
+      "A API da LG ThinQ requer autenticaÃ§Ã£o OAuth2 via app oficial. " +
       "Use o app LG ThinQ para vincular a conta e obter o token de acesso.",
     helpUrl: "https://www.lg.com/br/suporte/app-lg-thinq"
   };
@@ -116,7 +117,7 @@ serve(async (req) => {
     if (brand === "samsung") {
       if (!token)
         return respond(
-          { error: "Token pessoal Samsung SmartThings é obrigatório." },
+          { error: "Token pessoal Samsung SmartThings Ã© obrigatÃ³rio." },
           400
         );
 
@@ -126,19 +127,19 @@ serve(async (req) => {
       }
 
       if (action === "status") {
-        if (!deviceId) return respond({ error: "deviceId obrigatório." }, 400);
+        if (!deviceId) return respond({ error: "deviceId obrigatÃ³rio." }, 400);
         const status = await samsungStatus(token, deviceId);
         return respond(status);
       }
 
       if (action === "control") {
         if (!deviceId || !commands)
-          return respond({ error: "deviceId e commands obrigatórios." }, 400);
+          return respond({ error: "deviceId e commands obrigatÃ³rios." }, 400);
         const result = await samsungControl(token, deviceId, commands);
         return respond({ success: true, result });
       }
 
-      return respond({ error: "Ação inválida." }, 400);
+      return respond({ error: "AÃ§Ã£o invÃ¡lida." }, 400);
     }
 
     // ---- LG ThinQ ----
@@ -147,12 +148,12 @@ serve(async (req) => {
         return respond(await lgDiscover(["BR"]));
       }
       return respond(
-        { error: "Ação não suportada para LG. Use o app LG ThinQ." },
+        { error: "AÃ§Ã£o nÃ£o suportada para LG. Use o app LG ThinQ." },
         400
       );
     }
 
-    // ---- Outras marcas (não possuem API pública aberta) ----
+    // ---- Outras marcas (nÃ£o possuem API pÃºblica aberta) ----
     const brandGuide: Record<string, string> = {
       brastemp: "https://conectado.brastemp.com.br",
       consul: "https://www.consul.com.br/conectados",
@@ -171,7 +172,7 @@ serve(async (req) => {
       {
         error: "brand_not_supported",
         message:
-          `A marca ${brand} não possui uma API pública aberta para integração direta. ` +
+          `A marca ${brand} nÃ£o possui uma API pÃºblica aberta para integraÃ§Ã£o direta. ` +
           `Acesse o app oficial da marca para controlar a geladeira.`,
         helpUrl: brandGuide[brand] ?? null
       },

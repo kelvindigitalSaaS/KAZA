@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { isAndroid, isNative } from "./capacitor";
@@ -6,6 +7,13 @@ import { isAndroid, isNative } from "./capacitor";
 const ICON_192 = "/icon.png";
 const ICON_512 = "/icon.png";
 const BADGE_ICON = "/icons/badge-96.svg";
+const FRIGGO_SOUND = "default";
+
+interface NotificationAction {
+  action: string;
+  title: string;
+  icon?: string;
+}
 
 function detectBrowser() {
   if (typeof navigator === 'undefined') return 'other';
@@ -151,11 +159,11 @@ export async function saveWebPushSubscription(): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const reg = await navigator.serviceWorker.ready;
-    let sub = await reg.pushManager.getSubscription();
+    const sub = await reg.pushManager.getSubscription();
     // Sem VAPID key aqui; grava inscrição existente se houver.
     if (!sub) return;
     const json = sub.toJSON() as any;
-    await supabase.from("push_subscriptions").upsert({
+    await (supabase.from("push_subscriptions") as any).upsert({
       user_id: user.id,
       endpoint: sub.endpoint,
       p256dh: json?.keys?.p256dh ?? null,

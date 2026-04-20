@@ -3,8 +3,9 @@ import { useKaza } from '@/contexts/KazaContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ItemCard } from '../ItemCard';
 import { BarcodeScanner } from '../BarcodeScanner';
+import { ConsumableTracker } from '../ConsumableTracker';
 import { useNavigate } from 'react-router-dom';
-import { Refrigerator, Snowflake, Package, Droplets, Search, ScanBarcode, ChevronDown, ChevronUp, TrendingDown, CheckSquare, Square, Trash2, X, Edit3, AlertTriangle, EyeOff, Plus } from 'lucide-react';
+import { Refrigerator, Snowflake, Package, Droplets, Search, ScanBarcode, ChevronDown, ChevronUp, TrendingDown, CheckSquare, Square, Trash2, X, Edit3, AlertTriangle, EyeOff, Plus, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,6 +28,9 @@ export function FridgeTab() {
     const [activeTab, setActiveTab] = useState<'items' | 'consumables'>('items');
     const [activeFilter, setActiveFilter] = useState<ItemLocation | 'all'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
+    const [trackerOpen, setTrackerOpen] = useState(false);
     const [scannerOpen, setScannerOpen] = useState(false);
     const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
     const [selectionMode, setSelectionMode] = useState(false);
@@ -181,7 +185,7 @@ export function FridgeTab() {
     const allSelected = selectionMode && selectedItems.size === filteredItems.length && filteredItems.length > 0;
 
     return (
-        <div className="space-y-4 pb-24">
+        <div className="space-y-4 pb-nav-safe">
 
             {/* Selection toolbar (when active) */}
             {selectionMode && (
@@ -259,65 +263,111 @@ export function FridgeTab() {
                 </TabsList>
 
                 <TabsContent value="items" className="mt-4 space-y-4">
-                    {/* Search row with scanner + select-all icons */}
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setScannerOpen(true)}
-                            title={l.scanner}
-                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.06] dark:border-white/10 text-primary shadow-sm transition-all active:scale-[0.95]"
-                        >
-                            <ScanBarcode className="h-5 w-5" />
-                        </button>
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    {/* Search & Actions Row */}
+                    <div className="flex items-center justify-between px-1 mb-2">
+                        <div className="flex items-center gap-2 relative">
+                            <h2 className="text-[22px] font-black text-[#1a3d32] dark:text-emerald-50 tracking-tight ml-1">
+                                {language === 'pt-BR' ? 'Estoque' : language === 'en' ? 'Stock' : 'Inventario'}
+                            </h2>
+                            <button
+                                onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
+                                className={cn("flex h-8 w-8 items-center justify-center rounded-full transition-colors", locationDropdownOpen || activeFilter !== 'all' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400" : "bg-black/[0.04] dark:bg-white/[0.06] text-muted-foreground hover:bg-black/[0.08]")}
+                            >
+                                <SlidersHorizontal className="h-4 w-4" />
+                            </button>
+                            
+                            {locationDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setLocationDropdownOpen(false)} />
+                                    <div className="absolute top-full left-0 mt-2 w-56 max-h-[300px] overflow-y-auto rounded-2xl bg-white dark:bg-[#11302c] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-black/[0.04] p-2 z-50 animate-in fade-in slide-in-from-top-2 scrollbar-none">
+                                        {locationFilters.map(filter => {
+                                            const Icon = filter.icon;
+                                            const isActive = activeFilter === filter.id;
+                                            const count = filter.id === 'all'
+                                                ? items.length
+                                                : items.filter(i => i.location === filter.id).length;
+
+                                            return (
+                                                <button
+                                                    key={filter.id}
+                                                    onClick={() => {
+                                                        setActiveFilter(filter.id);
+                                                        setLocationDropdownOpen(false);
+                                                    }}
+                                                    className={cn(
+                                                        "flex w-full items-center justify-between px-3 py-2.5 rounded-xl transition-all",
+                                                        isActive 
+                                                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 font-bold" 
+                                                            : "hover:bg-black/[0.03] dark:hover:bg-white/[0.05] text-foreground"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <Icon className="h-[18px] w-[18px] opacity-70" />
+                                                        <span className="text-[14px]">
+                                                            {filter.id === 'all' ? (language === 'pt-BR' ? 'Todo o Estoque' : 'All Stock') : getFilterLabel(filter)}
+                                                        </span>
+                                                    </div>
+                                                    <span className={cn(
+                                                        "text-[11px] font-black rounded-full px-1.5 py-0.5",
+                                                        isActive ? "bg-emerald-100 dark:bg-emerald-500/30" : "bg-black/[0.05] dark:bg-white/10"
+                                                    )}>
+                                                        {count}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                                className={cn(
+                                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all active:scale-[0.95]",
+                                    isSearchOpen || searchQuery ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-black/[0.04] dark:bg-white/[0.06] text-muted-foreground hover:bg-black/[0.08]"
+                                )}
+                            >
+                                <Search className="h-[18px] w-[18px]" />
+                            </button>
+                            <button
+                                onClick={() => setScannerOpen(true)}
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 transition-all active:scale-[0.95]"
+                            >
+                                <ScanBarcode className="h-[18px] w-[18px]" />
+                            </button>
+                            <button
+                                onClick={() => { setSelectionMode(true); selectAll(); }}
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-muted-foreground transition-all active:scale-[0.95] hover:text-foreground"
+                            >
+                                <CheckSquare className="h-[18px] w-[18px]" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Expandable Search Input */}
+                    {(isSearchOpen || searchQuery) && (
+                        <div className="relative animate-in slide-in-from-top-2 fade-in duration-200 z-10 -mx-1 mb-3">
+                            <Search className="absolute left-5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground opacity-50 pointer-events-none" />
                             <Input
                                 placeholder={l.searchItems}
                                 value={searchQuery}
+                                autoFocus
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-12 rounded-2xl border-black/[0.06] dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl pl-10 text-[15px] shadow-sm"
+                                className="h-[52px] rounded-2xl border border-black/[0.08] dark:border-white/10 focus-visible:border-emerald-500/50 focus-visible:ring-4 focus-visible:ring-emerald-500/10 bg-white dark:bg-[#11302c]/50 backdrop-blur-xl pl-[3.25rem] pr-12 text-[15px] font-bold tracking-wide shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none placeholder:font-semibold transition-all w-full"
                             />
-                        </div>
-                        <button
-                            onClick={() => { setSelectionMode(true); selectAll(); }}
-                            title={l.selectAll}
-                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.06] dark:border-white/10 text-foreground shadow-sm transition-all active:scale-[0.95]"
-                        >
-                            <CheckSquare className="h-5 w-5" />
-                        </button>
-                    </div>
-
-                    {/* Location Filters — hidden when all items selected */}
-                    {!allSelected && <div className="flex flex-wrap gap-2">
-                        {locationFilters.map((filter) => {
-                            const Icon = filter.icon;
-                            const isActive = activeFilter === filter.id;
-                            const count = filter.id === 'all'
-                                ? items.length
-                                : items.filter(i => i.location === filter.id).length;
-
-                            return (
+                            {searchQuery && (
                                 <button
-                                    key={filter.id}
-                                    onClick={() => setActiveFilter(filter.id)}
-                                    className={cn(
-                                        'flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
-                                        isActive
-                                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                                            : 'bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-foreground'
-                                    )}
+                                    onClick={() => { setSearchQuery(''); setIsSearchOpen(false); }}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 h-[22px] w-[22px] flex items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
                                 >
-                                    <Icon className="h-3.5 w-3.5" />
-                                    {getFilterLabel(filter)}
-                                    <span className={cn(
-                                        'rounded-full px-2 py-0.5 text-[10px] font-bold',
-                                        isActive ? 'bg-white/20' : 'bg-gray-200 dark:bg-white/10 text-muted-foreground'
-                                    )}>
-                                        {count}
-                                    </span>
+                                    <X className="h-3 w-3" />
                                 </button>
-                            );
-                        })}
-                    </div>}
+                            )}
+                        </div>
+                    )}
+
+                    {/* Location Filters have been moved to dropdown title */}
 
                     {/* Items by Category with Collapsible */}
                     {Object.entries(groupedItems).length === 0 ? (
@@ -340,29 +390,31 @@ export function FridgeTab() {
                             )}
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-6 pt-2">
                             {Object.entries(groupedItems).map(([category, categoryItems]) => (
-                                <section key={category} className="rounded-2xl border border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden shadow-sm">
+                                <section key={category}>
                                     <button
                                         onClick={() => toggleCategory(category)}
-                                        className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-all hover:bg-gray-50 dark:hover:bg-white/5"
+                                        className="flex w-full items-center justify-between pb-3 text-left transition-all group outline-none"
                                     >
-                                        <div className="flex items-center gap-2.5">
-                                            <h2 className="text-sm font-bold text-foreground">
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-[18px] font-black tracking-tight text-[#1a3d32] dark:text-emerald-50 group-hover:text-emerald-600 transition-colors">
                                                 {categoryLabels[category]?.[language] || category}
                                             </h2>
-                                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                                            <span className="flex h-5 items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.08] px-2 text-[11px] font-bold text-muted-foreground">
                                                 {categoryItems.length}
                                             </span>
                                         </div>
-                                        {collapsedCategories[category] ? (
-                                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                        ) : (
-                                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                        )}
+                                        <div className="h-7 w-7 flex items-center justify-center rounded-full bg-black/[0.02] dark:bg-white/[0.02] group-hover:bg-black/[0.04] transition-colors">
+                                            {collapsedCategories[category] ? (
+                                                <ChevronDown className="h-[18px] w-[18px] text-muted-foreground opacity-70" />
+                                            ) : (
+                                                <ChevronUp className="h-[18px] w-[18px] text-muted-foreground opacity-70" />
+                                            )}
+                                        </div>
                                     </button>
                                     {!collapsedCategories[category] && (
-                                        <div className="space-y-2 px-3 pb-3 pt-1 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
+                                        <div className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
                                             {categoryItems.map((item) => (
                                                 <div key={item.id} className="relative">
                                                     {selectionMode && (
@@ -446,12 +498,12 @@ export function FridgeTab() {
 
                     <div className="rounded-2xl border border-black/[0.04] dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden shadow-sm">
                         <button
-                            onClick={() => navigate('/app/consumables')}
-                            className="flex w-full items-center justify-between p-4 text-left transition-all hover:bg-muted/50"
+                            onClick={() => setTrackerOpen(!trackerOpen)}
+                            className="flex w-full items-center justify-between p-4 text-left transition-all hover:bg-muted/50 outline-none"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-                                    <TrendingDown className="h-6 w-6 text-primary" />
+                                <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl transition-all", trackerOpen ? "bg-emerald-500 text-white" : "bg-primary/10 text-primary")}>
+                                    <TrendingDown className="h-6 w-6" />
                                 </div>
                                 <div>
                                     <p className="font-semibold text-foreground">
@@ -462,29 +514,17 @@ export function FridgeTab() {
                                     </p>
                                 </div>
                             </div>
-                            <ChevronDown className="h-5 w-5 text-gray-500" />
+                            <ChevronDown className={cn("h-5 w-5 text-gray-500 transition-transform duration-300", trackerOpen && "rotate-180")} />
                         </button>
+                        
+                        {trackerOpen && (
+                            <div className="border-t border-black/[0.04] dark:border-white/10 bg-white dark:bg-[#11302c]/30 animate-in slide-in-from-top-2 fade-in duration-300">
+                                <ConsumableTracker inline />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4">
-                        <div className="flex items-start gap-3">
-                            <div className="rounded-2xl bg-primary/10 p-2">
-                                <TrendingDown className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                                <p className="font-medium text-foreground">
-                                    {language === 'pt-BR' ? 'Como funciona?' : language === 'en' ? 'How it works?' : '¿Cómo funciona?'}
-                                </p>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    {language === 'pt-BR'
-                                        ? 'Adicione itens de uso diário e o app calcula quando você precisa comprar novamente. Debite o consumo à noite e receba alertas de reposição.'
-                                        : language === 'en'
-                                            ? 'Add daily use items and the app calculates when you need to buy again. Log consumption at night and receive replenishment alerts.'
-                                            : 'Añade artículos de uso diario y la app calcula cuándo necesitas comprar de nuevo. Registra el consumo por la noche y recibe alertas de reposición.'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+
                 </TabsContent>
             </Tabs>
 
@@ -538,7 +578,6 @@ export function FridgeTab() {
                 </div>
             )}
 
-            {/* Barcode Scanner Modal */}
             <BarcodeScanner
                 open={scannerOpen}
                 onClose={() => setScannerOpen(false)}

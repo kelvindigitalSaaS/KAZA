@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useKaza } from "@/contexts/FriggoContext";
 import { RecipeCard } from "../RecipeCard";
 import { allRecipes, findRecipesByIngredients, availableCategories } from "@/data/recipeDatabase";
-import { Sparkles, Heart, ChefHat, Search, BookOpen, Dumbbell, Tag, X } from "lucide-react";
+import { Sparkles, Heart, ChefHat, Search, BookOpen, Dumbbell, Tag, X, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -25,9 +25,15 @@ export function RecipesTab() {
   const navigate = useNavigate();
   const [subTab, setSubTab] = useState<"recipes" | "planner" | "favorites">("recipes");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string|null>(null);
   const [visibleCount, setVisibleCount] = useState(30);
   const getFilteredRecipes = () => {
     let baseList = allRecipes;
+
+    if (selectedCategory) {
+      baseList = baseList.filter(r => r.category === selectedCategory);
+    }
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -43,7 +49,7 @@ export function RecipesTab() {
   const filteredRecipes = getFilteredRecipes();
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="space-y-4 pb-nav-safe">
       {/* ── Header ── */}
       <div className="pt-2 flex flex-col gap-4">
 
@@ -141,21 +147,48 @@ export function RecipesTab() {
 
 
           {/* ── Search ── */}
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar receitas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border-black/[0.04] dark:border-white/[0.06] text-[15px]"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          <div className="flex gap-2 relative">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar receitas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border-black/[0.04] dark:border-white/[0.06] text-[15px]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            
+            <button
+               onClick={() => setFilterOpen(!filterOpen)}
+               className={cn("flex flex-shrink-0 items-center justify-center h-11 w-11 rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 backdrop-blur-xl transition-all", filterOpen || selectedCategory ? "bg-emerald-500 text-white" : "text-muted-foreground")}
+            >
+               <SlidersHorizontal className="h-4 w-4" />
+            </button>
+            
+            {filterOpen && (
+               <>
+                 <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
+                 <div className="absolute right-0 top-[110%] w-48 bg-white dark:bg-[#11302c] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-black/[0.04] p-2 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="max-h-64 overflow-y-auto no-scrollbar flex flex-col">
+                      <button onClick={() => { setSelectedCategory(null); setFilterOpen(false); }} className={cn("w-full text-left px-3 py-2.5 text-[13px] rounded-xl transition-colors mb-1 shrink-0", !selectedCategory ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 font-bold" : "hover:bg-black/[0.03] dark:hover:bg-white/[0.05] text-foreground")}>
+                        Todas as Categorias
+                      </button>
+                      {availableCategories.map(cat => (
+                        <button key={cat} onClick={() => { setSelectedCategory(cat); setFilterOpen(false); }} className={cn("w-full text-left px-3 py-2.5 text-[13px] rounded-xl transition-colors shrink-0", selectedCategory === cat ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 font-bold" : "hover:bg-black/[0.03] dark:hover:bg-white/[0.05] text-foreground")}>
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                 </div>
+               </>
             )}
           </div>
 

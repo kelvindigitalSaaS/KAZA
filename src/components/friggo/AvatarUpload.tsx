@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -75,7 +76,7 @@ export default function AvatarUpload({ currentUrl, size = 100, className }: Avat
   };
 
   return (
-    <div className={cn("relative group", className)}>
+    <div className={cn("relative group rounded-full", className)}>
       <div
         className="relative flex items-center justify-center overflow-hidden rounded-full bg-muted shadow-xl"
         style={{ width: size, height: size }}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect } from "react";
 import { useKaza } from "@/contexts/FriggoContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -81,6 +82,7 @@ export function ShoppingTab() {
   const [showSavedLists, setShowSavedLists] = useState(false);
   const [savedLists, setSavedLists] = useState<Array<{ id: string; date: string; name?: string; items: Array<{ name: string; quantity?: number; unit?: string; store?: string }> }>>([]);
   const [newItemUnit, setNewItemUnit] = useState("un");
+  const [newItemQty, setNewItemQty] = useState("1");
   const [newItemStore, setNewItemStore] = useState<"market" | "fair" | "pharmacy" | "other">("market");
   const [showFilters, setShowFilters] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
@@ -302,16 +304,18 @@ export function ShoppingTab() {
     const itemName = product?.name || newItem.trim();
     if (!itemName) return;
     const chosenStore = product?.category || newItemStore;
+    const parsedQty = parseFloat(newItemQty.replace(',', '.'));
     addToShoppingList({
       name: itemName,
       category:
         chosenStore === "pharmacy" ? "hygiene" :
           chosenStore === "fair" ? "vegetable" : "pantry",
-      quantity: product?.defaultQuantity || 1,
+      quantity: product?.defaultQuantity || (Number.isFinite(parsedQty) ? parsedQty : 1),
       unit: product?.unit || newItemUnit,
       store: chosenStore
     });
     setNewItem("");
+    setNewItemQty("1");
     setShowSuggestions(false);
     toast.success(l.itemAdded);
   };
@@ -681,7 +685,7 @@ export function ShoppingTab() {
   );
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="space-y-4 pb-nav-safe">
       <div className="flex items-center justify-between pt-2">
         <div className="hidden">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
@@ -864,19 +868,13 @@ export function ShoppingTab() {
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             className="flex-1 h-[52px] rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 backdrop-blur-xl text-sm transition-all focus:shadow-sm"
           />
-          <Select value={newItemStore} onValueChange={(v) => setNewItemStore(v as any)}>
-            <SelectTrigger className="h-[52px] w-[64px] rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 text-base font-bold shrink-0 px-0 justify-center">
-              <SelectValue>
-                {newItemStore === "market" ? "🛒" : newItemStore === "fair" ? "🌿" : newItemStore === "pharmacy" ? "💊" : "📦"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="market">🛒 {l.market}</SelectItem>
-              <SelectItem value="fair">🌿 {l.fair}</SelectItem>
-              <SelectItem value="pharmacy">💊 {l.pharmacy}</SelectItem>
-              <SelectItem value="other">📦 {language === "pt-BR" ? "Outros" : language === "es" ? "Otros" : "Other"}</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            inputMode="decimal"
+            placeholder="Qtd"
+            value={newItemQty}
+            onChange={(e) => setNewItemQty(e.target.value)}
+            className="flex-shrink-0 h-[52px] w-[56px] text-center rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 text-sm font-bold transition-all focus:shadow-sm px-1 placeholder:font-normal placeholder:opacity-70"
+          />
           <Select value={newItemUnit} onValueChange={setNewItemUnit}>
             <SelectTrigger className="h-[52px] w-[64px] rounded-2xl border-black/[0.04] dark:border-white/[0.06] bg-white/80 dark:bg-white/5 text-xs font-bold shrink-0">
               <SelectValue />
@@ -972,10 +970,9 @@ export function ShoppingTab() {
             {activeFilter === "all" && (
               <button
                 onClick={() => setActiveFilter("market")}
-                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-muted-foreground transition-all active:scale-[0.97]"
+                className="flex items-center justify-center h-[36px] w-[36px] rounded-full bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.06] text-muted-foreground transition-all flex-shrink-0 active:scale-[0.97]"
               >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                {l.filters}
+                <SlidersHorizontal className="h-4 w-4" />
               </button>
             )}
           </div>

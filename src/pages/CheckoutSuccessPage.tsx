@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Check, ArrowRight, Sparkles, Home } from "lucide-react";
@@ -92,7 +93,7 @@ export default function CheckoutSuccessPage() {
                       .select("*, sub_account_groups(id)")
                       .eq("user_id", user?.id)
                       .eq("plan_tier", "multiPRO")
-                      .single();
+                      .single() as any;
 
                     if (subscription?.sub_account_groups?.id) {
                       await supabase.functions.invoke("send-invite-email", {
@@ -107,7 +108,7 @@ export default function CheckoutSuccessPage() {
               }
             }
             // Clear stored members after sending invites
-            try { localStorage.removeItem("trio_members"); } catch {}
+            try { localStorage.removeItem("trio_members"); } catch { /* ignore */ }
           }
         } catch (_inviteProcessError) { /* silent */ }
 
