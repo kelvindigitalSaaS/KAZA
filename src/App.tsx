@@ -22,6 +22,8 @@ import { Sentry } from "@/lib/sentry";
 import { OfflineOverlay } from "@/components/friggo/OfflineOverlay";
 import PWAInstallGuide from "@/components/friggo/PWAInstallGuide";
 import { AccountSessionTracker } from "@/components/friggo/AccountSessionTracker";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -283,6 +285,8 @@ const App = () => {
                     <AccountSessionTracker />
                     <Toaster />
                     <Sonner />
+                    <SpeedInsights />
+                    <Analytics />
                     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
                       <AppPWAInstallGuide />
                       <MobileFrame>
