@@ -34,15 +34,22 @@ serve(async (req) => {
   }
 
   try {
-    // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Auth ─────────────────────────────────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Missing Authorization header" }, 401);
+    if (!authHeader) {
+      console.error("[AUTH] Missing Authorization header");
+      return json({ error: "Missing Authorization header" }, 401);
+    }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) return json({ error: "Invalid token" }, 401);
+    
+    if (authError || !user) {
+      console.error("[AUTH] Invalid token or user not found:", authError?.message);
+      return json({ error: `Invalid token: ${authError?.message || "User not found"}` }, 401);
+    }
 
-    // â”€â”€ Payload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Payload ─────────────────────────────────────────────────────────────────
     const payload: InviteRequest = await req.json();
     const { invited_email } = payload;
     let { group_id } = payload;

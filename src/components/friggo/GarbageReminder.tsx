@@ -85,7 +85,6 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
           .from("garbage_reminders")
           .select("*")
           .eq("home_id", homeId)
-          .eq("user_id", user.id)
           .maybeSingle();
         if (data) {
           setEnabled((data as any).enabled ?? false);
@@ -231,14 +230,12 @@ export function GarbageReminder({ open, onClose }: GarbageReminderProps) {
         .from("garbage_reminders")
         .upsert({
           home_id: homeId,
-          user_id: user.id,
           enabled,
           selected_days: selectedDays,
           reminder_time: reminderTime,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo",
           garbage_location: garbageLocation,
           building_floor: buildingFloor || null,
-        }, { onConflict: "home_id,user_id" });
+        }, { onConflict: "home_id" });
 
       if (error && import.meta.env.DEV) {
         console.error("[DEV] garbage_reminders upsert error:", error);

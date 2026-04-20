@@ -183,14 +183,12 @@ export async function syncGarbageReminderToDb(homeId: string | null | undefined)
     const cfg = getGarbageReminderConfig();
     await supabase.from("garbage_reminders").upsert({
       home_id: homeId,
-      user_id: user.id,
       enabled: cfg.enabled,
       selected_days: cfg.selectedDays,
       reminder_time: cfg.reminderTime,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo",
       garbage_location: cfg.garbageLocation,
       building_floor: cfg.buildingFloor ?? null,
-    }, { onConflict: "home_id,user_id" });
+    }, { onConflict: "home_id" });
   } catch (_e) { /* silent — DB sync optional */ }
 }
 

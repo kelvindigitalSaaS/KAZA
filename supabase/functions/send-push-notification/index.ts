@@ -38,10 +38,17 @@ serve(async (req) => {
 
   try {
     const payload: PushPayload = await req.json();
+    console.log("[PUSH] Received payload:", JSON.stringify(payload));
     const { group_id, home_id, title, body, data, exclude_user_id } = payload;
 
     if ((!group_id && !home_id) || !title || !body) {
-      return json({ error: "Missing required fields: (group_id or home_id), title, body" }, 400);
+      const missing = [];
+      if (!group_id && !home_id) missing.push("group_id or home_id");
+      if (!title) missing.push("title");
+      if (!body) missing.push("body");
+      
+      console.error("[PUSH] Missing fields:", missing.join(", "));
+      return json({ error: `Missing required fields: ${missing.join(", ")}` }, 400);
     }
 
     let userIds: string[] = [];
