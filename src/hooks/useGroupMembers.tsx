@@ -182,21 +182,17 @@ export function useGroupMembers() {
         });
 
         if (error) {
+          if (import.meta.env.DEV) console.error("[INVITE] Error calling function:", error);
           let errorMsg = "Erro ao enviar convite";
           
-          // Try to extract JSON from FunctionsHttpError context
-          if (error && typeof error === 'object' && 'context' in error) {
-            try {
-              const res = (error as any).context as Response;
-              // Clone the response so we don't lock the stream if already read
-              const errorBody = await res.clone().json();
-              if (errorBody && errorBody.error) {
-                errorMsg = errorBody.error;
-              }
-            } catch (e) {
-              // Ignore if not JSON
+          try {
+            // Try to extract JSON from error context without leaking to console
+            const context = (error as any).context;
+            if (context instanceof Response) {
+              const errorBody = await context.clone().json().catch(() => null);
+              if (errorBody?.error) errorMsg = errorBody.error;
             }
-          }
+          } catch (e) { /* silent fail on parsing */ }
 
           if (errorMsg === "Erro ao enviar convite") {
             const msg =

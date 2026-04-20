@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("[AUTH] getSession: start");
+    if (import.meta.env.DEV) console.log("[AUTH] getSession: start");
     const t0 = performance.now();
 
     // onAuthStateChange fires INITIAL_SESSION synchronously before getSession
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("[AUTH] onAuthStateChange:", event, "hasSession=", !!session);
+      if (import.meta.env.DEV) console.log("[AUTH] onAuthStateChange:", event, "hasSession=", !!session);
       if (event === "INITIAL_SESSION") {
         initialSessionResolved = true;
       }
@@ -88,14 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // getSession is a fallback: if INITIAL_SESSION already fired and resolved
     // the session, skip redundant state updates to prevent double fetchData.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("[AUTH] getSession: done in", (performance.now() - t0).toFixed(0), "ms, hasSession=", !!session);
+      if (import.meta.env.DEV) console.log("[AUTH] getSession: done in", (performance.now() - t0).toFixed(0), "ms, hasSession=", !!session);
       if (!initialSessionResolved) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     }).catch((err) => {
-      console.error("[AUTH] getSession: ERROR", err);
+      if (import.meta.env.DEV) console.error("[AUTH] getSession: ERROR", err);
       if (!initialSessionResolved) setLoading(false);
     });
 
