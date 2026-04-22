@@ -43,6 +43,18 @@ export function PWAProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("appinstalled", installedHandler);
 
+    // Auto-show guide on /app if not already installed and not shown in this session
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    const path = window.location.pathname;
+    const hasSeenGuide = sessionStorage.getItem("pwa-guide-shown");
+
+    if (!isStandalone && path.startsWith("/app") && !hasSeenGuide) {
+      setTimeout(() => {
+        setShowGuide(true);
+        sessionStorage.setItem("pwa-guide-shown", "true");
+      }, 3000);
+    }
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
       window.removeEventListener("appinstalled", installedHandler);
