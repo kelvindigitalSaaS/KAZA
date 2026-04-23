@@ -426,6 +426,24 @@ export default function Onboarding() {
   const { theme, setTheme } = useTheme();
   const { signOut, user } = useAuth();
   const { toast } = useToast();
+
+  // Bloqueio de segurança: Se o usuário é um convidado pendente de vinculação,
+  // não mostramos o onboarding principal. Deixamos o KazaContext completar o setup.
+  const isInvitedUser = (user as any)?.user_metadata?.invite_token;
+  
+  if (isInvitedUser) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">
+            Finalizando seu convite...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const handleSignOut = async () => {
     try {
       await signOut();

@@ -46,3 +46,35 @@ export function formatCPF(value: string): string {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
     .slice(0, 14);
 }
+
+/**
+ * Password requirement interface
+ */
+export interface PasswordRequirements {
+  minLength: boolean;
+  hasUpper: boolean;
+  hasLower: boolean;
+  hasNumber: boolean;
+  hasSymbol: boolean;
+}
+
+/**
+ * Checks password against several security requirements
+ */
+export function getPasswordRequirements(password: string): PasswordRequirements {
+  return {
+    minLength: password.length >= 8,
+    hasUpper: /[A-Z]/.test(password),
+    hasLower: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+}
+
+/**
+ * Returns true if all password requirements are met
+ */
+export function isPasswordStrong(password: string): boolean {
+  const reqs = getPasswordRequirements(password);
+  return reqs.minLength && reqs.hasUpper && reqs.hasLower && reqs.hasNumber && reqs.hasSymbol;
+}

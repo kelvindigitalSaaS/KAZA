@@ -9,6 +9,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { ArrowLeft, Check, Eye, EyeOff, Mail, Loader2, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getPasswordRequirements, isPasswordStrong, isValidCPF } from "@/lib/utils/validation";
 
 export const PENDING_INVITE_KEY = "pending_invite_setup";
 
@@ -65,6 +66,9 @@ export function SubAccountOnboarding({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Password requirements real-time check
+  const passwordReqs = getPasswordRequirements(password);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -143,7 +147,7 @@ export function SubAccountOnboarding({
   const handleNameNext = async () => {
     if (!name.trim()) { toast.error("Digite seu nome"); return; }
     if (name.trim().length < 2) { toast.error("Nome muito curto"); return; }
-    if (cpf.trim().length < 11) { toast.error("Digite um CPF válido"); return; }
+    if (!isValidCPF(cpf)) { toast.error("Digite um CPF válido"); return; }
     
     setLoading(true);
     try {
@@ -151,6 +155,7 @@ export function SubAccountOnboarding({
         name: name.trim(),
         cpf: cpf.trim() 
       });
+      toast.success("Nome e CPF salvos");
       setStep("password");
     } catch {
       toast.error("Erro ao salvar. Verifique sua conexão.");
@@ -160,8 +165,8 @@ export function SubAccountOnboarding({
   };
 
   const handlePasswordNext = async () => {
-    if (!password || password.length < 6) {
-      toast.error("Senha deve ter pelo menos 6 caracteres");
+    if (!isPasswordStrong(password)) {
+      toast.error("A senha não cumpre os requisitos de segurança");
       return;
     }
     if (password !== confirmPassword) {
@@ -170,7 +175,10 @@ export function SubAccountOnboarding({
     }
     setLoading(true);
     try {
-      await saveStep(STEP_NUMBERS.password, { password: true }); // Just mark as done
+      // For security, we don't save the password in clear text in step_data.
+      // We just mark that the password step is completed.
+      await saveStep(STEP_NUMBERS.password, { password_defined: true }); 
+      toast.success("Senha definida com sucesso");
       setStep("consumables");
     } catch {
       toast.error("Erro ao salvar. Verifique sua conexão.");
@@ -185,6 +193,7 @@ export function SubAccountOnboarding({
       await saveStep(STEP_NUMBERS.consumables, {
         consumables: Array.from(selectedConsumables),
       });
+      toast.success("Preferências salvas");
       setStep("complete");
     } catch {
       toast.error("Erro ao salvar. Verifique sua conexão.");
@@ -373,7 +382,7 @@ export function SubAccountOnboarding({
             <div className="space-y-1">
               <p className="text-xs font-bold text-primary uppercase tracking-widest">Segurança</p>
               <h2 className="text-2xl font-black text-foreground">Defina sua senha</h2>
-              <p className="text-sm text-muted-foreground">Mínimo 6 caracteres para sua proteção</p>
+              <p className="text-sm text-muted-foreground">Crie uma senha forte para sua conta</p>
             </div>
             <div className="space-y-4">
               <div className="relative">
@@ -394,6 +403,16 @@ export function SubAccountOnboarding({
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+
+              {/* Password Requirements UI */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 rounded-2xl bg-muted/30 border border-black/[0.03] dark:border-white/[0.03]">
+                <RequirementItem fulfilled={passwordReqs.minLength} label="Mínimo 8 caracteres" />
+                <RequirementItem fulfilled={passwordReqs.hasUpper} label="Letra maiúscula" />
+                <RequirementItem fulfilled={passwordReqs.hasLower} label="Letra minúscula" />
+                <RequirementItem fulfilled={passwordReqs.hasNumber} label="Número" />
+                <RequirementItem fulfilled={passwordReqs.hasSymbol} label="Símbolo (!@#$)" />
+              </div>
+
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -412,7 +431,13 @@ export function SubAccountOnboarding({
                 </button>
               </div>
             </div>
-            <Button onClick={handlePasswordNext} size="lg" className="w-full h-14 rounded-2xl font-bold text-base">
+            <Button 
+              onClick={handlePasswordNext} 
+              size="lg" 
+              className="w-full h-14 rounded-2xl font-bold text-base"
+              disabled={loading || !isPasswordStrong(password)}
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Continuar
             </Button>
           </div>
@@ -486,6 +511,25 @@ export function SubAccountOnboarding({
 
       </main>
     </PageTransition>
+  );
+}
+
+function RequirementItem({ fulfilled, label }: { fulfilled: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className={cn(
+        "h-4 w-4 rounded-full flex items-center justify-center transition-colors",
+        fulfilled ? "bg-emerald-500 text-white" : "bg-black/10 dark:bg-white/10"
+      )}>
+        {fulfilled && <Check className="h-3 w-3" />}
+      </div>
+      <span className={cn(
+        "text-[10px] font-bold uppercase tracking-wider transition-colors",
+        fulfilled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60"
+      )}>
+        {label}
+      </span>
+    </div>
   );
 }
 

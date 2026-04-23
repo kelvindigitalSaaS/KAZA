@@ -214,6 +214,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       }
 
       if (!hid) {
+        console.log("[KAZA] No home_id found. Checking for pending invites...");
         // Post-email-confirmation: complete pending invite setup.
         // Primary: invite_token stored in user_metadata at signUp (DB-backed, reliable).
         // Fallback: legacy localStorage key for users who signed up before this migration.
@@ -223,20 +224,27 @@ export function KazaProvider({ children }: { children: ReactNode }) {
           ? (() => { try { return JSON.parse(legacyRaw).inviteToken; } catch { return undefined; } })()
           : undefined;
 
+        console.log("[KAZA] invite tokens found:", { metaToken: !!metaToken, legacyToken: !!legacyToken });
+        
         const inviteToken = metaToken ?? legacyToken;
         if (inviteToken) {
           try {
+            console.log("[KAZA] Processing invite token:", inviteToken);
             const { completeInviteSetup } = await import("@/pages/Invite/components/SubAccountOnboarding");
             await completeInviteSetup(user.id, inviteToken);
+            console.log("[KAZA] Invite setup completed successfully. Reloading...");
+            
             if (legacyRaw) localStorage.removeItem("pending_invite_setup");
             // Reload page to refresh all contexts with new membership
             window.location.reload();
             return;
           } catch (err) {
-            if (import.meta.env.DEV) console.error("[DEV] Invite setup failed:", err);
+            console.error("[KAZA] Invite setup failed:", err);
             // Clear stale legacy key so we don't retry indefinitely
             if (legacyRaw) localStorage.removeItem("pending_invite_setup");
           }
+        } else {
+          console.log("[KAZA] No pending invite tokens found.");
         }
 
         setItems([]);
