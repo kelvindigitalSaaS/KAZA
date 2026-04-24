@@ -21,6 +21,9 @@ import { Sentry } from "@/lib/sentry";
 import { OfflineOverlay } from "@/components/kaza/OfflineOverlay";
 import PWAInstallGuide from "@/components/kaza/PWAInstallGuide";
 import { AccountSessionTracker } from "@/components/kaza/AccountSessionTracker";
+import { UpdatePrompt } from "@/components/UpdatePrompt";
+import { invalidateCacheIfNeeded } from "@/lib/cacheVersion";
+import { initDebugHelper } from "@/lib/debugHelper";
 
 const Index = lazy(() => import("./pages/Home"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -211,6 +214,14 @@ function SalesPageGuard() {
 }
 
 const App = () => {
+  // Check cache version on app load
+  useEffect(() => {
+    invalidateCacheIfNeeded().catch(err => {
+      console.error('Error checking cache version:', err);
+    });
+    initDebugHelper();
+  }, []);
+
   // Listen for deep-link returns (auth callback)
   useEffect(() => {
     listenForDeepLinks(async (url) => {
@@ -262,6 +273,7 @@ const App = () => {
                   <TooltipProvider>
                     <OfflineOverlay />
                     <AccountSessionTracker />
+                    <UpdatePrompt />
                     <Toaster />
                     <Sonner />
                     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
