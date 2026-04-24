@@ -26,12 +26,15 @@ BEGIN
     RAISE EXCEPTION 'Invalid or expired invite token';
   END IF;
 
-  -- 1) Create/update sub-account membership
-  INSERT INTO sub_account_members (group_id, user_id, role, is_active, joined_at)
-  VALUES (v_invite.group_id, auth.uid(), 'member', true, now())
+  -- 1) Create/update sub-account membership with user's name
+  INSERT INTO sub_account_members (group_id, user_id, role, is_active, joined_at, display_name)
+  SELECT v_invite.group_id, auth.uid(), 'member', true, now(), COALESCE(p.name, 'Membro')
+  FROM profiles p
+  WHERE p.user_id = auth.uid()
   ON CONFLICT (group_id, user_id) DO UPDATE
     SET is_active = true,
-        joined_at = now();
+        joined_at = now(),
+        display_name = COALESCE((SELECT COALESCE(p.name, 'Membro') FROM profiles p WHERE p.user_id = auth.uid()), display_name);
 
   -- 2) Find the master's primary home (the one where they are 'owner')
   SELECT hm.home_id INTO v_master_home_id

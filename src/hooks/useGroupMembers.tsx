@@ -8,10 +8,6 @@ import { toast } from "sonner";
 
 interface GroupMemberWithStatus extends SubAccountMember {
   isOnline?: boolean;
-  profile?: {
-    name: string | null;
-    avatar_url: string | null;
-  } | null;
 }
 
 interface GroupSlot {
@@ -44,22 +40,22 @@ export function useGroupMembers() {
           .eq("id", groupId)
           .maybeSingle();
 
-        // 2. Fetch members with profile data
+        // 2. Fetch members (display_name already stored in sub_account_members)
         const { data: membersData } = await supabase
           .from("sub_account_members")
-          .select("*, profile:profiles(name, avatar_url)")
+          .select("*")
           .eq("group_id", groupId);
 
-        // 3. If master is not in members, fetch master profile and add
+        // 3. If master is not in members, fetch master name and add
         let allMembers: GroupMemberWithStatus[] = membersData || [];
         if (groupData && !allMembers.some(m => m.user_id === groupData.master_user_id)) {
           const { data: masterProfile } = await supabase
             .from("profiles")
-            .select("name, avatar_url")
+            .select("name")
             .eq("user_id", groupData.master_user_id)
             .maybeSingle();
-          
-          if (masterProfile) {
+
+          if (masterProfile?.name) {
             // Add a synthetic member row for the master
             allMembers.unshift({
               id: "master-" + groupData.master_user_id,
@@ -68,8 +64,7 @@ export function useGroupMembers() {
               role: "master",
               is_active: true,
               display_name: masterProfile.name,
-              joined_at: new Date().toISOString(), // Fallback
-              profile: masterProfile
+              joined_at: new Date().toISOString(),
             } as any);
           }
         }
@@ -127,17 +122,9 @@ export function useGroupMembers() {
         (payload) => {
           if (payload.eventType === "INSERT") {
             const newMember = payload.new as SubAccountMember;
-            // Fetch profile for the new member
-            supabase
-              .from("profiles")
-              .select("name, avatar_url")
-              .eq("user_id", newMember.user_id)
-              .maybeSingle()
-              .then(({ data: profileData }) => {
-                setMembers((prev) => [...prev, { ...newMember, profile: profileData, isOnline: false }]);
-                const name = profileData?.name || newMember.display_name || "Uma pessoa";
-                toast.success(`${name} se juntou ao seu plano!`);
-              });
+            setMembers((prev) => [...prev, { ...newMember, isOnline: false }]);
+            const name = newMember.display_name || "Uma pessoa";
+            toast.success(`${name} se juntou ao seu plano!`);
           } else if (payload.eventType === "UPDATE") {
             const updated = payload.new as SubAccountMember;
             setMembers((prev) =>

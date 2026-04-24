@@ -210,16 +210,12 @@ export function GroupMembersCard() {
                 {slot.type === "filled" && slot.member && (
                   <>
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-sm font-bold text-primary overflow-hidden">
-                        {slot.member.profile?.avatar_url ? (
-                          <img src={slot.member.profile.avatar_url} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          (slot.member.profile?.name || slot.member.display_name || "?")[0].toUpperCase()
-                        )}
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-sm font-bold text-primary">
+                        {(slot.member.display_name || "?")[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground truncate">
-                          {slot.member.profile?.name || slot.member.display_name || (slot.member.user_id.substring(0, 8) + "...")}
+                          {slot.member.display_name || (slot.member.user_id.substring(0, 8) + "...")}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {slot.member.isOnline ? (
@@ -237,7 +233,7 @@ export function GroupMembersCard() {
                         onClick={() =>
                           setRemoveConfirm({
                             memberId: slot.member!.id,
-                            memberName: slot.member!.profile?.name || slot.member!.display_name || "Membro",
+                            memberName: slot.member!.display_name || "Membro",
                           })
                         }
                         className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"

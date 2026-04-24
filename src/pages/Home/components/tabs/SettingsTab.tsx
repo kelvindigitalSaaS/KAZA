@@ -322,12 +322,14 @@ export function SettingsTab() {
             </div>
           </div>
           <div className="flex flex-col gap-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <p className="text-[18px] font-bold text-[#2C2C2A] dark:text-white leading-tight truncate">
                 {onboardingData?.name || user?.email?.split("@")[0]}
               </p>
-              {/* Green dot: user is always online while app is open */}
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50 shrink-0" title="Online" />
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 shrink-0">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 animate-pulse" />
+                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Online</span>
+              </div>
             </div>
             {planTier === "premium" && trialDaysRemaining <= 0 ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#3D6B55]/10 border border-[#3D6B55]/25 text-[#3D6B55] text-[11px] font-black uppercase tracking-wider w-fit">
