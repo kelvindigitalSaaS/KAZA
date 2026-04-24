@@ -420,17 +420,11 @@ const staggerItem = {
   },
 };
 
+// Wrapper: handles invited user check BEFORE any hooks (respects Rules of Hooks)
 export default function Onboarding() {
-  const { completeOnboarding, setConsumablesBulk, onboardingData, saveOnboardingProgress } = useKaza();
-  const { language } = useLanguage();
-  const { theme, setTheme } = useTheme();
-  const { signOut, user } = useAuth();
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const isInvitedUser = !!(user as any)?.user_metadata?.invite_token;
 
-  // Bloqueio de segurança: Se o usuário é um convidado pendente de vinculação,
-  // não mostramos o onboarding principal. Deixamos o KazaContext completar o setup.
-  const isInvitedUser = (user as any)?.user_metadata?.invite_token;
-  
   if (isInvitedUser) {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background">
@@ -443,6 +437,16 @@ export default function Onboarding() {
       </div>
     );
   }
+
+  return <OnboardingForm />;
+}
+
+function OnboardingForm() {
+  const { completeOnboarding, setConsumablesBulk, onboardingData, saveOnboardingProgress } = useKaza();
+  const { language } = useLanguage();
+  const { theme, setTheme } = useTheme();
+  const { signOut, user } = useAuth();
+  const { toast } = useToast();
 
   const handleSignOut = async () => {
     try {
@@ -601,6 +605,8 @@ export default function Onboarding() {
         return;
       }
       setCpfError("");
+      // Save name+cpf progress when clicking Continuar at CPF step
+      saveOnboardingProgress(data).catch(() => {});
     }
 
     // Ensure at least one notification preference is selected
@@ -622,17 +628,7 @@ export default function Onboarding() {
     }
   };
   
-  // Debounced auto-save: saves progress automatically after 2 seconds of inactivity
-  useEffect(() => {
-    if (!user) return;
-    const timer = setTimeout(() => {
-      // Only save if we have at least a name or CPF started
-      if (data.name.trim() || data.cpf.trim()) {
-        saveOnboardingProgress(data);
-      }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [data.name, data.cpf, data.homeName, data.homeType, user, saveOnboardingProgress]);
+  // Progress is saved explicitly in handleNext at the CPF step.
 
   // Se começar num step que deve ser pulado (nome/CPF já definidos), avança
   useEffect(() => {

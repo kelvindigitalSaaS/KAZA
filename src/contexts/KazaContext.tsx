@@ -233,7 +233,10 @@ export function KazaProvider({ children }: { children: ReactNode }) {
             const { completeInviteSetup } = await import("@/pages/Invite/components/SubAccountOnboarding");
             await completeInviteSetup(user.id, inviteToken);
             console.log("[KAZA] Invite setup completed successfully. Reloading...");
-            
+
+            // Clear invite_token from user metadata so it doesn't re-trigger on future logins
+            await supabase.auth.updateUser({ data: { invite_token: null, invited_to_group: null } }).catch(() => {});
+
             if (legacyRaw) localStorage.removeItem("pending_invite_setup");
             // Reload page to refresh all contexts with new membership
             window.location.reload();
@@ -242,6 +245,11 @@ export function KazaProvider({ children }: { children: ReactNode }) {
             console.error("[KAZA] Invite setup failed:", err);
             // Clear stale legacy key so we don't retry indefinitely
             if (legacyRaw) localStorage.removeItem("pending_invite_setup");
+            // If token is invalid/expired, clear it from metadata so user isn't stuck
+            const errMsg = String((err as any)?.message || "");
+            if (errMsg.toLowerCase().includes("invalid") || errMsg.toLowerCase().includes("expired") || errMsg.toLowerCase().includes("not found")) {
+              await supabase.auth.updateUser({ data: { invite_token: null, invited_to_group: null } }).catch(() => {});
+            }
           }
         } else {
           console.log("[KAZA] No pending invite tokens found.");
@@ -961,12 +969,6 @@ export function KazaProvider({ children }: { children: ReactNode }) {
         p_name: data.name || null,
         p_cpf: rawCpf
       });
-      // Sincroniza estado local se necessário
-      if (data.name || data.cpf) {
-        setOnboardingData(prev => prev ? ({ ...prev, ...data }) : buildDefaultOnboarding(data));
-      }
-      
-      // Feedback visual de salvamento passo a passo
       toast({
         title: language === "pt-BR" ? "Progresso salvo" : "Progress saved",
         description: language === "pt-BR" ? "Dados atualizados com segurança." : "Data securely updated.",

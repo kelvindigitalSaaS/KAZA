@@ -70,11 +70,31 @@ export function SubAccountOnboarding({
   // Password requirements real-time check
   const passwordReqs = getPasswordRequirements(password);
 
+  // Consumables from the main account's home (fetched when reaching consumables step)
+  const [extraConsumables, setExtraConsumables] = useState<Array<{ name: string; icon: string }>>([]);
+
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setInterval(() => setResendCooldown((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
   }, [resendCooldown]);
+
+  useEffect(() => {
+    if (step !== "consumables" || !groupId) return;
+    supabase
+      .from("consumables")
+      .select("name, icon")
+      .eq("home_id", groupId)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const defaultNames = new Set(DEFAULT_CONSUMABLES.map((c) => c.name));
+          const extras = data
+            .filter((c: any) => c.name && !defaultNames.has(c.name))
+            .map((c: any) => ({ name: c.name, icon: c.icon || "📦" }));
+          setExtraConsumables(extras);
+        }
+      });
+  }, [step, groupId]);
 
   const handleResendEmail = async () => {
     if (resending || resendCooldown > 0) return;
@@ -344,8 +364,13 @@ export function SubAccountOnboarding({
               <h2 className="text-2xl font-black text-foreground">O que tem na despensa?</h2>
               <p className="text-sm text-muted-foreground">Selecione o que você já usa no dia a dia</p>
             </div>
+            {extraConsumables.length > 0 && (
+              <p className="text-xs text-muted-foreground -mt-2 mb-1">
+                Inclui itens já cadastrados pela conta principal
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-3">
-              {DEFAULT_CONSUMABLES.map((item) => (
+              {[...DEFAULT_CONSUMABLES, ...extraConsumables].map((item) => (
                 <label
                   key={item.name}
                   className={cn(
