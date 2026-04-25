@@ -210,11 +210,14 @@ function RootRoute() {
   const { user, loading } = useAuth();
   if (loading) return <SplashLoader />;
   if (user) return <Navigate to="/app/home" replace />;
-  return <Navigate to="/auth" replace />;
+  return <Suspense fallback={<PageSkeleton />}><SalesPage /></Suspense>;
 }
 
 /** Rota /pagina-de-vendas: logados vão para /app/home; visitantes veem a page de vendas */
 function SalesPageGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return <SplashLoader />;
+  if (user) return <Navigate to="/app/home" replace />;
   return <Suspense fallback={<PageSkeleton />}><SalesPage /></Suspense>;
 }
 

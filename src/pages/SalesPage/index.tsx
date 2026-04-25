@@ -669,14 +669,14 @@ export default function SalesPage() {
       document.head.appendChild(meta);
     }
 
-    // Canonical URL
+    // Canonical URL — sempre aponta para a raiz (URL principal para SEO)
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonical) {
       canonical = document.createElement('link') as HTMLLinkElement;
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href = 'https://kazapp.tech/pagina-de-vendas';
+    canonical.href = 'https://kazapp.tech/';
 
     // JSON-LD structured data
     const existingLd = document.querySelector('script[data-kaza-ld]');
@@ -705,7 +705,7 @@ export default function SalesPage() {
       { property: 'og:title', content: 'KAZA — Gestão Doméstica Inteligente' },
       { property: 'og:description', content: 'Organize seu estoque, evite desperdício e economize tempo com o KAZA.' },
       { property: 'og:image', content: 'https://kazapp.tech/icons/512.png' },
-      { property: 'og:url', content: 'https://kazapp.tech/pagina-de-vendas' },
+      { property: 'og:url', content: 'https://kazapp.tech/' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: 'KAZA — Gestão Doméstica Inteligente' },
