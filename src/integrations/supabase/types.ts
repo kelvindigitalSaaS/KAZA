@@ -79,6 +79,19 @@ export type ActionTypeEnum =
   | "added" | "consumed" | "cooked" | "discarded" | "defrosted" | "expired";
 export type ConsumableActionEnum = "debit" | "restock" | "adjust";
 
+export interface UserAchievementRow {
+  id: string;
+  user_id: string;
+  shopping_completions: number;
+  share_count: number;
+  meal_plan_count: number;
+  garbage_setups: number;
+  garbage_done: number;
+  unlocked: Record<string, string>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {

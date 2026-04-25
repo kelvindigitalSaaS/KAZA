@@ -10,6 +10,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { KazaProvider, useKaza } from "@/contexts/KazaContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { PWAProvider } from "@/contexts/PWAContext";
+import { AchievementsProvider } from "@/contexts/AchievementsContext";
 import {
   listenForDeepLinks,
   closeInAppBrowser
@@ -276,6 +277,7 @@ const App = () => {
         <SubscriptionProvider>
           <LanguageProvider>
             <KazaProvider>
+              <AchievementsProvider>
               <PWAProvider>
                 <ThemeProvider>
                   <TooltipProvider>
@@ -400,6 +402,7 @@ const App = () => {
                   </TooltipProvider>
                 </ThemeProvider>
               </PWAProvider>
+              </AchievementsProvider>
             </KazaProvider>
           </LanguageProvider>
         </SubscriptionProvider>

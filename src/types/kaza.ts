@@ -142,6 +142,26 @@ export interface DefrostTimer {
   estimatedMinutes: number;
 }
 
+export type AchievementCategory = "economy" | "usage" | "shopping" | "share" | "mealplan" | "register" | "garbage";
+
+export interface Achievement {
+  id: string;
+  category: AchievementCategory;
+  name: string;
+  description: string;
+  icon: string;
+  threshold: number;
+  unlocked: boolean;
+  unlockedAt?: Date;
+}
+
+export interface AchievementStats {
+  itemsConsumed: number;
+  itemsCooked: number;
+  itemsDiscarded: number;
+  shoppingCompletions: number;
+}
+
 export interface MealPlanEntry {
   id: string;
   recipe_id: string;

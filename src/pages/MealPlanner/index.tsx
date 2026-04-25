@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useKaza } from "@/contexts/KazaContext";
+import { useAchievements } from "@/contexts/AchievementsContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { allRecipes } from "@/data/recipeDatabase";
 import { format } from "date-fns";
@@ -39,6 +40,7 @@ export default function MealPlannerPage() {
   const [searchParams] = useSearchParams();
   const { addToMealPlan } = useKaza();
   const { isMultiPro } = useSubscription();
+  const { recordMealPlan } = useAchievements();
 
   const dateParam = searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,6 +94,7 @@ export default function MealPlannerPage() {
         notify_members: notifyMembers,
       });
       setAddedRecipes((prev) => new Set(prev).add(`${pendingMeal.recipeId}-${pendingMeal.mealType}`));
+      recordMealPlan();
       setShowSheet(false);
       setPendingMeal(null);
     } catch {

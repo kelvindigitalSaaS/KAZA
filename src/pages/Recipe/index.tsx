@@ -6,6 +6,7 @@ import { Clock, Users, Check, ArrowLeft, ArrowRight, Leaf, Play, Pause, Shopping
 import { cn } from '@/lib/utils';
 import { useKaza } from '@/contexts/KazaContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAchievements } from '@/contexts/AchievementsContext';
 import { Heart, CalendarDays, Minus, Plus } from 'lucide-react';
 import { 
   Dialog,
@@ -34,6 +35,7 @@ const NOTIF_ICON = '/icon.png';
 import { useRecipeLogic } from './logic/useRecipeLogic';
 
 export default function RecipePage() {
+    const { recordMealPlan } = useAchievements();
     const {
         recipe,
         currentStep,
@@ -206,6 +208,7 @@ export default function RecipePage() {
                                             planned_date: selectedDate,
                                             meal_type: selectedMeal
                                         });
+                                        recordMealPlan();
                                         setPlannerOpen(false);
                                     }}
                                 >

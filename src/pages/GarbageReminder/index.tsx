@@ -12,6 +12,7 @@ import { AlarmClock, ArrowLeft, Bell, Building2, Calendar, Check, Clock, Home, M
 import { toast } from "sonner";
 import { PageTransition } from "@/components/PageTransition";
 import { startGarbageReminderMonitoring } from "@/lib/garbageReminderNotifications";
+import { useAchievements } from "@/contexts/AchievementsContext";
 import { notifyHomeMembers } from "@/lib/pushNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -44,6 +45,7 @@ export default function GarbageReminderPage() {
   const { language } = useLanguage();
   const { homeId } = useKaza();
   const { user } = useAuth();
+  const { recordGarbageSetup, recordGarbageDone } = useAchievements();
 
   const [enabled, setEnabled] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 4]);
@@ -223,6 +225,7 @@ export default function GarbageReminderPage() {
       startGarbageReminderMonitoring();
     }
 
+    recordGarbageSetup();
     toast.success(l.saved, { duration: 2000 });
     navigate(-1);
   };
@@ -254,6 +257,7 @@ export default function GarbageReminderPage() {
       if (error) throw error;
 
       // 2. Local State
+      recordGarbageDone();
       setLastDoneAt(now);
       const profile = await supabase.from("profiles").select("name").eq("user_id", user.id).single();
       const userName = profile.data?.name || (language === "pt-BR" ? "Alguém" : "Someone");

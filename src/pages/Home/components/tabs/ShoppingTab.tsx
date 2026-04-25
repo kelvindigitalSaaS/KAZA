@@ -54,6 +54,7 @@ import {
 import { notifyHomeMembers } from "@/lib/pushNotifications";
 import { allRecipes } from "@/data/recipeDatabase";
 import { Calendar, Utensils, Zap } from "lucide-react";
+import { useAchievements } from "@/contexts/AchievementsContext";
 
 export function ShoppingTab() {
   const {
@@ -72,6 +73,7 @@ export function ShoppingTab() {
   } = useKaza();
   const { user } = useAuth();
   const { language } = useLanguage();
+  const { recordShoppingCompletion, recordShare } = useAchievements();
   const [activeFilter, setActiveFilter] = useState("all");
   const [newItem, setNewItem] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -275,6 +277,7 @@ export function ShoppingTab() {
       return;
     }
     await markAllShoppingComplete();
+    recordShoppingCompletion();
     toast.success(l.allBought);
   };
 
@@ -302,6 +305,7 @@ export function ShoppingTab() {
   const handleShareWhatsApp = () => {
     const pending = shoppingList.filter(i => !i.isCompleted);
     if (pending.length === 0) { toast.info(language === "pt-BR" ? "Lista vazia" : "Empty list"); return; }
+    recordShare();
     const text = pending.map(i => `• ${i.name}${i.quantity ? ` (${i.quantity} ${i.unit || ''})` : ''}`).join('\n');
     const msg = encodeURIComponent(`🛒 *Lista de Compras*\n\n${text}`);
     window.open(`https://wa.me/?text=${msg}`, '_blank');

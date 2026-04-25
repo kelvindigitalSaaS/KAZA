@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, User, Home, Users, Refrigerator, Loader2, CreditCard, Lock } from 'lucide-react';
+import { AchievementsPanel } from '@/components/kaza/AchievementsPanel';
 import AvatarUpload from '@/pages/Home/components/AvatarUpload';
 import { isValidCPF, formatCPF } from '@/lib/utils/validation';
 import { cn } from '@/lib/utils';
@@ -270,6 +271,10 @@ export default function ProfilePage() {
                             <Input value={fridgeBrand} onChange={(e) => setFridgeBrand(e.target.value)} className="h-11 rounded-2xl bg-muted/30 border-2 focus:border-primary font-semibold text-[15px]" placeholder="Ex: Samsung, LG..." />
                         </div>
                     )}
+                </div>
+
+                <div className="rounded-3xl bg-white/80 dark:bg-white/5 border border-black/[0.04] dark:border-white/[0.06] backdrop-blur-xl p-5 shadow-sm">
+                    <AchievementsPanel />
                 </div>
 
                 <Button onClick={handleSave} className="w-full h-12 md:h-12 rounded-2xl text-base font-black uppercase tracking-widest shadow-xl shadow-primary/20" disabled={isSaving}>

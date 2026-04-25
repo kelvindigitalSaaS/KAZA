@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { useAchievements } from '@/contexts/AchievementsContext';
 import { useKaza } from '@/contexts/KazaContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -166,6 +167,7 @@ export function HomeTab() {
     const { items, alerts, dismissAlert, onboardingData, shoppingList, consumables, addToShoppingList, toggleShoppingItem, itemHistory, markAllShoppingComplete, toggleSection: toggleContextSection } = useKaza();
     const { subscription } = useSubscription();
     const { language } = useLanguage();
+    const { recordShoppingCompletion } = useAchievements();
     const navigate = useNavigate();
 
     const [activeSection, setActiveSection] = useState<ActiveSection>(null);
@@ -606,7 +608,7 @@ export function HomeTab() {
                                     : <div className="space-y-3">
                                         <div className="flex items-center gap-2">
                                             <button
-                                                onClick={() => markAllShoppingComplete()}
+                                                onClick={() => { markAllShoppingComplete(); recordShoppingCompletion(); }}
                                                 className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold transition-all active:scale-[0.97]"
                                             >
                                                 <CheckCircle2 className="h-3.5 w-3.5" />
