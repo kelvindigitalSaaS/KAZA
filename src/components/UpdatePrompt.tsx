@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { RefreshCw, X } from 'lucide-react';
 import { checkForAppUpdate } from '@/lib/cacheVersion';
 
 export function UpdatePrompt() {
+  const { pathname } = useLocation();
+  const isAppRoute = pathname.startsWith('/app');
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [hasUpdate, setHasUpdate] = useState(false);
   const dismissedRef = useRef(false);
@@ -45,7 +49,7 @@ export function UpdatePrompt() {
   }, []);
 
   useEffect(() => {
-    if (!hasUpdate || toastShownRef.current) return;
+    if (!hasUpdate || toastShownRef.current || !isAppRoute) return;
     toastShownRef.current = true;
 
     const applyUpdate = async () => {
@@ -104,7 +108,7 @@ export function UpdatePrompt() {
       ),
       { duration: Infinity }
     );
-  }, [hasUpdate]);
+  }, [hasUpdate, isAppRoute]);
 
   // Show loading state while updating
   if (isUpdating) {

@@ -196,7 +196,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
 
   const showError = useCallback((title: string, err: unknown) => {
     const msg = err instanceof Error ? err.message : String(err);
-    if (import.meta.env.DEV) { console.error("[DEV]", title, err); }
+    console.error("[KAZA]", title, err);
     toast({ title, description: msg, variant: "destructive" });
   }, [toast]);
 
@@ -1178,8 +1178,9 @@ export function KazaProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (data: Partial<OnboardingData>) => {
     if (!user || !homeId) {
+      console.warn("[KAZA] updateProfile abortado:", { hasUser: !!user, hasHomeId: !!homeId });
       setOnboardingData((prev) => buildDefaultOnboarding({ ...(prev ?? {}), ...data }));
-      return;
+      throw new Error(!user ? "Sessão expirada. Faça login novamente." : "Lar não carregado. Recarregue a página.");
     }
     try {
       const jobs: Promise<any>[] = [];
@@ -1228,6 +1229,7 @@ export function KazaProvider({ children }: { children: ReactNode }) {
       setOnboardingData((prev) => buildDefaultOnboarding({ ...(prev ?? {}), ...data }));
     } catch (err) {
       showError("Erro ao atualizar perfil", err);
+      throw err;
     }
   };
 

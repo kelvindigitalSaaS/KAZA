@@ -140,11 +140,9 @@ export default function ProfilePage() {
             });
             toast.success(l.success);
             navigate(-1);
-        } catch (error) {
-            if (import.meta.env.DEV) {
-                console.error('[DEV] Error saving profile:', error);
-            }
-            toast.error(l.error);
+        } catch (error: any) {
+            console.error('[KAZA] Error saving profile:', error);
+            toast.error(error?.message || l.error);
         } finally {
             setIsSaving(false);
         }

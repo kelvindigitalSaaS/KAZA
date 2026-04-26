@@ -285,12 +285,12 @@ const App = () => {
                   <TooltipProvider>
                     <OfflineOverlay />
                     <AccountSessionTracker />
-                    <UpdatePrompt />
                     <Toaster />
                     <Sonner />
                     {!isNative && <Analytics />}
                     {!isNative && <SpeedInsights />}
                     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+                      <UpdatePrompt />
                       <AppPWAInstallGuide />
                       <MobileFrame>
                         <AuthGuard>
